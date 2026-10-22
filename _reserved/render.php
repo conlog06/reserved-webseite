@@ -143,7 +143,7 @@ function rs_render_ig(?array $ig, array $S): string {
         // Kein Zugang eingerichtet: statischen Inhalt der index.html behalten
         $tpl = (string)file_get_contents(rs_root() . '/index.html');
         preg_match('~<!--cms:ig-->(.*?)<!--/cms:ig-->~s', $tpl, $m);
-        return $m[1] ?? '';
+        return str_replace(['"assets/img/', '"../assets/img/'], ['"' . rs_url('assets/img/'), '"' . rs_url('assets/img/')], $m[1] ?? '');
     }
     $P = $ig['profile'];
     $num = fn($n) => $n === null ? '–' : ($n >= 10000 ? number_format($n / 1000, 1, ',', '.') . ' Tsd.' : number_format((int)$n, 0, ',', '.'));
@@ -208,4 +208,83 @@ function rs_render_datenschutz(array $S, array $c): string {
 <h4>5. Instagram</h4><p>Unsere Webseite zeigt Beiträge aus unserem Instagram-Profil. Die Bilder liegen auf unserem Server. Erst wenn du einen Link zu Instagram anklickst oder ein Video in der Großansicht abspielst, wird eine Verbindung zu Meta Platforms Ireland Ltd. hergestellt; dann gelten deren Datenschutzbestimmungen.</p>
 <h4>6. Deine Rechte</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren. Schreib uns dafür einfach eine E-Mail.</p>
 HTML;
+}
+
+
+/* ==========================================================================
+   Landingpage /angebot/
+   ========================================================================== */
+function rs_render_angebot(string $html, array $c): string {
+    $A = $c['angebot']; $S = $c['site'];
+    $html = rs_render_page($html, $c);
+    /* Texte */
+    $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms-lp="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($A) {
+        $v = $A[$m[3]] ?? null;
+        return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
+    }, $html);
+    $check = '<svg aria-hidden="true"><use href="#i-check"/></svg>';
+    $html = rs_block($html, 'lp_bullets', implode('', array_map(fn($b) => '<li>' . $check . '<span>' . e($b) . '</span></li>', array_filter($A['bullets'], fn($b) => trim($b) !== ''))));
+
+    /* Bilderstapel: neueste Instagram-Bilder, sonst die festen Slides */
+    if ($ig = rs_ig_data()) {
+        $imgs = array_slice($ig['posts'], 0, 3);
+        if (count($imgs) === 3) $html = rs_block($html, 'lp_stack', implode('', array_map(fn($p) => '<img src="' . e(rs_url($p['img'])) . '" alt="">', array_reverse($imgs))));
+    }
+
+    /* Angebot mit Countdown */
+    $offer = '';
+    if (!empty($A['offer_on']) && trim($A['offer_title']) !== '') {
+        $until = rs_ts($A['offer_until']);
+        $offer = '<div class="offer">' . (trim($A['offer_badge']) !== '' ? '<span class="offer-badge">✦ ' . e($A['offer_badge']) . '</span>' : '')
+               . '<h3>' . e($A['offer_title']) . '</h3>' . (trim($A['offer_text']) !== '' ? '<p>' . rs_fmt($A['offer_text']) . '</p>' : '');
+        if ($until && $until > time()) {
+            $offer .= '<div class="offer-count" data-until="' . ($until * 1000) . '" role="timer" aria-label="Zeit bis Aktionsende">';
+            foreach (['d' => 'Tage', 'h' => 'Std.', 'm' => 'Min.', 's' => 'Sek.'] as $k => $l) $offer .= '<div><b data-u="' . $k . '">00</b><small>' . $l . '</small></div>';
+            $offer .= '</div><small class="offer-end">Gültig bis ' . e(rs_date_de($until, true)) . '</small>';
+        }
+        $offer .= '</div>';
+    }
+    $html = rs_block($html, 'lp_offer', $offer);
+
+    /* Pakete als Karten */
+    $cards = '';
+    foreach ($S['plans'] as $i => $p) {
+        $feat = [];
+        foreach ($S['plan_rows'] as $r) {
+            $v = trim((string)($r['v'][$i] ?? ''));
+            if (in_array($v, ['', '—', '-', '–', 'nein', 'Nein'], true)) continue;
+            if (in_array($v, ['✓', '✔', 'x', 'X', 'ja', 'Ja'], true)) $feat[] = $r['l'];
+            elseif (preg_match('/^(\d+|bis zu \d+)$/iu', $v)) $feat[] = $v . ' ' . $r['l'];
+            else $feat[] = $r['l'] . ': ' . $v;
+            if (count($feat) >= 7) break;
+        }
+        $cards .= '<article class="pcard' . ($i === 1 ? ' hl' : '') . ' reveal' . ($i ? ' d' . $i : '') . '"><span class="tier">' . e($p['tier']) . '</span><h3>' . e($p['name']) . '</h3>'
+                . (trim($p['price'] ?? '') !== '' ? '<span class="pprice">' . e($p['price']) . '</span>' : '')
+                . '<ul>' . implode('', array_map(fn($f) => '<li>' . $check . e($f) . '</li>', $feat)) . '</ul>'
+                . '<a class="btn ' . ($i === 1 ? 'btn-primary' : 'btn-ghost') . '" href="#kontakt" data-paket="' . e($p['name']) . '" data-track="plan-' . ($i + 1) . '">' . e($p['name']) . ' anfragen</a></article>';
+    }
+    $html = (string)preg_replace('~<div class="pcards">.*?</div>\s*</div>\s*</section>~s', '<div class="pcards">' . str_replace(['\\', '$'], ['\\\\', '\$'], $cards) . '</div></div></section>', $html, 1);
+    $html = str_replace('Preise individuell – wir melden uns innerhalb kurzer Zeit.', e($S['plans_note']), $html);
+
+    /* Stimmen */
+    $qs = array_slice(array_values(array_filter($S['quotes'], fn($q) => !empty($q['on']))), 0, max(1, (int)$A['quotes_n']));
+    $qh = '';
+    foreach ($qs as $i => $q) {
+        $who = trim($q['n'] . ($q['c'] !== '' ? ', ' . $q['c'] : ''), ', ');
+        $qh .= '<figure class="quote' . (!empty($q['blue']) ? ' blue' : '') . ' reveal' . ($i % 3 ? ' d' . ($i % 3) : '') . '"><span class="qm">“</span><blockquote>' . e($q['t']) . '</blockquote><figcaption>— ' . e($who)
+             . (trim($q['note'] ?? '') !== '' ? '<small>' . e($q['note']) . '</small>' : '') . '</figcaption></figure>';
+    }
+    $html = (string)preg_replace('~<div class="lp-quotes">.*?</div>\s*</div>\s*</section>~s', '<div class="lp-quotes">' . str_replace(['\\', '$'], ['\\\\', '\$'], $qh) . '</div></div></section>', $html, 1);
+
+    /* FAQ */
+    $faq = '';
+    foreach ($A['faq'] as $f) if (trim($f['q'] ?? '') !== '') $faq .= '<details class="reveal"><summary>' . e($f['q']) . '</summary><p>' . rs_fmt((string)$f['a']) . '</p></details>';
+    $html = (string)preg_replace('~<div class="faq">.*?</div>\s*</div>\s*</section>~s', '<div class="faq">' . str_replace(['\\', '$'], ['\\\\', '\$'], $faq) . '</div></div></section>', $html, 1);
+    if ($faq === '') $A['show']['faq'] = false;
+
+    /* Abschnitte ein-/ausblenden */
+    foreach (['results', 'steps', 'ig', 'plans', 'quotes', 'faq'] as $k) {
+        if (empty($A['show'][$k])) $html = rs_block($html, 'lp_' . $k, '');
+    }
+    return $html;
 }

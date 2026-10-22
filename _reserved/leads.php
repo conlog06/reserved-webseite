@@ -82,6 +82,7 @@ function rs_lead_create(array $in): array {
         'rec' => $rec, 'why' => $why, 'score' => $score,
         'src' => rs_cut((string)preg_replace('/[^\w.\-: \/]/u', '', (string)($in['src'] ?? '')), 60) ?: 'direkt',
         'device' => ['m' => 'Handy', 't' => 'Tablet', 'd' => 'Computer'][rs_stats_device($ua)] . ' · ' . rs_stats_os($ua),
+        'page' => ($in['page'] ?? '') === 'angebot' ? 'angebot' : 'start',
     ];
     rs_locked('leads', function () use ($lead) { $l = rs_leads(); $l[] = $lead; rs_save_leads($l); });
     rs_stats_lead();
@@ -118,10 +119,10 @@ function rs_lead_mails(array $lead): void {
     $text  = "Neue Anfrage über die Webseite\n==============================\n\n";
     $text .= "Priorität:       $temp ({$lead['score']}/100)\n";
     $text .= "Empfehlung:      {$lead['rec']}\n";
-    $text .= "Gekommen über:   {$lead['src']} ({$lead['device']})\n\n";
+    $text .= "Gekommen über:   {$lead['src']} ({$lead['device']})" . (($lead['page'] ?? '') === 'angebot' ? ' – über die Landingpage /angebot' : '') . "\n\n";
     $text .= rs_lead_summary($lead);
     $text .= "\nIm Admin-Bereich ansehen: " . rs_abs_url('admin/?tab=anfragen&id=' . $lead['id']) . "\n";
-    rs_mail($c['site']['email'], "Neue Anfrage: $who – $temp, Empfehlung {$lead['rec']}", $text, $d['email'], $d['name']);
+    rs_mail($c['site']['email'], "Neue Anfrage" . (($lead['page'] ?? '') === 'angebot' ? ' (Landingpage)' : '') . ": $who – $temp, Empfehlung {$lead['rec']}", $text, $d['email'], $d['name']);
 
     if (!empty($c['leads']['autoreply'])) {
         $first = explode(' ', $d['name'])[0];

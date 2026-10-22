@@ -82,7 +82,42 @@ function rs_locked(string $lock, callable $fn) {
 function rs_defaults(): array {
     $Y = '✓'; $N = '—';
     return [
-        'mode' => 'live',                         // live | maintenance
+        'mode' => 'live',                         // live | prelaunch | maintenance
+        'launch_at' => '',                        // "2026-11-15T18:00" (deutsche Zeit)
+        'auto_launch' => true,                    // zum Zeitpunkt automatisch online gehen
+        'launch_mailed' => false,                 // Anmeldungen wurden beim Launch benachrichtigt
+        'prelaunch' => [
+            'kicker' => 'Bald online',
+            'title' => 'Etwas Neues',
+            'script' => 'kommt bald.',
+            'text' => 'Die neue Webseite von Reserved. startet in Kürze. Trag dich ein und erfahre als Erstes, wenn es losgeht.',
+            'signup' => true,
+            'notify_mail' => true,
+        ],
+        'angebot' => [
+            'on' => true,
+            'kicker' => 'Social Media für lokale Unternehmen',
+            'title' => 'Mehr Kund:innen über Instagram & TikTok.',
+            'script' => 'Ohne Aufwand für dich.',
+            'lead' => 'Wir drehen bei dir vor Ort, schneiden, planen und liefern jeden Monat Content, der nach dir aussieht – nicht nach Werbung.',
+            'cta' => 'Kostenloses Erstgespräch sichern',
+            'offer_on' => false,
+            'offer_badge' => 'Aktion',
+            'offer_title' => '',
+            'offer_text' => '',
+            'offer_until' => '',                  // "2026-11-30T23:59" → Countdown
+            'bullets' => ['Drehs vor Ort in Osnabrück & Umgebung', 'Videos, Fotos & Stories – jeden Monat', 'Eine Korrekturschleife pro Post', 'Kostenloses Erstgespräch'],
+            'show' => ['results' => true, 'steps' => true, 'ig' => true, 'plans' => true, 'quotes' => true, 'faq' => true],
+            'quotes_n' => 3,
+            'faq' => [
+                ['q' => 'Muss ich etwas vorbereiten?', 'a' => 'Nein. Wir planen jeden Monat Formate, Ideen und aktuelle Trends und stimmen den Dreh vorher kurz mit dir ab.'],
+                ['q' => 'Wie oft kommt ihr zum Drehen vorbei?', 'a' => 'Je nach Paket ein- bis zweimal im Monat – direkt bei dir vor Ort.'],
+                ['q' => 'Postet ihr auch für mich?', 'a' => 'Im Premium-Paket übernehmen wir das Posten auf Instagram & TikTok und das Community Management. In Starter und Standard bekommst du den fertigen Content inklusive Captions & Hashtags.'],
+                ['q' => 'Was ist, wenn mir ein Video nicht gefällt?', 'a' => 'Zu jedem Post gibt es eine Korrekturschleife.'],
+                ['q' => 'Kommt ihr auch außerhalb von Osnabrück?', 'a' => 'Ja. Ab 15 km berechnen wir eine kleine Anfahrtspauschale.'],
+                ['q' => 'Kann ich erst mal testen?', 'a' => 'Ja – mit einem einzelnen Video ohne laufende Betreuung.'],
+            ],
+        ],
         'maintenance_text' => 'Wir arbeiten gerade an der Webseite. Schreib uns in der Zwischenzeit gern per Instagram oder E-Mail.',
         'admin_hash' => '',
         'secret' => '',
@@ -269,6 +304,86 @@ function rs_ago(int $ts): string {
     if ($d < 172800) return 'gestern';
     if ($d < 86400 * 30) return 'vor ' . (int)floor($d / 86400) . ' Tagen';
     return date('d.m.Y', $ts);
+}
+
+/* ---------- Vor-Launch: Zeitpunkt, Zugänge, Anmeldungen ---------- */
+const RS_COOKIE = 'reserved_zugang';
+function rs_ts(?string $local): ?int {
+    if (!$local) return null;
+    $d = DateTime::createFromFormat('Y-m-d\TH:i', $local, new DateTimeZone('Europe/Berlin'));
+    return $d ? $d->getTimestamp() : null;
+}
+/** Tatsächlich gültiger Modus (Vor-Launch wird zum Zeitpunkt automatisch online) */
+function rs_effective_mode(array $c): string {
+    if ($c['mode'] === 'prelaunch' && $c['auto_launch']) {
+        $t = rs_ts($c['launch_at']);
+        if ($t !== null && time() >= $t) return 'live';
+    }
+    return $c['mode'];
+}
+function rs_codes(): array { return rs_read('codes', []); }
+function rs_save_codes(array $codes): void { rs_write('codes', array_values($codes)); }
+function rs_new_code(): string {
+    $a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; $s = '';
+    for ($i = 0; $i < 8; $i++) $s .= $a[random_int(0, strlen($a) - 1)];
+    return substr($s, 0, 4) . '-' . substr($s, 4);
+}
+function rs_norm_code(string $c): string { return strtoupper((string)preg_replace('/[^A-Za-z0-9]/', '', $c)); }
+function rs_code_valid(array $code): bool {
+    if (empty($code['active'])) return false;
+    if (!empty($code['expires'])) { $t = rs_ts($code['expires']); if ($t !== null && time() > $t) return false; }
+    return true;
+}
+function rs_find_code(string $input): ?array {
+    $n = rs_norm_code($input);
+    if ($n === '') return null;
+    foreach (rs_codes() as $code) if (hash_equals(rs_norm_code($code['code']), $n)) return $code;
+    return null;
+}
+function rs_touch_code(string $id): void {
+    rs_locked('codes', function () use ($id) {
+        $codes = rs_codes();
+        foreach ($codes as &$code) if ($code['id'] === $id) { $code['last_used'] = time(); $code['uses'] = ($code['uses'] ?? 0) + 1; }
+        unset($code); rs_save_codes($codes);
+    });
+}
+function rs_sign(string $v): string { return hash_hmac('sha256', $v, rs_secret()); }
+function rs_grant_cookie(string $who, int $days = 30): void {
+    $exp = time() + $days * 86400; $val = $who . '|' . $exp;
+    setcookie(RS_COOKIE, base64_encode($val . '|' . rs_sign($val)), ['expires' => $exp, 'path' => rs_base() ?: '/', 'secure' => rs_https(), 'httponly' => true, 'samesite' => 'Lax']);
+}
+function rs_clear_cookie(): void {
+    setcookie(RS_COOKIE, '', ['expires' => time() - 3600, 'path' => rs_base() ?: '/', 'secure' => rs_https(), 'httponly' => true, 'samesite' => 'Lax']);
+}
+/** "code:<id>" oder null */
+function rs_cookie_who(): ?string {
+    $raw = $_COOKIE[RS_COOKIE] ?? '';
+    if ($raw === '' || ($dec = base64_decode($raw, true)) === false) return null;
+    $parts = explode('|', $dec);
+    if (count($parts) !== 3) return null;
+    [$who, $exp, $sig] = $parts;
+    if (!hash_equals(rs_sign($who . '|' . $exp), $sig) || time() > (int)$exp) return null;
+    if (strpos($who, 'code:') === 0) foreach (rs_codes() as $code) if ('code:' . $code['id'] === $who && rs_code_valid($code)) return $who;
+    return null;
+}
+function rs_signups(): array { return rs_read('signups', []); }
+
+/** Beim (automatischen) Launch alle Anmeldungen einmalig benachrichtigen */
+function rs_launch_notify(): int {
+    return (int)rs_locked('launch', function () {
+        $c = rs_config();
+        if (!empty($c['launch_mailed']) || empty($c['prelaunch']['notify_mail'])) return 0;
+        $c['launch_mailed'] = true; rs_save_config($c);
+        $n = 0; $url = rs_abs_url('');
+        foreach (rs_signups() as $s) {
+            $text = "Hallo!\n\nDu wolltest Bescheid wissen, sobald es losgeht – jetzt ist es so weit: Die neue Webseite von Reserved. ist online.\n\n$url\n\n"
+                  . "Social Media für lokale Unternehmen – wir freuen uns auf dich!\n\nVictoria\nReserved.\n\n"
+                  . "(Du bekommst diese E-Mail einmalig, weil du dich auf der Vor-Launch-Seite eingetragen hast. Deine Adresse wird danach gelöscht.)";
+            if (rs_mail((string)$s['email'], 'Reserved. ist online', $text, (string)$c['site']['email'], 'Reserved.')) $n++;
+        }
+        rs_write('signups', []); // Datensparsam: nach dem Versand löschen
+        return $n;
+    });
 }
 
 require_once __DIR__ . '/stats.php';

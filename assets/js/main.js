@@ -28,22 +28,26 @@
 
   const burger = $('#burger');
   let lockY = 0;
+  const FX = () => window.RsFX || null;
   const lock = (on) => {
+    if (FX()?.lenis) { FX().lock(on); root.classList.toggle('dlg-open', on); return; }
     if (on) { lockY = scrollY; document.body.style.cssText = `position:fixed;top:-${lockY}px;left:0;right:0`; }
     else { document.body.style.cssText = ''; scrollTo(0, lockY); }
   };
+  const goTo = (sel) => { const el = typeof sel === 'string' ? $(sel) : sel; if (!el) return; FX() ? FX().scrollTo(el) : el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); };
   const toggleMenu = (open) => {
     if (open === document.body.classList.contains('menu-open')) return;
     document.body.classList.toggle('menu-open', open);
     burger.setAttribute('aria-expanded', open);
     burger.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
     lock(open);
+    FX()?.menu?.(open);
   };
-  burger.addEventListener('click', () => toggleMenu(!document.body.classList.contains('menu-open')));
+  if (burger) burger.addEventListener('click', () => toggleMenu(!document.body.classList.contains('menu-open')));
   $$('#mobile-menu a').forEach(a => a.addEventListener('click', (e) => {
     const target = a.getAttribute('href');
     toggleMenu(false);
-    if (target && target.startsWith('#')) { e.preventDefault(); requestAnimationFrame(() => $(target)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' })); }
+    if (target && target.startsWith('#')) { e.preventDefault(); setTimeout(() => goTo(target), 60); }
   }));
   addEventListener('keydown', e => { if (e.key === 'Escape') toggleMenu(false); });
   matchMedia('(min-width: 1021px)').addEventListener?.('change', ev => { if (ev.matches) toggleMenu(false); });
@@ -52,7 +56,7 @@
   const io = new IntersectionObserver(entries => {
     entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
   }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
-  $$('.reveal').forEach(el => io.observe(el));
+  if (!root.classList.contains('fx')) $$('.reveal').forEach(el => io.observe(el));
 
   /* ---------- Handy-Mockup: Story-Slider ---------- */
   const slides = $$('#igSlides img');
@@ -109,7 +113,7 @@
     $('#igBoxLink').href = p.permalink || `https://www.instagram.com/${ig.profile?.username || 'reserved.social'}/`;
     $('#igPostPrev').disabled = i === 0;
     $('#igPostNext').disabled = i >= ig.posts.length - 1;
-    if (!box.open) { box.showModal(); root.classList.add('dlg-open'); }
+    if (!box.open) { box.showModal(); root.classList.add('dlg-open'); FX()?.lock(true); }
   };
   if (box) {
     const trk = $('#igTrack');
@@ -140,10 +144,11 @@
     $$('#wall .quote').forEach(q => {
       const hide = f !== 'all' && q.dataset.client !== f;
       q.classList.toggle('hide', hide);
-      if (!hide) q.classList.add('in');
+      if (!hide) { q.classList.add('in'); q.style.opacity = ''; q.style.visibility = ''; q.style.transform = ''; }
     });
+    FX()?.refresh();
   }));
-  $('#moreBtn')?.addEventListener('click', () => wall.classList.add('expanded'));
+  $('#moreBtn')?.addEventListener('click', () => { wall.classList.add('expanded'); $$('#wall .quote').forEach(q => { q.classList.add('in'); q.style.opacity = ''; q.style.visibility = ''; }); FX()?.refresh(); });
 
   /* ---------- Pakete: Umschalter (Handy) ---------- */
   const plans = $('#plans');
@@ -154,7 +159,7 @@
 
   /* ---------- Smarte Anfrage ---------- */
   const form = $('#leadForm');
-  const stepsEl = $$('.lf-step', form);
+  const stepsEl = form ? $$('.lf-step', form) : [];
   const labels = ['Dein Unternehmen', 'Deine Ziele', 'Deine Kontaktdaten'];
   let step = 1, started = 0;
   const val = (n) => form.elements[n]?.value?.trim?.() ?? '';
@@ -187,7 +192,7 @@
     if (n >= 2) track('form-step' + n);
     if (focus) {
       const r = form.getBoundingClientRect();
-      if (r.top < 60 || r.top > innerHeight * .4) form.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      if (r.top < 60 || r.top > innerHeight * .4) goTo(form);
     }
   };
   const showErr = (msg) => { const el = $('#lfError'); el.textContent = msg; el.hidden = !msg; };
@@ -226,7 +231,7 @@
         name: val('name'), email: val('email'), telefon: val('telefon'), firma: val('firma'), ort: val('ort'), insta: val('insta'),
         nachricht: val('nachricht'), branche: radio('branche'), branche_text: val('branche_text'), stand: radio('stand'),
         umfang: radio('umfang'), start: radio('start'), kontakt: radio('kontakt'), ziele: checks('ziele'), paket: val('paket'),
-        consent: 1, website: val('website'), t: started ? Date.now() - started : 0, src: source()
+        consent: 1, website: val('website'), t: started ? Date.now() - started : 0, src: source(), page: val('page') || 'start'
       };
       const [rec, why] = recommend();
       const btn = $('#lfSubmit');
@@ -287,20 +292,33 @@
       $$('a', mbar).forEach(a => a.tabIndex = on ? 0 : -1);
     };
     document.body.classList.add('has-mbar');
-    new IntersectionObserver(([en]) => { pastHero = !en.isIntersecting && en.boundingClientRect.top < 0; upd(); }).observe($('.hero'));
+    new IntersectionObserver(([en]) => { pastHero = !en.isIntersecting && en.boundingClientRect.top < 0; upd(); }).observe($('[data-sec="hero"]'));
     new IntersectionObserver(([en]) => { atContact = en.isIntersecting; upd(); }, { rootMargin: '0px 0px -20% 0px' }).observe($('#kontakt'));
     new IntersectionObserver(([en]) => { if (en.isIntersecting) { atContact = true; upd(); } }).observe($('.footer'));
   }
 
   /* ---------- Impressum / Datenschutz ---------- */
-  $$('[data-open]').forEach(b => b.addEventListener('click', () => { $('#' + b.dataset.open).showModal(); root.classList.add('dlg-open'); }));
+  $$('[data-open]').forEach(b => b.addEventListener('click', () => { $('#' + b.dataset.open).showModal(); root.classList.add('dlg-open'); FX()?.lock(true); }));
   $$('dialog').forEach(d => {
     d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
-    d.addEventListener('close', () => { if (!$$('dialog[open]').length) root.classList.remove('dlg-open'); });
+    d.addEventListener('close', () => { if (!$$('dialog[open]').length) { root.classList.remove('dlg-open'); FX()?.lock(false); } });
   });
   if (['#impressum', '#datenschutz'].includes(location.hash)) { $(location.hash).showModal(); root.classList.add('dlg-open'); }
 
   const y = $('#year'); if (y) y.textContent = new Date().getFullYear();
+
+  /* ---------- Landingpage: Countdown der Aktion ---------- */
+  const oc = $('[data-until]');
+  if (oc) {
+    const end = +oc.dataset.until;
+    const pad = (n) => String(n).padStart(2, '0');
+    const tick = () => {
+      const t = Math.max(0, Math.floor((end - Date.now()) / 1000));
+      ['d', 'h', 'm', 's'].forEach((k, i) => { const el = $(`[data-u="${k}"]`, oc); if (el) el.textContent = pad([Math.floor(t / 86400), Math.floor(t % 86400 / 3600), Math.floor(t % 3600 / 60), t % 60][i]); });
+      if (t > 0) setTimeout(tick, 1000 - (Date.now() % 1000)); else oc.closest('.offer')?.classList.add('ended');
+    };
+    tick();
+  }
 
   /* ---------- Statistik ohne Cookies (nur mit Server) ---------- */
   function track(id) { if (T) T.c.add(id); }

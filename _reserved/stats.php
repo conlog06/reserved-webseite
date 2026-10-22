@@ -14,7 +14,7 @@ declare(strict_types=1);
 const RS_STATS_KEEP_MONTHS = 14;
 
 function rs_stats_pages(): array {
-    return ['index.html' => 'Startseite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
+    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
 }
 /** Abschnitte der Seite in Reihenfolge (für den "Wie weit wird gescrollt"-Trichter) */
 function rs_stats_sections(): array {

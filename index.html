@@ -53,13 +53,23 @@
   </div>
 </header>
 
-<nav class="mobile-menu" id="mobile-menu" aria-label="Mobile Navigation">
-  <a href="#leistungen">Leistungen</a>
-  <a href="#pakete">Pakete</a>
-  <a href="#feed">Instagram</a>
-  <a href="#feedback">Feedback</a>
-  <a href="#ueber">Über uns</a>
-  <a href="#kontakt" class="btn btn-primary" data-track="cta-nav">Kostenloses Erstgespräch <svg><use href="#i-arrow"/></svg></a>
+<nav class="mobile-menu" id="mobile-menu" aria-label="Mobile Navigation" data-lenis-prevent>
+  <div class="mm-glow" aria-hidden="true"></div>
+  <div class="mm-inner">
+    <span class="mm-kicker">Menü</span>
+    <ul class="mm-links">
+      <li><a href="#leistungen"><span class="mm-i">01</span><span class="mm-t">Leistungen</span></a></li>
+      <li><a href="#pakete"><span class="mm-i">02</span><span class="mm-t">Pakete</span></a></li>
+      <li><a href="#feed"><span class="mm-i">03</span><span class="mm-t">Instagram</span></a></li>
+      <li><a href="#feedback"><span class="mm-i">04</span><span class="mm-t">Feedback</span></a></li>
+      <li><a href="#ueber"><span class="mm-i">05</span><span class="mm-t">Über uns</span></a></li>
+    </ul>
+    <a href="#kontakt" class="btn btn-primary mm-cta" data-track="cta-nav">Kostenloses Erstgespräch <svg><use href="#i-arrow"/></svg></a>
+    <div class="mm-foot">
+      <a href="mailto:reserved.social@web.de" data-cms-href="mailto"><svg><use href="#i-mail"/></svg><span data-cms="email">reserved.social@web.de</span></a>
+      <a href="https://www.instagram.com/reserved.social/" data-cms-href="ig" target="_blank" rel="noopener"><svg><use href="#i-insta"/></svg><span>@<span data-cms-ig="handle">reserved.social</span></span></a>
+    </div>
+  </div>
 </nav>
 
 <main id="top">
@@ -166,7 +176,7 @@
         <span class="num">R.</span>
         <div>
           <h3>Die Lösung: Reserved.</h3>
-          <p>Wir machen lokale Unternehmen und Selbstständige sichtbar. Mit Content, der <b>jeden Monat</b> kommt – geplant, gedreht und geschnitten von uns.</p>
+          <p>Wir machen <span class="rotator" id="rotator" aria-label="lokale Unternehmen"><span class="rot-word">Cafés</span><span class="rot-word">Friseure</span><span class="rot-word">Praxen</span><span class="rot-word">Restaurants</span><span class="rot-word">Handwerker</span><span class="rot-word">Selbstständige</span></span> sichtbar. Mit Content, der <b>jeden Monat</b> kommt – geplant, gedreht und geschnitten von uns.</p>
         </div>
         <a href="#pakete" class="btn btn-dark">Zu den Paketen <svg><use href="#i-arrow"/></svg></a>
       </div>
@@ -428,7 +438,7 @@
   <section class="section about" id="ueber" data-sec="ueber">
     <div class="container about-grid">
       <div class="about-img reveal">
-        <img src="assets/img/post-dm.webp" data-cms-img="about" alt="Victoria von Reserved. am Laptop" loading="lazy" decoding="async" width="864" height="1080">
+        <div class="about-frame"><img src="assets/img/post-dm.webp" data-cms-img="about" alt="Victoria von Reserved. am Laptop" loading="lazy" decoding="async" width="864" height="1080"></div>
         <span class="stamp">Reserved. by @victoria.frz</span>
       </div>
       <div>
@@ -564,7 +574,7 @@
 
 <footer class="footer">
   <div class="container">
-    <div class="footer-big" aria-hidden="true">Reserved<span>.</span></div>
+    <div class="footer-big" id="footerBig" aria-hidden="true">Reserved<span>.</span></div>
     <div class="footer-row">
       <span>Reserved. — Social Media für lokale Unternehmen · © <span id="year">2026</span></span>
       <nav aria-label="Rechtliches">
@@ -594,7 +604,7 @@
     </div>
     <div class="igbox-side">
       <div class="igbox-head"><span class="ig-pic sm" id="igBoxPic"><span>R.</span></span><b id="igBoxUser">reserved.social</b><button type="button" class="igbox-close" data-close aria-label="Schließen"><svg><use href="#i-close"/></svg></button></div>
-      <div class="igbox-cap" id="igBoxCap"></div>
+      <div class="igbox-cap" id="igBoxCap" data-lenis-prevent></div>
       <div class="igbox-foot">
         <div class="igbox-meta" id="igBoxMeta"></div>
         <a class="btn btn-dark" id="igBoxLink" href="#" target="_blank" rel="noopener" data-track="ig-open"><svg><use href="#i-insta"/></svg> Auf Instagram ansehen</a>
@@ -605,7 +615,7 @@
 </dialog>
 
 <dialog id="impressum" class="legal" aria-labelledby="imp-title">
-  <div class="dlg">
+  <div class="dlg" data-lenis-prevent>
     <button type="button" class="dlg-close" data-close aria-label="Schließen"><svg><use href="#i-close"/></svg></button>
     <h2 id="imp-title">Impressum</h2>
     <p class="sub">Angaben gemäß § 5 DDG</p>
@@ -620,7 +630,7 @@
 </dialog>
 
 <dialog id="datenschutz" class="legal" aria-labelledby="ds-title">
-  <div class="dlg">
+  <div class="dlg" data-lenis-prevent>
     <button type="button" class="dlg-close" data-close aria-label="Schließen"><svg><use href="#i-close"/></svg></button>
     <h2 id="ds-title">Datenschutz</h2>
     <p class="sub">Datenschutzerklärung</p>
@@ -630,6 +640,11 @@
   </div>
 </dialog>
 
+<script src="assets/js/vendor/gsap.min.js" defer></script>
+<script src="assets/js/vendor/ScrollTrigger.min.js" defer></script>
+<script src="assets/js/vendor/SplitText.min.js" defer></script>
+<script src="assets/js/vendor/lenis.min.js" defer></script>
+<script src="assets/js/effects.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 </body>
 </html>

@@ -8,5 +8,6 @@ if ($path === '/admin') { header('Location: /admin/'); return true; }
 if (preg_match('#^/admin/(index\.php)?$#', $path)) { $_SERVER['SCRIPT_NAME'] = '/admin/index.php'; require $root . '/admin/index.php'; return true; }
 if ($path === '/_reserved/api.php') { $_SERVER['SCRIPT_NAME'] = '/_reserved/api.php'; require $root . '/_reserved/api.php'; return true; }
 if (preg_match('#^/_reserved/#', $path)) { http_response_code(403); echo 'Gesperrt'; return true; }
-if ($path === '/' || $path === '/index.html') { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
+if ($path === '/angebot') { header('Location: /angebot/'); return true; }
+if ($path === '/' || $path === '/index.html' || $path === '/angebot/' || $path === '/angebot/index.html') { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
 return false;

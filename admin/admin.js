@@ -27,6 +27,18 @@
     f.addEventListener('submit', () => { dirty = false; });
   });
   addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  // Links kopieren
+  const copy = (b, t) => {
+    const done = () => { const o = b.textContent; b.textContent = 'Kopiert ✓'; setTimeout(() => { b.textContent = o; }, 1600); };
+    navigator.clipboard ? navigator.clipboard.writeText(t).then(done, () => prompt('Link kopieren:', t)) : prompt('Link kopieren:', t);
+  };
+  document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => copy(b, b.dataset.copy)));
+  const uc = document.getElementById('utmCopy');
+  if (uc) uc.addEventListener('click', () => {
+    const base = uc.closest('.utm').dataset.base;
+    const camp = (document.getElementById('utmCamp').value || 'kampagne').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+    copy(uc, base + '?utm_source=kampagne&utm_campaign=' + encodeURIComponent(camp));
+  });
   // Meldungen nach ein paar Sekunden ausblenden
   document.querySelectorAll('.flash[role="status"]').forEach(f => setTimeout(() => { f.style.transition = 'opacity .5s'; f.style.opacity = '0'; setTimeout(() => f.remove(), 500); }, 5000));
 })();

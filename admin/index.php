@@ -14,7 +14,7 @@ header('Referrer-Policy: same-origin');
 rs_session();
 $c = rs_config();
 $self = (string)strtok($_SERVER['REQUEST_URI'] ?? '', '?');
-$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
+$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'seiten' => 'Seiten', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
 $tab = isset($tabs[$_GET['tab'] ?? '']) ? $_GET['tab'] : 'start';
 
 function flash(string $t, string $type = 'ok'): void { $_SESSION['rs_flash'] = [$t, $type]; }
@@ -167,6 +167,75 @@ if ($post) {
             @chmod(rs_root() . '/' . $rel, 0644);
             $S['img_about'] = $rel . '?v=' . time(); rs_save_config($c); flash('Bild aktualisiert.'); back('#ueber');
 
+        /* ----- Seiten: Status, Vor-Launch, Zugänge, Landingpage ----- */
+        case 'status':
+            $m = (string)($_POST['mode'] ?? 'live');
+            $c['mode'] = in_array($m, ['live', 'prelaunch', 'maintenance'], true) ? $m : 'live';
+            $at = trim((string)($_POST['launch_at'] ?? ''));
+            $c['launch_at'] = rs_ts($at) ? $at : '';
+            $c['auto_launch'] = !empty($_POST['auto_launch']);
+            $c['prelaunch']['notify_mail'] = !empty($_POST['notify_mail']);
+            $c['maintenance_text'] = $str('maintenance_text', 400);
+            if ($c['mode'] === 'prelaunch') $c['launch_mailed'] = false;
+            rs_save_config($c);
+            flash($c['mode'] === 'prelaunch' && $c['launch_at'] === '' ? 'Gespeichert. Tipp: Ohne Startzeitpunkt zeigt die Vor-Launch-Seite keinen Countdown.' : 'Status gespeichert.', $c['mode'] === 'prelaunch' && $c['launch_at'] === '' ? 'warn' : 'ok');
+            back('#status');
+        case 'launch_now':
+            $wasPre = $c['mode'] === 'prelaunch';
+            $c['mode'] = 'live'; rs_save_config($c);
+            $n = $wasPre ? rs_launch_notify() : 0;
+            flash('Die Seite ist jetzt für alle online.' . ($n ? " $n Benachrichtigung(en) verschickt." : '')); back();
+        case 'prelaunch_texts':
+            foreach (['kicker' => 60, 'title' => 80, 'script' => 60, 'text' => 500] as $k => $max) $c['prelaunch'][$k] = $str('pl_' . $k, $max) ?: $c['prelaunch'][$k];
+            $c['prelaunch']['signup'] = !empty($_POST['pl_signup']);
+            rs_save_config($c); flash('Texte der Vor-Launch-Seite gespeichert.'); back('#vorlaunch');
+        case 'add_code':
+            $name = $str('name', 80);
+            if ($name === '') { flash('Bitte einen Namen für den Zugang angeben.', 'error'); back('#zugaenge'); }
+            $exp = trim((string)($_POST['expires'] ?? ''));
+            rs_locked('codes', function () use ($name, $exp) {
+                $codes = rs_codes();
+                $codes[] = ['id' => bin2hex(random_bytes(6)), 'name' => $name, 'code' => rs_new_code(), 'created' => time(),
+                            'expires' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $exp) ? $exp . 'T23:59' : '', 'active' => true, 'uses' => 0, 'last_used' => 0];
+                rs_save_codes($codes);
+            });
+            flash('Zugang für „' . $name . '“ angelegt – Link kopieren und weitergeben.'); back('#zugaenge');
+        case 'toggle_code':
+        case 'delete_code':
+            $id = (string)($_POST['id'] ?? '');
+            rs_locked('codes', function () use ($action, $id) {
+                $codes = rs_codes();
+                if ($action === 'delete_code') $codes = array_filter($codes, fn($x) => $x['id'] !== $id);
+                else foreach ($codes as &$x) if ($x['id'] === $id) $x['active'] = empty($x['active']);
+                unset($x); rs_save_codes($codes);
+            });
+            flash($action === 'delete_code' ? 'Zugang gelöscht.' : 'Zugang aktualisiert.'); back('#zugaenge');
+        case 'signup_delete':
+            $em = (string)($_POST['email'] ?? '');
+            rs_locked('signups', function () use ($em) { rs_write('signups', array_values(array_filter(rs_signups(), fn($x) => $x['email'] !== $em))); });
+            flash('Eintrag gelöscht.'); back('#anmeldungen');
+        case 'signup_export':
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="reserved-anmeldungen-' . date('Y-m-d') . '.csv"');
+            echo "\xEF\xBB\xBFE-Mail;Datum\n";
+            foreach (rs_signups() as $x) echo '"' . str_replace('"', '""', $x['email']) . '";' . date('d.m.Y H:i', (int)$x['ts']) . "\n";
+            exit;
+        case 'angebot':
+            $A = &$c['angebot'];
+            $A['on'] = !empty($_POST['lp_on']);
+            foreach (['kicker' => 90, 'title' => 120, 'script' => 60, 'lead' => 400, 'cta' => 50, 'offer_badge' => 24, 'offer_title' => 90, 'offer_text' => 300] as $k => $max) $A[$k] = $str('lp_' . $k, $max);
+            $A['offer_on'] = !empty($_POST['lp_offer_on']);
+            $u = trim((string)($_POST['lp_offer_until'] ?? '')); $A['offer_until'] = rs_ts($u) ? $u : '';
+            $A['bullets'] = array_values(array_filter(array_map(fn($b) => rs_cut((string)$b, 90), (array)($_POST['lp_bullets'] ?? [])), fn($b) => $b !== ''));
+            foreach (['results', 'steps', 'ig', 'plans', 'quotes', 'faq'] as $k) $A['show'][$k] = !empty($_POST['lp_show'][$k]);
+            $A['quotes_n'] = max(1, min(9, (int)($_POST['lp_quotes_n'] ?? 3)));
+            $A['faq'] = [];
+            foreach ($list('faq') as $f) if (trim((string)($f['q'] ?? '')) !== '') $A['faq'][] = ['q' => rs_cut((string)$f['q'], 160), 'a' => rs_cut((string)($f['a'] ?? ''), 1200)];
+            unset($A);
+            if ($c['angebot']['offer_on'] && $c['angebot']['offer_title'] === '') flash('Gespeichert – für die Aktion bitte noch einen Titel eintragen, sonst wird sie nicht angezeigt.', 'warn');
+            else flash('Landingpage gespeichert – sofort sichtbar.');
+            rs_save_config($c); back('#landingpage');
+
         /* ----- Instagram ----- */
         case 'ig_save':
             $tok = trim((string)($_POST['token'] ?? ''));
@@ -199,8 +268,6 @@ if ($post) {
             $from = trim((string)($_POST['mail_from'] ?? ''));
             $S['mail_from'] = $from === '' || filter_var($from, FILTER_VALIDATE_EMAIL) ? $from : $S['mail_from'];
             $S['instagram'] = ltrim(rs_cut((string)($_POST['instagram'] ?? ''), 60), '@') ?: $S['instagram'];
-            $c['mode'] = ($_POST['mode'] ?? '') === 'maintenance' ? 'maintenance' : 'live';
-            $c['maintenance_text'] = $str('maintenance_text', 400);
             foreach (['imp_name' => 80, 'imp_business' => 120, 'imp_address' => 300, 'imp_ustid' => 30, 'datenschutz' => 20000] as $k => $max) $S[$k] = $str($k, $max);
             rs_save_config($c); flash('Einstellungen gespeichert.'); back();
         case 'stats':
@@ -295,7 +362,8 @@ head('Admin – Reserved.', true);
 </header>
 <main class="wrap">
 <?php if ($flash): ?><p class="flash <?= e($flash[1]) ?>" role="status"><?= e($flash[0]) ?></p><?php endif; ?>
-<?php if ($c['mode'] === 'maintenance'): ?><p class="flash warn">Wartungsmodus ist an – Besucher sehen gerade nur die Wartungsseite. <a href="?tab=einstellungen">Ändern</a></p><?php endif; ?>
+<?php $effMode = rs_effective_mode($c); if ($effMode === 'maintenance'): ?><p class="flash warn">Wartungsmodus ist an – Besucher sehen gerade nur die Wartungsseite. <a href="?tab=seiten">Ändern</a></p>
+<?php elseif ($effMode === 'prelaunch'): ?><p class="flash warn">Vor-Launch aktiv – Besucher sehen die Countdown-Seite<?= rs_ts($c['launch_at']) ? ' bis ' . e(rs_date_de((int)rs_ts($c['launch_at']))) : '' ?>. <a href="?tab=seiten">Ändern</a></p><?php endif; ?>
 
 <?php /* ======================= ÜBERSICHT ======================= */ if ($tab === 'start'):
   $maxDay = max(1, ...array_map(fn($d) => $d['u'], $st['days']));
@@ -376,6 +444,7 @@ head('Admin – Reserved.', true);
         <dt>Umfang</dt><dd><?= e($o['umfang'][$d['umfang']] ?? '–') ?></dd>
         <dt>Start</dt><dd><?= e($o['start'][$d['start']] ?? '–') ?></dd>
         <?php if ($d['paket']): ?><dt>Paket geklickt</dt><dd><?= e($d['paket']) ?></dd><?php endif; ?>
+        <dt>Seite</dt><dd><?= ($one['page'] ?? '') === 'angebot' ? '<span class="chip-s">Landingpage /angebot</span>' : 'Startseite' ?></dd>
       </dl>
       <?php if ($d['nachricht']): ?><h3>Nachricht</h3><p class="msg"><?= nl2br(e($d['nachricht'])) ?></p><?php endif; ?>
     </section>
@@ -443,7 +512,8 @@ head('Admin – Reserved.', true);
   </div>
   <div class="grid g-3">
     <section class="card"><h2>Herkunft</h2><div class="bars"><?= bars($st['r'], 0, 10, fn($k) => $k === 'direkt' ? 'Direkt / Lesezeichen' : $k) ?></div>
-      <?php if ($st['cp']): ?><h3 class="mt">Kampagnen <small>(utm_campaign)</small></h3><div class="bars"><?= bars($st['cp'], 0, 6) ?></div><?php endif; ?></section>
+      <?php if ($st['cp']): ?><h3 class="mt">Kampagnen <small>(utm_campaign)</small></h3><div class="bars"><?= bars($st['cp'], 0, 6) ?></div><?php endif; ?>
+      <h3 class="mt">Seiten</h3><div class="bars"><?= bars($st['p'], 0, 6, fn($k) => rs_stats_pages()[$k] ?? $k) ?></div></section>
     <section class="card"><h2>Klicks</h2><div class="bars"><?= bars($st['c'], max(1, $st['v']), 12, fn($k) => $clicks[$k] ?? $k) ?></div></section>
     <section class="card"><h2>Geräte</h2><div class="bars"><?= bars(array_filter(['Handy' => $st['g']['m'] ?? 0, 'Computer' => $st['g']['d'] ?? 0, 'Tablet' => $st['g']['t'] ?? 0])) ?></div>
       <h3 class="mt">Systeme</h3><div class="bars"><?= bars($st['os'], 0, 6) ?></div>
@@ -582,17 +652,124 @@ head('Admin – Reserved.', true);
   </div>
   <?php if (!empty($igData['posts'])): ?><section class="card"><h2>Aktuell auf der Webseite</h2><div class="topposts"><?php foreach (array_slice($igData['posts'], 0, (int)$ig['count']) as $p): ?><a href="<?= e($p['permalink']) ?>" target="_blank" rel="noopener"><img src="<?= e(rs_url($p['img'])) ?>" alt=""><span><?= $p['likes'] !== null ? '♥ ' . (int)$p['likes'] . ' · 💬 ' . (int)$p['comments'] : e(date('d.m.Y', $p['ts'])) ?></span></a><?php endforeach; ?></div></section><?php endif; ?>
 
+<?php /* ======================= SEITEN ======================= */ elseif ($tab === 'seiten'):
+  $eff = rs_effective_mode($c); $launchTs = rs_ts($c['launch_at']); $codes = array_reverse(rs_codes()); $signups = array_reverse(rs_signups());
+  $A = $c['angebot']; $P = $c['prelaunch'];
+  $modeNames = ['live' => 'Online', 'prelaunch' => 'Vor-Launch', 'maintenance' => 'Wartung'];
+  $lpUrl = rs_abs_url('angebot/'); $home = rs_abs_url('');
+  $st30 = rs_stats_summary(30); $lpVisits = (int)($st30['p']['angebot/index.html'] ?? 0);
+  $lpLeads = count(array_filter($leads, fn($x) => ($x['page'] ?? '') === 'angebot' && $x['created'] > time() - 30 * 86400));
+?>
+  <div class="page-head"><div><h1>Seiten</h1><p class="sub">Was Besucher sehen: Status, Vor-Launch-Seite und Landingpage.</p></div></div>
+  <nav class="subnav"><a href="#status">Status</a><a href="#vorlaunch">Vor-Launch</a><a href="#zugaenge">Zugänge</a><a href="#anmeldungen">Anmeldungen</a><a href="#landingpage">Landingpage</a></nav>
+
+  <section class="hero-status s-<?= e($eff) ?>" id="status">
+    <div><span class="eyebrow-s">Gerade sichtbar</span><h2 class="big"><?= e($modeNames[$eff]) ?></h2>
+      <p class="sub"><?php if ($eff === 'prelaunch'): ?>Countdown-Seite<?= $launchTs ? ' bis <b>' . e(rs_date_de($launchTs, true)) . '</b>' . ($c['auto_launch'] ? ' – danach geht die Seite automatisch online.' : ' – danach bleibt sie gesperrt, bis du sie freischaltest.') : ' ohne Startzeitpunkt.' ?>
+      <?php elseif ($eff === 'maintenance'): ?>Besucher sehen eine Hinweisseite. Du und Personen mit Zugangslink sehen die echte Seite.
+      <?php else: ?>Die Webseite ist für alle erreichbar.<?php endif; ?></p></div>
+    <div class="btnrow">
+      <a class="btn btn-ghost btn-small" href="<?= e(rs_url('?vorschau=launch')) ?>" target="_blank" rel="noopener">Vor-Launch-Seite ansehen ↗</a>
+      <?php if ($eff !== 'live'): ?><form method="post"><?= $hidden('launch_now') ?><button class="btn btn-small" onclick="return confirm('Seite jetzt für alle freischalten?')">Jetzt veröffentlichen</button></form><?php endif; ?>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Status</h2>
+    <form method="post" class="form"><?= $hidden('status') ?>
+      <div class="modes m3">
+        <?php foreach (['live' => ['Online', 'Webseite für alle sichtbar'], 'prelaunch' => ['Vor-Launch', 'Countdown-Seite mit E-Mail-Benachrichtigung'], 'maintenance' => ['Wartung', 'Hinweisseite, z. B. während Umbauten']] as $k => [$t, $d]): ?>
+        <label class="mode"><input type="radio" name="mode" value="<?= $k ?>"<?= $c['mode'] === $k ? ' checked' : '' ?>><span><b><?= $t ?></b><small><?= $d ?></small></span></label><?php endforeach; ?>
+      </div>
+      <div class="cols"><label>Startzeitpunkt <small>(deutsche Zeit, für den Countdown)</small><input type="datetime-local" name="launch_at" value="<?= e($c['launch_at']) ?>"></label>
+        <div class="stack self-end"><label class="check"><input type="checkbox" name="auto_launch" value="1"<?= $c['auto_launch'] ? ' checked' : '' ?>> Zum Startzeitpunkt automatisch online gehen</label>
+          <label class="check"><input type="checkbox" name="notify_mail" value="1"<?= !empty($P['notify_mail']) ? ' checked' : '' ?>> Beim Start alle Anmeldungen per E-Mail benachrichtigen</label></div></div>
+      <label>Text der Wartungsseite<textarea name="maintenance_text" rows="2" maxlength="400"><?= e($c['maintenance_text']) ?></textarea></label>
+      <button class="btn">Status speichern</button>
+    </form>
+  </section>
+
+  <div class="grid g-1-1">
+    <section class="card" id="vorlaunch">
+      <h2>Vor-Launch-Seite</h2>
+      <form method="post" class="form"><?= $hidden('prelaunch_texts') ?>
+        <label>Zeile oben<input name="pl_kicker" value="<?= e($P['kicker']) ?>" maxlength="60"></label>
+        <div class="cols"><label>Überschrift<input name="pl_title" value="<?= e($P['title']) ?>" maxlength="80"></label><label>Schreibschrift<input name="pl_script" value="<?= e($P['script']) ?>" maxlength="60"></label></div>
+        <label>Text<textarea name="pl_text" rows="3" maxlength="500"><?= e($P['text']) ?></textarea></label>
+        <label class="check"><input type="checkbox" name="pl_signup" value="1"<?= !empty($P['signup']) ? ' checked' : '' ?>> E-Mail-Benachrichtigung anbieten</label>
+        <button class="btn btn-small">Texte speichern</button>
+      </form>
+    </section>
+    <section class="card" id="zugaenge">
+      <h2>Zugänge <small class="muted-s">(sehen die echte Seite vor dem Start)</small></h2>
+      <form method="post" class="row-inline"><?= $hidden('add_code') ?>
+        <label class="grow">Name<input name="name" placeholder="z. B. Victoria (Handy)" maxlength="80" required></label>
+        <label>Gültig bis<input type="date" name="expires" min="<?= date('Y-m-d') ?>"></label>
+        <button class="btn btn-small">Anlegen</button></form>
+      <?php if (!$codes): ?><p class="empty">Noch keine Zugänge.</p><?php endif; ?>
+      <ul class="codes"><?php foreach ($codes as $cd): $ok = rs_code_valid($cd); $link = $home . '?zugang=' . $cd['code']; ?>
+        <li class="<?= $ok ? '' : 'off' ?>"><div><b><?= e($cd['name']) ?></b> <span class="tag<?= $ok ? ' on' : '' ?>"><?= $ok ? 'aktiv' : (!empty($cd['active']) ? 'abgelaufen' : 'gesperrt') ?></span>
+          <small><code><?= e($cd['code']) ?></code> · <?= !empty($cd['expires']) ? 'bis ' . e(date('d.m.Y', (int)rs_ts($cd['expires']))) : 'unbegrenzt' ?> · <?= $cd['last_used'] ? 'zuletzt ' . e(rs_ago((int)$cd['last_used'])) . ' (' . (int)$cd['uses'] . '×)' : 'noch nicht genutzt' ?></small></div>
+          <div class="btnrow"><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($link) ?>">Link kopieren</button>
+            <form method="post"><?= $hidden('toggle_code') ?><input type="hidden" name="id" value="<?= e($cd['id']) ?>"><button class="btn btn-ghost btn-small"><?= !empty($cd['active']) ? 'Sperren' : 'Entsperren' ?></button></form>
+            <form method="post" onsubmit="return confirm('Zugang löschen?')"><?= $hidden('delete_code') ?><input type="hidden" name="id" value="<?= e($cd['id']) ?>"><button class="btn btn-small btn-danger">✕</button></form></div></li>
+      <?php endforeach; ?></ul>
+    </section>
+  </div>
+
+  <section class="card" id="anmeldungen">
+    <div class="card-h"><h2>Anmeldungen zur Benachrichtigung <span class="count-s"><?= count($signups) ?></span></h2>
+      <?php if ($signups): ?><form method="post"><?= $hidden('signup_export') ?><button class="btn btn-ghost btn-small">Als CSV laden</button></form><?php endif; ?></div>
+    <p class="hint">Diese Adressen bekommen beim Start eine E-Mail (wenn oben eingeschaltet) und werden danach automatisch gelöscht.</p>
+    <?php if (!$signups): ?><p class="empty">Noch niemand eingetragen.</p><?php else: ?><ul class="signups"><?php foreach ($signups as $x): ?><li><span><?= e($x['email']) ?></span><small><?= e(date('d.m.Y H:i', (int)$x['ts'])) ?></small>
+      <form method="post"><?= $hidden('signup_delete') ?><input type="hidden" name="email" value="<?= e($x['email']) ?>"><button class="x" aria-label="Löschen">✕</button></form></li><?php endforeach; ?></ul><?php endif; ?>
+  </section>
+
+  <section class="card" id="landingpage">
+    <div class="card-h"><h2>Landingpage /angebot</h2><a class="more" href="<?= e(rs_url('angebot/')) ?>" target="_blank" rel="noopener">Ansehen ↗</a></div>
+    <div class="kpis mini3"><div class="kpi"><span>Besucher (30 Tage)</span><b><?= $n($lpVisits) ?></b></div><div class="kpi"><span>Anfragen (30 Tage)</span><b><?= $n($lpLeads) ?></b></div><div class="kpi"><span>Quote</span><b><?= $lpVisits ? $n($lpLeads / $lpVisits * 100, 1) : '0' ?> %</b></div></div>
+    <form method="post" class="form"><?= $hidden('angebot') ?>
+      <label class="check"><input type="checkbox" name="lp_on" value="1"<?= !empty($A['on']) ? ' checked' : '' ?>> Landingpage ist erreichbar <small>(aus = Besucher landen auf der Startseite)</small></label>
+      <fieldset><legend>Oberer Bereich</legend>
+        <label>Zeile oben<input name="lp_kicker" value="<?= e($A['kicker']) ?>" maxlength="90"></label>
+        <div class="cols"><label>Überschrift<input name="lp_title" value="<?= e($A['title']) ?>" maxlength="120"></label><label>Schreibschrift<input name="lp_script" value="<?= e($A['script']) ?>" maxlength="60"></label></div>
+        <label>Text<textarea name="lp_lead" rows="2" maxlength="400"><?= e($A['lead']) ?></textarea></label>
+        <label>Button-Text<input name="lp_cta" value="<?= e($A['cta']) ?>" maxlength="50"></label>
+        <div class="stack"><span class="lbl-s">Vorteile (Häkchen-Liste)</span>
+          <div id="lpBullets" class="stack"><?php foreach (array_pad($A['bullets'], 4, '') as $b): ?><div class="lrow l2"><input name="lp_bullets[]" value="<?= e($b) ?>" maxlength="90"><button type="button" class="x" data-remove aria-label="Löschen">✕</button></div><?php endforeach; ?></div>
+          <template id="tpl-bullet"><div class="lrow l2"><input name="lp_bullets[]" maxlength="90"><button type="button" class="x" data-remove aria-label="Löschen">✕</button></div></template>
+          <button type="button" class="btn btn-ghost btn-small" data-add="tpl-bullet" data-to="lpBullets">+ Vorteil</button></div>
+      </fieldset>
+      <fieldset><legend>Aktion / Angebot <?= !empty($A['offer_on']) && $A['offer_title'] ? '<span class="tag on">sichtbar</span>' : '<span class="tag">aus</span>' ?></legend>
+        <label class="check"><input type="checkbox" name="lp_offer_on" value="1"<?= !empty($A['offer_on']) ? ' checked' : '' ?>> Aktions-Box anzeigen</label>
+        <div class="cols"><label>Etikett<input name="lp_offer_badge" value="<?= e($A['offer_badge']) ?>" maxlength="24" placeholder="z. B. Herbst-Aktion"></label><label>Titel<input name="lp_offer_title" value="<?= e($A['offer_title']) ?>" maxlength="90" placeholder="z. B. Erstes Video zum Kennenlernpreis"></label></div>
+        <label>Text<textarea name="lp_offer_text" rows="2" maxlength="300"><?= e($A['offer_text']) ?></textarea></label>
+        <label>Gültig bis <small>(optional – zeigt einen Countdown, danach verschwindet er)</small><input type="datetime-local" name="lp_offer_until" value="<?= e($A['offer_until']) ?>"></label>
+      </fieldset>
+      <fieldset><legend>Abschnitte</legend>
+        <div class="checks"><?php foreach (['results' => 'Ergebnisse', 'steps' => 'So läuft\'s', 'ig' => 'Instagram', 'plans' => 'Pakete', 'quotes' => 'Kundenstimmen', 'faq' => 'Fragen (FAQ)'] as $k => $t): ?><label class="check"><input type="checkbox" name="lp_show[<?= $k ?>]" value="1"<?= !empty($A['show'][$k]) ? ' checked' : '' ?>> <?= $t ?></label><?php endforeach; ?></div>
+        <label class="inline">Anzahl Kundenstimmen <input type="number" name="lp_quotes_n" min="1" max="9" value="<?= (int)$A['quotes_n'] ?>"></label>
+        <p class="hint">Pakete, Ergebnisse und Stimmen kommen aus „Inhalte“ – einmal pflegen, überall aktuell.</p>
+      </fieldset>
+      <fieldset><legend>Fragen (FAQ)</legend>
+        <div id="lpFaq" class="qlist"><?php foreach ($A['faq'] as $i => $f): ?><div class="qed"><input name="faq[<?= $i ?>][q]" value="<?= e($f['q']) ?>" placeholder="Frage" maxlength="160"><textarea name="faq[<?= $i ?>][a]" rows="2" maxlength="1200" placeholder="Antwort"><?= e($f['a']) ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
+        <template id="tpl-faq"><div class="qed"><input name="faq[__][q]" placeholder="Frage" maxlength="160"><textarea name="faq[__][a]" rows="2" maxlength="1200" placeholder="Antwort"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-faq" data-to="lpFaq">+ Frage</button>
+      </fieldset>
+      <button class="btn">Landingpage speichern</button>
+    </form>
+    <h3 class="mt">Links mit Herkunft</h3>
+    <p class="hint">Je nach Kanal einen eigenen Link verwenden – in der Statistik siehst du dann genau, woher Besucher und Anfragen kommen.</p>
+    <div class="utm" data-base="<?= e($lpUrl) ?>">
+      <?php foreach (['instagram-bio' => 'Instagram-Bio', 'instagram-story' => 'Instagram-Story', 'tiktok' => 'TikTok', 'whatsapp' => 'WhatsApp', 'flyer' => 'Flyer / QR-Code', 'google' => 'Google-Profil'] as $k => $t): $u = $lpUrl . '?utm_source=' . $k; ?>
+      <div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?>
+      <div class="utm-row"><span>Eigene Kampagne</span><input id="utmCamp" placeholder="z. B. herbst-aktion" maxlength="40"><button type="button" class="btn btn-ghost btn-small" id="utmCopy">Kopieren</button></div>
+    </div>
+  </section>
+
 <?php /* ======================= EINSTELLUNGEN ======================= */ else: ?>
   <div class="page-head"><div><h1>Einstellungen</h1></div></div>
   <section class="card">
     <form method="post" class="form"><?= $hidden('settings') ?>
-      <fieldset><legend>Webseite</legend>
-        <div class="modes">
-          <label class="mode"><input type="radio" name="mode" value="live"<?= $c['mode'] === 'live' ? ' checked' : '' ?>><span><b>Online</b><small>Webseite für alle sichtbar</small></span></label>
-          <label class="mode"><input type="radio" name="mode" value="maintenance"<?= $c['mode'] === 'maintenance' ? ' checked' : '' ?>><span><b>Wartung</b><small>Besucher sehen eine Hinweisseite, du siehst die echte Seite</small></span></label>
-        </div>
-        <label>Text der Wartungsseite<textarea name="maintenance_text" rows="2" maxlength="400"><?= e($c['maintenance_text']) ?></textarea></label>
-      </fieldset>
       <fieldset><legend>Kontakt</legend>
         <div class="cols">
           <label>E-Mail <small>(Empfänger der Anfragen)</small><input type="email" name="email" value="<?= e($S['email']) ?>" required></label>
@@ -637,7 +814,7 @@ function lead_row(array $x): string {
     $br = $d['branche'] === 'andere' && $d['branche_text'] ? $d['branche_text'] : ($o['branche'][$d['branche']] ?? '');
     return '<li class="lead' . (empty($x['seen']) && $x['status'] === 'neu' ? ' unread' : '') . '"><a href="?tab=anfragen&id=' . e($x['id']) . '">'
         . '<span class="temp t-' . $tk . '" title="Priorität ' . (int)$x['score'] . '/100">' . $tl . '</span>'
-        . '<span class="lm"><b>' . e($d['firma'] ?: $d['name']) . '</b><small>' . e(trim(($d['firma'] ? $d['name'] . ' · ' : '') . $br . ($d['ort'] ? ' · ' . $d['ort'] : ''), ' ·')) . '</small></span>'
+        . '<span class="lm"><b>' . e($d['firma'] ?: $d['name']) . (($x['page'] ?? '') === 'angebot' ? ' <i class="lp-tag">LP</i>' : '') . '</b><small>' . e(trim(($d['firma'] ? $d['name'] . ' · ' : '') . $br . ($d['ort'] ? ' · ' . $d['ort'] : ''), ' ·')) . '</small></span>'
         . '<span class="lr"><span class="pill-s st-' . e($x['status']) . '">' . e(rs_lead_status()[$x['status']] ?? '') . '</span><span class="rec-s">' . e($x['rec']) . '</span><small>' . e(rs_ago((int)$x['created'])) . '</small></span></a></li>';
 }
 function quote_editor(string $i, array $q): string {
@@ -665,7 +842,7 @@ function spark(array $vals): string {
 function icon(string $k): string {
     $p = ['start' => '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>', 'anfragen' => '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/>',
           'statistik' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', 'inhalte' => '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
-          'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/>', 'einstellungen' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'][$k] ?? '';
+          'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/>', 'seiten' => '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/><path d="m10 13 2 2 4-4"/>', 'einstellungen' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'][$k] ?? '';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
 function render_auth(string $type, ?string $error): void {

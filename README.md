@@ -19,6 +19,16 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - **Instagram:** Zugangsschlüssel eintragen (Anleitung im Admin), Anzahl Beiträge, Jetzt aktualisieren.
 - **Einstellungen:** Online/Wartung, E-Mail-Empfänger & Absender, Test-Mail, Impressum, Datenschutzerklärung (Vorlage oder eigener Text), Statistik an/aus, Passwort.
 
+**Animationen & Scrollen**
+- [GSAP](https://github.com/greensock/gsap) mit ScrollTrigger & SplitText, [Lenis](https://github.com/darkroomengineering/lenis) für weiches Scrollen (am Handy bleibt natives Scrollen).
+- Nachbauten aus [React Bits](https://github.com/DavidHDev/react-bits) als Vanilla-JS: ScrollFloat (Überschriften), ScrollReveal (Text füllt sich), RotatingText, CountUp, ScrollVelocity (Laufband reagiert aufs Scrollen), Magnet, SpotlightCard, ClickSpark, TiltedCard.
+- Nur `transform`/`opacity`, kein Pinning; bei „Bewegung reduzieren“ oder ohne JavaScript läuft die Seite normal ohne Effekte.
+
+**Seiten (im Admin unter „Seiten“)**
+- **Vor-Launch:** Countdown-Seite mit laufender Bildwand, E-Mail-Benachrichtigung, Zugangslinks für Vorschau (z. B. für Victoria), automatischer Start zum Zeitpunkt inkl. Benachrichtigungs-Mail an alle Eingetragenen (danach werden die Adressen gelöscht).
+- **Landingpage `/angebot/`:** fokussierte Werbeseite (ohne Menü) mit Aktion inkl. Countdown, Vorteilen, Ergebnissen, Instagram, Paketkarten, Stimmen, FAQ und Formular. Texte, Aktion, FAQ und Abschnitte im Admin; fertige Links mit Herkunft (Instagram-Bio, Story, Flyer …) für die Statistik.
+- **Wartung:** Hinweisseite (HTTP 503).
+
 ## Einrichtung (einmalig)
 1. Alle Dateien per FTP/SFTP in das Web-Verzeichnis hochladen – **inklusive der versteckten `.htaccess`-Dateien**. PHP auf 8.1 oder neuer stellen.
 2. Schreibrechte für `_reserved/data/`, `assets/ig/` und `assets/img/` (bei IONOS Standard).
