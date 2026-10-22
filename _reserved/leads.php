@@ -18,6 +18,8 @@ function rs_lead_options(): array {
         'umfang' => ['test' => 'Erst mal reinschnuppern', 'content' => 'Content produzieren – posten tun wir selbst', 'all' => 'Alles – inkl. Posten & Community'],
         'start' => ['asap' => 'So schnell wie möglich', 'month' => 'In den nächsten 4 Wochen', 'later' => 'Später / erst mal informieren'],
         'kontakt' => ['mail' => 'E-Mail', 'phone' => 'Telefon', 'whatsapp' => 'WhatsApp', 'instagram' => 'Instagram-DM'],
+        'follower' => ['none' => 'Noch kein Profil', 'u500' => 'Unter 500', 'u2k' => '500 – 2.000', 'u10k' => '2.000 – 10.000', 'o10k' => 'Über 10.000'],
+        'posting' => ['never' => 'Gar nicht', 'rare' => 'Selten', 'weekly' => '1–3× pro Woche', 'daily' => 'Fast täglich'],
     ];
 }
 function rs_lead_status(): array {
@@ -67,6 +69,7 @@ function rs_lead_create(array $in): array {
         'ort' => $str('ort', 80), 'insta' => ltrim($str('insta', 60), '@'), 'nachricht' => $str('nachricht', 4000),
         'branche' => $pick('branche'), 'branche_text' => $str('branche_text', 80), 'stand' => $pick('stand'), 'umfang' => $pick('umfang'),
         'start' => $pick('start'), 'kontakt' => $pick('kontakt') ?: 'mail', 'paket' => $str('paket', 40),
+        'follower' => $pick('follower'), 'posting' => $pick('posting'),
         'ziele' => array_values(array_intersect(array_map('strval', (array)($in['ziele'] ?? [])), array_keys($o['ziele']))),
     ];
     $d['name'] = str_replace("\n", ' ', $d['name']);
@@ -82,7 +85,7 @@ function rs_lead_create(array $in): array {
         'rec' => $rec, 'why' => $why, 'score' => $score,
         'src' => rs_cut((string)preg_replace('/[^\w.\-: \/]/u', '', (string)($in['src'] ?? '')), 60) ?: 'direkt',
         'device' => ['m' => 'Handy', 't' => 'Tablet', 'd' => 'Computer'][rs_stats_device($ua)] . ' · ' . rs_stats_os($ua),
-        'page' => ($in['page'] ?? '') === 'angebot' ? 'angebot' : 'start',
+        'page' => in_array($in['page'] ?? '', ['angebot', 'check'], true) ? $in['page'] : 'start',
     ];
     rs_locked('leads', function () use ($lead) { $l = rs_leads(); $l[] = $lead; rs_save_leads($l); });
     rs_stats_lead();
@@ -105,6 +108,8 @@ function rs_lead_summary(array $lead): string {
     $t .= 'Lieber per:      ' . $lbl('kontakt') . "\n\n";
     $t .= 'Ziele:           ' . ($d['ziele'] ? implode(', ', array_map(fn($z) => $o['ziele'][$z], $d['ziele'])) : '–') . "\n";
     $t .= 'Social Media:    ' . $lbl('stand') . "\n";
+    if (($d['follower'] ?? '') !== '') $t .= 'Follower:        ' . $o['follower'][$d['follower']] . "\n";
+    if (($d['posting'] ?? '') !== '') $t .= 'Postet aktuell:  ' . $o['posting'][$d['posting']] . "\n";
     $t .= 'Umfang:          ' . $lbl('umfang') . "\n";
     $t .= 'Start:           ' . $lbl('start') . "\n";
     if ($d['paket'] !== '') $t .= "Paket gewählt:   {$d['paket']}\n";
@@ -119,10 +124,10 @@ function rs_lead_mails(array $lead): void {
     $text  = "Neue Anfrage über die Webseite\n==============================\n\n";
     $text .= "Priorität:       $temp ({$lead['score']}/100)\n";
     $text .= "Empfehlung:      {$lead['rec']}\n";
-    $text .= "Gekommen über:   {$lead['src']} ({$lead['device']})" . (($lead['page'] ?? '') === 'angebot' ? ' – über die Landingpage /angebot' : '') . "\n\n";
+    $text .= "Gekommen über:   {$lead['src']} ({$lead['device']})" . (['angebot' => ' – über die Landingpage /angebot', 'check' => ' – über den Fit-Check /start'][$lead['page'] ?? ''] ?? '') . "\n\n";
     $text .= rs_lead_summary($lead);
     $text .= "\nIm Admin-Bereich ansehen: " . rs_abs_url('admin/?tab=anfragen&id=' . $lead['id']) . "\n";
-    rs_mail($c['site']['email'], "Neue Anfrage" . (($lead['page'] ?? '') === 'angebot' ? ' (Landingpage)' : '') . ": $who – $temp, Empfehlung {$lead['rec']}", $text, $d['email'], $d['name']);
+    rs_mail($c['site']['email'], "Neue Anfrage" . (['angebot' => ' (Landingpage)', 'check' => ' (Fit-Check)'][$lead['page'] ?? ''] ?? '') . ": $who – $temp, Empfehlung {$lead['rec']}", $text, $d['email'], $d['name']);
 
     if (!empty($c['leads']['autoreply'])) {
         $first = explode(' ', $d['name'])[0];

@@ -153,19 +153,27 @@ if ($post) {
             rs_save_config($c); flash('Feedback gespeichert.'); back('#feedback');
         case 'image':
         case 'image_delete':
-            $old = (string)($S['img_about'] ?? '');
-            if ($old !== '') { $f = rs_root() . '/' . strtok($old, '?'); }
-            if ($action === 'image_delete') { if (!empty($f) && is_file($f)) @unlink($f); $S['img_about'] = ''; rs_save_config($c); flash('Bild entfernt – das Standardbild wird angezeigt.'); back('#ueber'); }
+            $slot = ($_POST['slot'] ?? '') === 'avatar' ? 'avatar' : 'about';
+            $anchor = $slot === 'avatar' ? '#fitcheck' : '#ueber';
+            if ($slot === 'avatar') $GLOBALS['tab'] = 'seiten';
+            $key = 'img_' . $slot;
+            $old = (string)($S[$key] ?? '');
+            $f = $old !== '' ? rs_root() . '/' . strtok($old, '?') : '';
+            if ($action === 'image_delete') { if ($f && is_file($f)) @unlink($f); $S[$key] = ''; rs_save_config($c); flash('Bild entfernt.'); back($anchor); }
             $up = $_FILES['file'] ?? null;
-            if (!$up || ($up['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file($up['tmp_name'])) { flash('Upload fehlgeschlagen – bitte eine Bilddatei wählen (max. 10 MB).', 'error'); back('#ueber'); }
+            if (!$up || ($up['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file($up['tmp_name'])) { flash('Upload fehlgeschlagen – bitte eine Bilddatei wählen (max. 10 MB).', 'error'); back($anchor); }
             $info = @getimagesize($up['tmp_name']);
             $ext = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'][$info[2] ?? 0] ?? null;
-            if (!$ext || $up['size'] > 10 * 1024 * 1024) { flash('Nur JPG, PNG oder WebP bis 10 MB.', 'error'); back('#ueber'); }
-            if (!empty($f) && is_file($f)) @unlink($f);
-            $rel = 'assets/img/about-upload.' . $ext;
-            if (!@move_uploaded_file($up['tmp_name'], rs_root() . '/' . $rel)) { flash('Bild konnte nicht gespeichert werden – Schreibrechte für assets/img/ prüfen.', 'error'); back('#ueber'); }
+            if (!$ext || $up['size'] > 10 * 1024 * 1024) { flash('Nur JPG, PNG oder WebP bis 10 MB.', 'error'); back($anchor); }
+            if ($f && is_file($f)) @unlink($f);
+            $rel = 'assets/img/' . $slot . '-upload.' . $ext;
+            if (!@move_uploaded_file($up['tmp_name'], rs_root() . '/' . $rel)) { flash('Bild konnte nicht gespeichert werden – Schreibrechte für assets/img/ prüfen.', 'error'); back($anchor); }
             @chmod(rs_root() . '/' . $rel, 0644);
-            $S['img_about'] = $rel . '?v=' . time(); rs_save_config($c); flash('Bild aktualisiert.'); back('#ueber');
+            $S[$key] = $rel . '?v=' . time(); rs_save_config($c); flash('Bild aktualisiert.'); back($anchor);
+        case 'check':
+            $c['check']['on'] = !empty($_POST['fc_on']);
+            foreach (['title' => 90, 'text' => 300, 'cta' => 40, 'done_title' => 60, 'done_text' => 300] as $k => $max) $c['check'][$k] = $str('fc_' . $k, $max) ?: $c['check'][$k];
+            rs_save_config($c); flash('Fit-Check gespeichert.'); back('#fitcheck');
 
         /* ----- Seiten: Status, Vor-Launch, Zugänge, Landingpage ----- */
         case 'status':
@@ -444,7 +452,9 @@ head('Admin – Reserved.', true);
         <dt>Umfang</dt><dd><?= e($o['umfang'][$d['umfang']] ?? '–') ?></dd>
         <dt>Start</dt><dd><?= e($o['start'][$d['start']] ?? '–') ?></dd>
         <?php if ($d['paket']): ?><dt>Paket geklickt</dt><dd><?= e($d['paket']) ?></dd><?php endif; ?>
-        <dt>Seite</dt><dd><?= ($one['page'] ?? '') === 'angebot' ? '<span class="chip-s">Landingpage /angebot</span>' : 'Startseite' ?></dd>
+        <?php if (($d['follower'] ?? '') !== ''): ?><dt>Follower</dt><dd><?= e($o['follower'][$d['follower']] ?? '') ?></dd><?php endif; ?>
+        <?php if (($d['posting'] ?? '') !== ''): ?><dt>Postet aktuell</dt><dd><?= e($o['posting'][$d['posting']] ?? '') ?></dd><?php endif; ?>
+        <dt>Seite</dt><dd><?= ['angebot' => '<span class="chip-s">Landingpage /angebot</span>', 'check' => '<span class="chip-s">Fit-Check /start</span>'][$one['page'] ?? ''] ?? 'Startseite' ?></dd>
       </dl>
       <?php if ($d['nachricht']): ?><h3>Nachricht</h3><p class="msg"><?= nl2br(e($d['nachricht'])) ?></p><?php endif; ?>
     </section>
@@ -661,7 +671,7 @@ head('Admin – Reserved.', true);
   $lpLeads = count(array_filter($leads, fn($x) => ($x['page'] ?? '') === 'angebot' && $x['created'] > time() - 30 * 86400));
 ?>
   <div class="page-head"><div><h1>Seiten</h1><p class="sub">Was Besucher sehen: Status, Vor-Launch-Seite und Landingpage.</p></div></div>
-  <nav class="subnav"><a href="#status">Status</a><a href="#vorlaunch">Vor-Launch</a><a href="#zugaenge">Zugänge</a><a href="#anmeldungen">Anmeldungen</a><a href="#landingpage">Landingpage</a></nav>
+  <nav class="subnav"><a href="#status">Status</a><a href="#vorlaunch">Vor-Launch</a><a href="#zugaenge">Zugänge</a><a href="#anmeldungen">Anmeldungen</a><a href="#landingpage">Landingpage</a><a href="#fitcheck">Fit-Check</a></nav>
 
   <section class="hero-status s-<?= e($eff) ?>" id="status">
     <div><span class="eyebrow-s">Gerade sichtbar</span><h2 class="big"><?= e($modeNames[$eff]) ?></h2>
@@ -766,6 +776,37 @@ head('Admin – Reserved.', true);
     </div>
   </section>
 
+
+  <section class="card" id="fitcheck">
+    <?php $K = $c['check']; $fcUrl = rs_abs_url('start/'); $fcSteps = rs_check_steps(); $fcLeads = count(array_filter($leads, fn($x) => ($x['page'] ?? '') === 'check' && $x['created'] > time() - 30 * 86400)); ?>
+    <div class="card-h"><h2>Fit-Check „Zusammenarbeit starten“ <small class="muted-s">/start</small></h2><a class="more" href="<?= e(rs_url('start/')) ?>" target="_blank" rel="noopener">Ansehen ↗</a></div>
+    <p class="hint">Eine Frage pro Bildschirm – ideal als Link in der Instagram-Bio. Die Antworten landen als Anfrage (markiert mit „FC“) inklusive Paket-Empfehlung.</p>
+    <div class="grid g-1-1 inner">
+      <div>
+        <h3>Wo springen Leute ab? <small>(letzte 30 Tage)</small></h3>
+        <div class="funnel"><?php $f0 = max(1, (int)($st30['c']['check-1'] ?? 0)); foreach ($fcSteps as $i => $t): $v = (int)($st30['c']['check-' . ($i + 1)] ?? 0); if ($i === count($fcSteps) - 1) $v = max($v, $fcLeads); ?>
+          <div class="frow"><span><?= ($i + 1) . '. ' . e($t) ?></span><i style="--w:<?= min(100, round($v / $f0 * 100)) ?>%"></i><b><?= $n($v) ?></b></div><?php endforeach; ?></div>
+      </div>
+      <div>
+        <h3>Profilfoto im Gruß</h3>
+        <div class="img-slot"><?php if ($S['img_avatar'] ?? ''): ?><img src="<?= e(rs_url($S['img_avatar'])) ?>" alt="" style="width:84px;aspect-ratio:1;border-radius:50%"><?php else: ?><span class="avatar-ph">R.</span><?php endif; ?>
+          <div><p class="hint">Quadratisches Foto von dir (Gesicht gut sichtbar). Ohne Foto erscheint das „R.“.</p>
+            <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><input type="hidden" name="slot" value="avatar"><label class="btn btn-ghost btn-small file-btn">Foto wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
+            <?php if ($S['img_avatar'] ?? ''): ?><form method="post"><?= $hidden('image_delete') ?><input type="hidden" name="slot" value="avatar"><button class="btn btn-small btn-danger">Entfernen</button></form><?php endif; ?></div></div>
+        <h3 class="mt">Links</h3>
+        <div class="utm"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'instagram-story' => 'Story / DM', 'tiktok' => 'TikTok-Bio'] as $k => $t): $u = $fcUrl . ($k ? '?utm_source=' . $k : ''); ?>
+          <div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
+      </div>
+    </div>
+    <form method="post" class="form mt"><?= $hidden('check') ?>
+      <label class="check"><input type="checkbox" name="fc_on" value="1"<?= !empty($K['on']) ? ' checked' : '' ?>> Fit-Check ist erreichbar <small>(aus = Hinweise auf der Webseite verschwinden)</small></label>
+      <div class="cols"><label>Begrüßung<input name="fc_title" value="<?= e($K['title']) ?>" maxlength="90"></label><label>Button<input name="fc_cta" value="<?= e($K['cta']) ?>" maxlength="40"></label></div>
+      <label>Text unter der Begrüßung<textarea name="fc_text" rows="2" maxlength="300"><?= e($K['text']) ?></textarea></label>
+      <div class="cols"><label>Danke-Überschrift<input name="fc_done_title" value="<?= e($K['done_title']) ?>" maxlength="60"></label><label>Danke-Text<input name="fc_done_text" value="<?= e($K['done_text']) ?>" maxlength="300"></label></div>
+      <p class="hint">Die Fragen (Unternehmen, Instagram, Branche, Ziele, Follower, Posten, Umfang, Start, Nachricht, Kontakt) sind fest, damit Empfehlung, Priorität und Statistik zuverlässig funktionieren.</p>
+      <button class="btn">Fit-Check speichern</button>
+    </form>
+  </section>
 <?php /* ======================= EINSTELLUNGEN ======================= */ else: ?>
   <div class="page-head"><div><h1>Einstellungen</h1></div></div>
   <section class="card">
@@ -814,7 +855,7 @@ function lead_row(array $x): string {
     $br = $d['branche'] === 'andere' && $d['branche_text'] ? $d['branche_text'] : ($o['branche'][$d['branche']] ?? '');
     return '<li class="lead' . (empty($x['seen']) && $x['status'] === 'neu' ? ' unread' : '') . '"><a href="?tab=anfragen&id=' . e($x['id']) . '">'
         . '<span class="temp t-' . $tk . '" title="Priorität ' . (int)$x['score'] . '/100">' . $tl . '</span>'
-        . '<span class="lm"><b>' . e($d['firma'] ?: $d['name']) . (($x['page'] ?? '') === 'angebot' ? ' <i class="lp-tag">LP</i>' : '') . '</b><small>' . e(trim(($d['firma'] ? $d['name'] . ' · ' : '') . $br . ($d['ort'] ? ' · ' . $d['ort'] : ''), ' ·')) . '</small></span>'
+        . '<span class="lm"><b>' . e($d['firma'] ?: $d['name']) . (['angebot' => ' <i class="lp-tag">LP</i>', 'check' => ' <i class="lp-tag fc">FC</i>'][$x['page'] ?? ''] ?? '') . '</b><small>' . e(trim(($d['firma'] ? $d['name'] . ' · ' : '') . $br . ($d['ort'] ? ' · ' . $d['ort'] : ''), ' ·')) . '</small></span>'
         . '<span class="lr"><span class="pill-s st-' . e($x['status']) . '">' . e(rs_lead_status()[$x['status']] ?? '') . '</span><span class="rec-s">' . e($x['rec']) . '</span><small>' . e(rs_ago((int)$x['created'])) . '</small></span></a></li>';
 }
 function quote_editor(string $i, array $q): string {

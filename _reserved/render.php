@@ -81,6 +81,9 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     }
     if ($handle !== 'reserved.social') $html = str_replace(['instagram.com/reserved.social/', 'ig.me/m/reserved.social'], ['instagram.com/' . e($handle) . '/', 'ig.me/m/' . e($handle)], $html);
 
+    /* Fit-Check ausgeschaltet → Hinweise entfernen */
+    if (empty($c['check']['on'])) { $html = rs_block($html, 'fclink', ''); $html = rs_block($html, 'fcfoot', ''); }
+
     /* Rechtliches */
     $html = rs_block($html, 'impressum', rs_render_impressum($S));
     $html = rs_block($html, 'datenschutz', rs_render_datenschutz($S, $c));
@@ -286,5 +289,20 @@ function rs_render_angebot(string $html, array $c): string {
     foreach (['results', 'steps', 'ig', 'plans', 'quotes', 'faq'] as $k) {
         if (empty($A['show'][$k])) $html = rs_block($html, 'lp_' . $k, '');
     }
+    return $html;
+}
+
+
+/* ==========================================================================
+   Fit-Check /start/
+   ========================================================================== */
+function rs_render_check(string $html, array $c): string {
+    $K = $c['check']; $S = $c['site'];
+    $html = rs_render_page($html, $c);
+    $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms-fc="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($K) {
+        $v = $K[$m[3]] ?? null;
+        return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
+    }, $html);
+    if (!empty($S['img_avatar'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="avatar"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($S['img_avatar'])) . '"', $html);
     return $html;
 }

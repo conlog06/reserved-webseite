@@ -14,7 +14,7 @@ declare(strict_types=1);
 const RS_STATS_KEEP_MONTHS = 14;
 
 function rs_stats_pages(): array {
-    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
+    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', 'start/index.html' => 'Fit-Check /start', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
 }
 /** Abschnitte der Seite in Reihenfolge (für den "Wie weit wird gescrollt"-Trichter) */
 function rs_stats_sections(): array {
@@ -25,9 +25,16 @@ function rs_stats_sections(): array {
 function rs_stats_clicks(): array {
     $plans = [];
     foreach (rs_config()['site']['plans'] as $i => $p) $plans['plan-' . ($i + 1)] = 'Paket „' . $p['name'] . '“ angefragt';
-    return $plans + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
+    $check = [];
+    foreach (rs_check_steps() as $i => $t) $check['check-' . ($i + 1)] = 'Fit-Check ' . ($i + 1) . ': ' . $t;
+    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
             'mail' => 'E-Mail-Adresse geklickt', 'dm' => 'Instagram-DM geklickt', 'ig-follow' => 'Instagram: Folgen', 'ig-post' => 'Instagram-Post geöffnet',
-            'ig-open' => 'Post auf Instagram geöffnet', 'form-start' => 'Anfrage begonnen', 'form-step2' => 'Anfrage: Schritt 2', 'form-step3' => 'Anfrage: Schritt 3'];
+            'ig-open' => 'Post auf Instagram geöffnet', 'check-cta' => 'Fit-Check-Link geklickt', 'form-start' => 'Anfrage begonnen', 'form-step2' => 'Anfrage: Schritt 2', 'form-step3' => 'Anfrage: Schritt 3'];
+}
+
+/** Schritte des Fit-Checks (für den Trichter im Admin) */
+function rs_check_steps(): array {
+    return ['Start', 'Unternehmen', 'Instagram', 'Branche', 'Ziele', 'Follower', 'Posten', 'Umfang', 'Start-Zeit', 'Nachricht', 'Kontakt', 'Gesendet'];
 }
 
 function rs_stats_is_bot(string $ua): bool {

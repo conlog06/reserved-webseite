@@ -94,6 +94,14 @@ function rs_defaults(): array {
             'signup' => true,
             'notify_mail' => true,
         ],
+        'check' => [
+            'on' => true,
+            'title' => 'Hey, ich bin Victoria von Reserved.',
+            'text' => 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, welches Paket zu dir passt. Bereit?',
+            'cta' => 'Los geht\'s',
+            'done_title' => 'Danke dir!',
+            'done_text' => 'Ich schaue mir deine Antworten persönlich an und melde mich bei dir.',
+        ],
         'angebot' => [
             'on' => true,
             'kicker' => 'Social Media für lokale Unternehmen',
@@ -172,6 +180,7 @@ function rs_defaults(): array {
             'about_lead' => 'Hinter Reserved. steht Victoria. Sie plant, dreht und schneidet – und ist dabei direkt bei dir vor Ort, nicht nur am Telefon.',
             'about_text' => 'Lokale Unternehmen haben selten Zeit oder Personal für Social Media. Genau da setzen wir an: Du bekommst Content, der authentisch wirkt, deine Produkte schön in Szene setzt und Menschen erreicht, die dich bisher noch nicht kannten. Manche Kund:innen begleiten wir schon seit Jahren.',
             'img_about' => '',
+            'img_avatar' => '',
             'imp_name' => 'Victoria Franz',
             'imp_business' => 'Reserved. – Social Media für lokale Unternehmen',
             'imp_address' => "c/o IP-Management #6193\nLudwig-Erhard-Straße 18\n20459 Hamburg",

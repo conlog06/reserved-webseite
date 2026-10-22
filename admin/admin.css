@@ -257,6 +257,8 @@ h2.big{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:
 .utm-row{display:grid;grid-template-columns:140px 1fr auto;gap:10px;align-items:center;font-size:.86rem}
 .utm-row code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--creme);padding:8px 10px;border-radius:9px}
 .utm-row input{padding:8px 10px}
+.lp-tag.fc{background:var(--terra)}
+.avatar-ph{width:84px;height:84px;border-radius:50%;background:var(--terra);color:var(--creme);display:grid;place-items:center;font:600 1.8rem 'Cormorant Garamond',Georgia,serif;flex-shrink:0}
 .lp-tag{font-style:normal;font-size:.62rem;font-weight:700;background:var(--kohle);color:var(--creme);padding:2px 6px;border-radius:6px;vertical-align:middle;margin-left:4px}
 
 /* Tablet */
