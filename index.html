@@ -94,7 +94,7 @@
         </div>
       </div>
 
-      <div class="hero-visual reveal d2" aria-label="Vorschau unserer Instagram-Beiträge">
+      <div class="hero-visual reveal d2" role="group" aria-label="Vorschau unserer Instagram-Beiträge">
         <div class="blob"></div>
         <div class="phone">
           <div class="phone-screen">
@@ -106,12 +106,12 @@
             <div class="ig-bars" id="igBars"></div>
             <div class="ig-slides" id="igSlides">
               <!--cms:phone-->
-              <img class="on" src="assets/img/post-0-cover.webp" alt="Was hat der Fantasy Bra mit deinem Unternehmen zu tun?" width="864" height="1080">
-              <img src="assets/img/post-1.webp" alt="Erst laufen, dann der Bra." width="864" height="1080">
-              <img src="assets/img/post-2.webp" alt="Die Bühne ist umgezogen." width="864" height="1080">
-              <img src="assets/img/post-3.webp" alt="Reichweite schlägt Lebenslauf." width="864" height="1080">
-              <img src="assets/img/post-loesung.webp" alt="Die Lösung: Reserved." width="864" height="1080">
-              <img src="assets/img/post-dm.webp" alt="Interessiert? Schreib uns eine DM!" width="864" height="1080">
+              <img class="on" alt="Was hat der Fantasy Bra mit deinem Unternehmen zu tun?" width="864" height="1080" src="assets/img/post-0-cover-540.webp" srcset="assets/img/post-0-cover-540.webp 540w, assets/img/post-0-cover.webp 864w" sizes="(max-width: 720px) 74vw, 330px" fetchpriority="high">
+              <img alt="Erst laufen, dann der Bra." width="864" height="1080" data-src="assets/img/post-1-540.webp" data-srcset="assets/img/post-1-540.webp 540w, assets/img/post-1.webp 864w" sizes="(max-width: 720px) 74vw, 330px">
+              <img alt="Die Bühne ist umgezogen." width="864" height="1080" data-src="assets/img/post-2-540.webp" data-srcset="assets/img/post-2-540.webp 540w, assets/img/post-2.webp 864w" sizes="(max-width: 720px) 74vw, 330px">
+              <img alt="Reichweite schlägt Lebenslauf." width="864" height="1080" data-src="assets/img/post-3-540.webp" data-srcset="assets/img/post-3-540.webp 540w, assets/img/post-3.webp 864w" sizes="(max-width: 720px) 74vw, 330px">
+              <img alt="Die Lösung: Reserved." width="864" height="1080" data-src="assets/img/post-loesung-540.webp" data-srcset="assets/img/post-loesung-540.webp 540w, assets/img/post-loesung.webp 864w" sizes="(max-width: 720px) 74vw, 330px">
+              <img alt="Interessiert? Schreib uns eine DM!" width="864" height="1080" data-src="assets/img/post-dm-540.webp" data-srcset="assets/img/post-dm-540.webp 540w, assets/img/post-dm.webp 864w" sizes="(max-width: 720px) 74vw, 330px">
               <!--/cms:phone-->
             </div>
             <div class="ig-actions">
@@ -176,7 +176,7 @@
         <span class="num">R.</span>
         <div>
           <h3>Die Lösung: Reserved.</h3>
-          <p>Wir machen <span class="rotator" id="rotator" aria-label="lokale Unternehmen"><span class="rot-word">Cafés</span><span class="rot-word">Friseure</span><span class="rot-word">Praxen</span><span class="rot-word">Restaurants</span><span class="rot-word">Handwerker</span><span class="rot-word">Selbstständige</span></span> sichtbar. Mit Content, der <b>jeden Monat</b> kommt – geplant, gedreht und geschnitten von uns.</p>
+          <p>Wir machen <span class="sr">lokale Unternehmen</span><span class="rotator" id="rotator" aria-hidden="true"><span class="rot-word">Cafés</span><span class="rot-word">Friseure</span><span class="rot-word">Praxen</span><span class="rot-word">Restaurants</span><span class="rot-word">Handwerker</span><span class="rot-word">Selbstständige</span></span> sichtbar. Mit Content, der <b>jeden Monat</b> kommt – geplant, gedreht und geschnitten von uns.</p>
         </div>
         <a href="#pakete" class="btn btn-dark">Zu den Paketen <svg><use href="#i-arrow"/></svg></a>
       </div>
@@ -285,16 +285,16 @@
             <tr><td>Videos pro Monat</td><td class="c1">4</td><td class="c2 col-hl">8</td><td class="c3">8</td></tr>
             <tr><td>Feed-Fotos</td><td class="c1">4</td><td class="c2 col-hl">6</td><td class="c3">8</td></tr>
             <tr><td>Drehtermine pro Monat</td><td class="c1">1</td><td class="c2 col-hl">bis zu 2</td><td class="c3">bis zu 2</td></tr>
-            <tr><td>Musik &amp; Schnitt</td><td class="c1"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
-            <tr><td>Instagram &amp; TikTok</td><td class="c1"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
-            <tr><td>Captions &amp; Hashtags</td><td class="c1"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Musik &amp; Schnitt</td><td class="c1"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Instagram &amp; TikTok</td><td class="c1"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Captions &amp; Hashtags</td><td class="c1"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
             <tr><td>Story-Content (Clips &amp; Fotos)</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl">5 pro Monat</td><td class="c3">10 pro Monat</td></tr>
-            <tr><td>Monatliche Content-Planung</td><td class="c1"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
-            <tr><td>Monatliche Content-Strategie</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
-            <tr><td>Community Management</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
-            <tr><td>Monatliche Auswertung</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Monatliche Content-Planung</td><td class="c1"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c2 col-hl"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Monatliche Content-Strategie</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Community Management</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Monatliche Auswertung</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
             <tr><td>Korrekturschleife</td><td class="c1">1 pro Post</td><td class="c2 col-hl">1 pro Post</td><td class="c3">1 pro Post</td></tr>
-            <tr><td>Posten auf Instagram &amp; TikTok</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
+            <tr><td>Posten auf Instagram &amp; TikTok</td><td class="c1 no" aria-label="nicht enthalten">—</td><td class="c2 col-hl no" aria-label="nicht enthalten">—</td><td class="c3"><svg role="img" aria-label="inklusive"><use href="#i-check"/></svg></td></tr>
           </tbody>
           <tfoot>
             <tr>
@@ -364,12 +364,12 @@
           </div>
         </aside>
         <div class="ig-grid" id="igGrid">
-          <button type="button" class="tile reveal" data-i="0"><img src="assets/img/post-0-cover.webp" alt="Was hat der Fantasy Bra mit deinem Unternehmen zu tun?" loading="lazy" decoding="async" width="864" height="1080"><span class="tile-ico"><svg><use href="#i-stack"/></svg></span></button>
-          <button type="button" class="tile reveal d1" data-i="1"><img src="assets/img/post-1.webp" alt="Erst laufen, dann der Bra." loading="lazy" decoding="async" width="864" height="1080"></button>
-          <button type="button" class="tile reveal d2" data-i="2"><img src="assets/img/post-2.webp" alt="Die Bühne ist umgezogen." loading="lazy" decoding="async" width="864" height="1080"></button>
-          <button type="button" class="tile reveal" data-i="3"><img src="assets/img/post-5.webp" alt="Gute Arbeit reicht nicht mehr." loading="lazy" decoding="async" width="864" height="1080"></button>
-          <button type="button" class="tile reveal d1" data-i="4"><img src="assets/img/post-loesung.webp" alt="Die Lösung: Reserved." loading="lazy" decoding="async" width="864" height="1080"></button>
-          <button type="button" class="tile reveal d2" data-i="5"><img src="assets/img/post-dm.webp" alt="Interessiert? Schreib uns eine DM!" loading="lazy" decoding="async" width="864" height="1080"></button>
+          <button type="button" class="tile reveal" data-i="0"><img src="assets/img/post-0-cover-540.webp" srcset="assets/img/post-0-cover-540.webp 540w, assets/img/post-0-cover.webp 864w" sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="Was hat der Fantasy Bra mit deinem Unternehmen zu tun?" loading="lazy" decoding="async" width="864" height="1080"><span class="tile-ico"><svg><use href="#i-stack"/></svg></span></button>
+          <button type="button" class="tile reveal d1" data-i="1"><img src="assets/img/post-1-540.webp" srcset="assets/img/post-1-540.webp 540w, assets/img/post-1.webp 864w" sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="Erst laufen, dann der Bra." loading="lazy" decoding="async" width="864" height="1080"></button>
+          <button type="button" class="tile reveal d2" data-i="2"><img src="assets/img/post-2-540.webp" srcset="assets/img/post-2-540.webp 540w, assets/img/post-2.webp 864w" sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="Die Bühne ist umgezogen." loading="lazy" decoding="async" width="864" height="1080"></button>
+          <button type="button" class="tile reveal" data-i="3"><img src="assets/img/post-5-540.webp" srcset="assets/img/post-5-540.webp 540w, assets/img/post-5.webp 864w" sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="Gute Arbeit reicht nicht mehr." loading="lazy" decoding="async" width="864" height="1080"></button>
+          <button type="button" class="tile reveal d1" data-i="4"><img src="assets/img/post-loesung-540.webp" srcset="assets/img/post-loesung-540.webp 540w, assets/img/post-loesung.webp 864w" sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="Die Lösung: Reserved." loading="lazy" decoding="async" width="864" height="1080"></button>
+          <button type="button" class="tile reveal d2" data-i="5"><img src="assets/img/post-dm-540.webp" srcset="assets/img/post-dm-540.webp 540w, assets/img/post-dm.webp 864w" sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="Interessiert? Schreib uns eine DM!" loading="lazy" decoding="async" width="864" height="1080"></button>
         </div>
       </div>
       <script type="application/json" id="igData">{"profile":{"username":"reserved.social","pic":""},"posts":[
@@ -438,7 +438,7 @@
   <section class="section about" id="ueber" data-sec="ueber">
     <div class="container about-grid">
       <div class="about-img reveal">
-        <div class="about-frame"><img src="assets/img/post-dm.webp" data-cms-img="about" alt="Victoria von Reserved. am Laptop" loading="lazy" decoding="async" width="864" height="1080"></div>
+        <div class="about-frame"><img src="assets/img/post-dm-540.webp" srcset="assets/img/post-dm-540.webp 540w, assets/img/post-dm.webp 864w" sizes="(max-width: 1020px) 90vw, 440px" data-cms-img="about" alt="Victoria von Reserved. am Laptop" loading="lazy" decoding="async" width="864" height="1080"></div>
         <span class="stamp">Reserved. by @victoria.frz</span>
       </div>
       <div>

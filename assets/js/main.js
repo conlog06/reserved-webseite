@@ -66,8 +66,12 @@
     slides.forEach(() => bars.appendChild(document.createElement('i')));
     const barEls = $$('i', bars);
     let cur = 0, timer, visible = true;
+    // Bilder erst laden, wenn sie gebraucht werden
+    const load = (img) => { if (img && img.dataset.src) { if (img.dataset.srcset) img.srcset = img.dataset.srcset; img.src = img.dataset.src; delete img.dataset.src; } };
     const show = (n) => {
       cur = (n + slides.length) % slides.length;
+      load(slides[cur]);
+      setTimeout(() => load(slides[(cur + 1) % slides.length]), 1200);
       slides.forEach((s, i) => s.classList.toggle('on', i === cur));
       barEls.forEach((b, i) => { b.classList.remove('active'); b.classList.toggle('done', i < cur); });
       void barEls[cur].offsetWidth;
@@ -186,7 +190,7 @@
   const goStep = (n, focus = true) => {
     step = n;
     stepsEl.forEach(s => { s.hidden = +s.dataset.step !== n; });
-    $('#lfBar').style.width = (n / 3 * 100) + '%';
+    $('#lfBar').style.transform = `scaleX(${n / 3})`;
     $('#lfLabel').textContent = `Schritt ${n} von 3 · ${labels[n - 1]}`;
     if (n === 2) updateRec();
     if (n >= 2) track('form-step' + n);

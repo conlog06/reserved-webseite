@@ -16,7 +16,19 @@ function rs_slug(string $s): string {
     $s = mb_strtolower(strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'Ä' => 'ae', 'Ö' => 'oe', 'Ü' => 'ue', 'ß' => 'ss']));
     return trim((string)preg_replace('/[^a-z0-9]+/', '-', $s), '-') ?: 'x';
 }
-function rs_check_svg(): string { return '<svg aria-label="inklusive"><use href="#i-check"/></svg>'; }
+function rs_check_svg(): string { return '<svg role="img" aria-label="inklusive"><use href="#i-check"/></svg>'; }
+
+/** CSS direkt in die Seite schreiben: keine blockierende Anfrage beim ersten Aufbau */
+function rs_inline_css(string $html): string {
+    static $css = null;
+    if ($css === null) {
+        $css = (string)@file_get_contents(rs_root() . '/assets/css/style.css');
+        $css = str_replace('url(../fonts/', 'url(' . rs_url('assets/fonts/'), $css);
+        $css = (string)preg_replace(['~/\*.*?\*/~s', '~\s*\n\s*~'], ['', "\n"], $css);
+    }
+    if ($css === '' || strlen($css) > 120000) return $html;
+    return (string)preg_replace('~<link rel="stylesheet" href="(\.\./)?assets/css/style\.css">~', '<style>' . str_replace(['\\', '$'], ['\\\\', '\\$'], $css) . '</style>', $html, 1);
+}
 
 function rs_render_page(string $html, array $c, bool $admin = false): string {
     $S = $c['site'];
@@ -40,7 +52,9 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     }, $html);
 
     /* Bild "Über uns" */
-    if (!empty($S['img_about'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="about"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($S['img_about'])) . '"', $html);
+    if (!empty($S['img_about'])) {
+        $html = (string)preg_replace_callback('~<img\b[^>]*\bdata-cms-img="about"[^>]*>~i', fn($m) => (string)preg_replace(['~\s(srcset|sizes)="[^"]*"~', '~\ssrc="[^"]*"~'], ['', ' src="' . e(rs_url($S['img_about'])) . '"'], $m[0]), $html);
+    }
 
     /* Ankündigungsleiste */
     if (!empty($S['bar_on']) && trim($S['bar_text']) !== '') {
@@ -76,7 +90,11 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $html = rs_block($html, 'ig', rs_render_ig($ig, $S));
     if ($ig) {
         $ph = '';
-        foreach (array_slice($ig['posts'], 0, 6) as $k => $p) $ph .= '<img' . ($k ? '' : ' class="on"') . ' src="' . e(rs_url($p['img'])) . '" alt="' . e(mb_substr($p['caption'], 0, 90)) . '">';
+        foreach (array_slice($ig['posts'], 0, 6) as $k => $p) {
+            $set = rs_ig_srcset($p['img']); $alt = ' alt="' . e(mb_substr($p['caption'], 0, 90)) . '" sizes="(max-width: 720px) 74vw, 330px" width="1080" height="1350"';
+            $ph .= $k ? '<img data-src="' . e(rs_url($p['img'])) . '"' . ($set ? ' data-' . ltrim($set) : '') . $alt . '>'
+                      : '<img class="on" src="' . e(rs_url($p['img'])) . '"' . $set . $alt . ' fetchpriority="high">';
+        }
         $html = rs_block($html, 'phone', $ph);
     }
     if ($handle !== 'reserved.social') $html = str_replace(['instagram.com/reserved.social/', 'ig.me/m/reserved.social'], ['instagram.com/' . e($handle) . '/', 'ig.me/m/' . e($handle)], $html);
@@ -167,7 +185,7 @@ function rs_render_ig(?array $ig, array $S): string {
         if ($p['likes'] !== null) $hover .= '<span><svg><use href="#i-heart"/></svg>' . $num($p['likes']) . '</span>';
         if ($p['comments'] !== null) $hover .= '<span><svg><use href="#i-comment"/></svg>' . $num($p['comments']) . '</span>';
         $alt = trim(mb_substr((string)preg_replace('/\s+/', ' ', $p['caption']), 0, 120)) ?: 'Instagram-Beitrag';
-        $o .= '<button type="button" class="tile reveal' . ($i % 3 ? ' d' . ($i % 3) : '') . '" data-i="' . $i . '"><img src="' . e(rs_url($p['img'])) . '" alt="' . e($alt) . '" loading="lazy" decoding="async">'
+        $o .= '<button type="button" class="tile reveal' . ($i % 3 ? ' d' . ($i % 3) : '') . '" data-i="' . $i . '"><img src="' . e(rs_url($p['img'])) . '"' . rs_ig_srcset($p['img']) . ' sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="' . e($alt) . '" loading="lazy" decoding="async" width="1080" height="1350">'
             . $ico . ($hover ? '<span class="tile-hover">' . $hover . '</span>' : '') . '</button>';
         $slides = array_map(fn($ch) => ['img' => rs_url($ch['img']), 'video' => $ch['video']], $p['children']);
         $json[] = ['img' => rs_url($p['img']), 'type' => $p['type'], 'video' => $p['video'], 'caption' => $p['caption'], 'permalink' => $p['permalink'],

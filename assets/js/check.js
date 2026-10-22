@@ -65,7 +65,7 @@
   /* ---------- Schritte ---------- */
   const progress = () => {
     const p = Math.round(Math.min(cur, LAST + 1) / (LAST + 1) * 100);
-    $('#fcBar').style.width = p + '%';
+    $('#fcBar').style.transform = `scaleX(${p / 100})`;
     $('#fcPct').textContent = p + ' %';
     $('#fcBack').hidden = cur === 0 || cur > LAST;
   };

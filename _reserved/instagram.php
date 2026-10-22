@@ -81,6 +81,15 @@ function rs_ig_store_image(string $url, string $name, int $max = 1080): string {
         }
         imageinterlace($im, true);
         $ok = imagejpeg($im, $abs, 82);
+        // kleinere Variante fürs Handy (spart Datenvolumen)
+        if ($max > 600 && imagesx($im) > 540) {
+            $sh = (int)round(imagesy($im) * 540 / imagesx($im));
+            $sm = imagecreatetruecolor(540, $sh);
+            imagecopyresampled($sm, $im, 0, 0, 0, 0, 540, $sh, imagesx($im), imagesy($im));
+            imageinterlace($sm, true);
+            imagejpeg($sm, substr($abs, 0, -4) . '-540.jpg', 80);
+            imagedestroy($sm);
+        }
         imagedestroy($im);
         if (!$ok) return '';
     } elseif (@file_put_contents($abs, $data) === false) return '';
@@ -149,7 +158,8 @@ function rs_ig_sync(bool $force = false): array {
 
             // Nicht mehr benötigte Bilder löschen
             foreach (glob(rs_root() . '/' . RS_IG_DIR . '/*.jpg') ?: [] as $f) {
-                if (!in_array(RS_IG_DIR . '/' . basename($f), $keep, true)) @unlink($f);
+                $base = RS_IG_DIR . '/' . preg_replace('/-540\.jpg$/', '.jpg', basename($f));
+                if (!in_array($base, $keep, true)) @unlink($f);
             }
             $c = rs_config_merge_ig($c, ['last_sync' => time(), 'last_error' => '']);
             if ($profile['username'] !== '') $c['site']['instagram'] = $profile['username'];
@@ -184,4 +194,11 @@ function rs_ig_data(): ?array {
     if (empty($d['posts'])) return null;
     $d['posts'] = array_slice($d['posts'], 0, max(3, min(30, (int)$c['ig']['count'])));
     return $d;
+}
+
+/** srcset für ein zwischengespeichertes Instagram-Bild (falls eine kleine Variante existiert) */
+function rs_ig_srcset(string $rel): string {
+    $small = substr($rel, 0, -4) . '-540.jpg';
+    if (!is_file(rs_root() . '/' . $small)) return '';
+    return ' srcset="' . e(rs_url($small)) . ' 540w, ' . e(rs_url($rel)) . ' 1080w"';
 }

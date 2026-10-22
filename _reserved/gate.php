@@ -113,7 +113,7 @@ if ($admin || $bypass) {
     $link = $admin ? '<a href="' . e(rs_url('admin/')) . '" style="color:#D98A73">Admin öffnen</a>' : '<a href="?zugang-beenden" style="color:#D98A73">Vorschau beenden</a>';
     $html = (string)preg_replace('~</body>~i', '<style>.rs-adminbar{bottom:calc(16px + env(safe-area-inset-bottom))}@media(max-width:720px){.rs-adminbar{bottom:calc(84px + env(safe-area-inset-bottom))}}</style><div class="rs-adminbar" style="position:fixed;left:50%;transform:translateX(-50%);z-index:9999;display:flex;gap:10px;align-items:center;padding:10px 16px;border-radius:999px;background:#2B2622;color:#F4F1EA;font:600 13px/1.2 system-ui,sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.35);white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis"><span style="width:8px;height:8px;border-radius:50%;background:#D98A73;flex-shrink:0"></span>' . e($label) . ' · ' . $link . '</div></body>', $html, 1);
 }
-echo $html;
+echo rs_inline_css($html);
 $track($page);
 if (!empty($launchedNow)) rs_launch_notify();
 rs_ig_maybe_sync();

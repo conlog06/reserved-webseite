@@ -120,17 +120,19 @@
   var hero = $('.hero, .lp-hero');
   var heroReveals = hero ? $$('.reveal', hero) : [];
   var intro = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.1 });
-  if ($('#nav')) intro.from('#nav', { y: -30, autoAlpha: 0, duration: 0.8 }, 0);
+  if ($('#nav')) intro.from('#nav', { y: -20, duration: 0.7 }, 0);
   if (hero) {
     var h1 = $('h1', hero), title = h1 && $('h1 > span:not(.script)', hero), script = h1 && $('.script', h1);
-    heroReveals.forEach(function (el) { if (el !== h1) gsap.set(el, { autoAlpha: 0, y: 34 }); });
-    intro.to($$('.pill', hero), { autoAlpha: 1, y: 0, duration: 0.8 }, 0.15);
-    if (title && Split) {
-      var sp = new Split(title, { type: 'words', wordsClass: 'sf-word' });
-      intro.from(sp.words, { yPercent: 110, rotate: 5, autoAlpha: 0, duration: 1, stagger: 0.06, ease: 'power4.out' }, 0.25);
-    }
-    if (script) intro.fromTo(script, { clipPath: 'inset(-20% 100% -20% 0)' }, { clipPath: 'inset(-20% 0% -20% 0)', duration: 1.5, ease: 'power2.inOut' }, 0.75);
-    intro.to(heroReveals.filter(function (el) { return el !== h1 && !el.classList.contains('pill'); }), { autoAlpha: 1, y: 0, duration: 1, stagger: 0.1 }, 0.6);
+    // Texte bleiben sichtbar und gleiten nur – so ist der Inhalt sofort da (schneller LCP)
+    intro.from($$('.pill', hero), { y: 16, duration: 0.8 }, 0);
+    // Großer Bildschirm: Wörter einzeln + Schreibschrift "zeichnet" sich. Handy: schlank, damit die Seite sofort fertig ist.
+    var big = matchMedia('(min-width: 1021px)').matches;
+    if (title && Split && big) {
+      var sp = new Split(title, { type: 'words', wordsClass: 'sf-word', aria: 'none' });
+      intro.from(sp.words, { yPercent: 35, rotate: 3, duration: 0.9, stagger: 0.05, ease: 'power4.out' }, 0.05);
+    } else if (h1) intro.from(h1, { y: 18, duration: 0.9 }, 0.05);
+    if (script && big) intro.fromTo(script, { clipPath: 'inset(-20% 100% -20% 0)' }, { clipPath: 'inset(-20% 0% -20% 0)', duration: 1.5, ease: 'power2.inOut' }, 0.75);
+    intro.from(heroReveals.filter(function (el) { return el !== h1 && !el.classList.contains('pill'); }), { y: 22, duration: 0.9, stagger: 0.08 }, 0.15);
     $$('.hero-proof strong').forEach(function (el, i) { countUp(el, 1 + i * 0.12); });
     if ($('.phone')) {
       intro.from('.phone', { y: 90, rotate: 14, autoAlpha: 0, duration: 1.4, ease: 'power4.out' }, 0.4);
@@ -154,87 +156,107 @@
     if ($('.lp-stack')) gsap.to('.lp-stack', { yPercent: -8, ease: 'none', scrollTrigger: scrub });
   }
 
+  /* Alles unterhalb des ersten Bildschirms erst einrichten, wenn der Browser Luft hat
+     (die Seite ist dadurch schneller bedienbar). */
+  var idle = function (fn) { (window.requestIdleCallback || function (f) { return setTimeout(f, 1); })(fn, { timeout: 1500 }); };
+  var later = function () {
   /* ---------- Einblenden: ScrollTrigger.batch ---------- */
-  var reveals = $$('.reveal').filter(function (el) { return heroReveals.indexOf(el) < 0; });
-  reveals.forEach(function (el) { gsap.set(el, { autoAlpha: 0, y: 44 }); });
-  ST.batch(reveals, {
-    start: 'top 90%', once: true,
-    onEnter: function (batch) {
-      gsap.to(batch, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.09, ease: 'power3.out', overwrite: true,
-        onComplete: function () { batch.forEach(function (el) { gsap.set(el, { clearProps: 'transform' }); el.classList.add('in'); }); } });
-    }
-  });
-
-  /* ---------- ScrollFloat (React Bits) – Überschriften Buchstabe für Buchstabe ---------- */
-  if (Split) $$('.section h2, .compare-title').forEach(function (h) {
-    if (hero && hero.contains(h)) return;
-    var s = new Split(h, { type: 'words,chars', wordsClass: 'sf-word', charsClass: 'sf-char' });
-    gsap.fromTo(s.chars, { yPercent: 120, scaleY: 2.2, scaleX: 0.7, autoAlpha: 0, transformOrigin: '50% 0%' },
-      { yPercent: 0, scaleY: 1, scaleX: 1, autoAlpha: 1, stagger: 0.025, ease: 'back.inOut(2)',
-        scrollTrigger: { trigger: h, start: 'top 92%', end: 'top 58%', scrub: 0.6 } });
-  });
-
-  /* ---------- ScrollReveal (React Bits) – Text füllt sich Wort für Wort ---------- */
-  if (Split) $$('.about .lead + .lead, .why-head .lead').forEach(function (el) {
-    var words = new Split(el, { type: 'words', wordsClass: 'sr-word' }).words;
-    gsap.fromTo(words, { opacity: 0.15 }, { opacity: 1, stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true } });
-  });
-
-  /* ---------- RotatingText (React Bits) ---------- */
-  var rot = $('#rotator');
-  if (rot) {
-    var words = $$('.rot-word', rot);
-    words.forEach(function (w) { w.innerHTML = w.textContent.split('').map(function (c) { return '<span class="rc">' + (c === ' ' ? '&nbsp;' : c) + '</span>'; }).join(''); });
-    rot.classList.add('rot-fx');
-    gsap.set(words, { autoAlpha: 0 }); gsap.set(words[0], { autoAlpha: 1 });
-    var wi = 0;
-    var next = function () {
-      var cur = words[wi]; wi = (wi + 1) % words.length; var nxt = words[wi];
-      gsap.to($$('.rc', cur), { yPercent: -110, duration: 0.45, stagger: 0.02, ease: 'power3.in', onComplete: function () { gsap.set(cur, { autoAlpha: 0 }); gsap.set($$('.rc', cur), { yPercent: 0 }); } });
-      gsap.set(nxt, { autoAlpha: 1 });
-      gsap.fromTo($$('.rc', nxt), { yPercent: 110 }, { yPercent: 0, duration: 0.6, stagger: 0.025, ease: 'back.out(1.6)', delay: 0.25 });
-    };
-    var loop = gsap.delayedCall(2.4, function tick() { next(); loop = gsap.delayedCall(2.6, tick); });
-  }
-
-  /* ---------- ScrollVelocity (React Bits) – Marquee reagiert aufs Scrollen ---------- */
-  var track = $('.marquee-track');
-  if (track) {
-    var x = 0, vel = 0, dir = -1, inView = false, skew = gsap.quickSetter(track, 'skewX', 'deg'), setX = gsap.quickSetter(track, 'x', 'px');
-    ST.create({ trigger: '.marquee', start: 'top bottom', end: 'bottom top', onToggle: function (s) { inView = s.isActive; },
-      onUpdate: function (s) { vel = s.getVelocity(); if (vel) dir = vel > 0 ? -1 : 1; } });
-    gsap.ticker.add(function (t, dt) {
-      if (!inView) return;
-      var half = track.scrollWidth / 2;
-      var speed = 0.06 * dt * (1 + Math.min(6, Math.abs(vel) / 300));
-      x += speed * dir; if (x <= -half) x += half; if (x > 0) x -= half;
-      setX(x); skew(gsap.utils.clamp(-8, 8, -vel / 250)); vel *= 0.92;
+    var reveals = $$('.reveal').filter(function (el) { return heroReveals.indexOf(el) < 0; });
+    reveals.forEach(function (el) { gsap.set(el, { autoAlpha: 0, y: 44 }); });
+    ST.batch(reveals, {
+      start: 'top 90%', once: true,
+      onEnter: function (batch) {
+        gsap.to(batch, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.09, ease: 'power3.out', overwrite: true,
+          onComplete: function () { batch.forEach(function (el) { gsap.set(el, { clearProps: 'transform' }); el.classList.add('in'); }); } });
+      }
     });
-  }
-
-  /* ---------- Ergebnis-Zahlen ---------- */
-  $$('.result strong').forEach(function (el) {
-    if (!/^\d/.test(el.textContent.trim())) return;
-    ST.create({ trigger: el, start: 'top 88%', once: true, onEnter: function () { countUp(el, 0.1); } });
-  });
-
-  /* ---------- Ablauf: Linie folgt dem Scrollen ---------- */
-  $$('.steps').forEach(function (steps) {
-    ST.create({ trigger: steps, start: 'top 75%', end: 'bottom 55%', scrub: true, onUpdate: function (s) { steps.style.setProperty('--p', s.progress.toFixed(3)); } });
-  });
-
-  /* ---------- Pakete: Zeilen nacheinander ---------- */
-  if ($('.plans tbody')) gsap.from('.plans tbody tr', { x: -24, autoAlpha: 0, duration: 0.6, stagger: 0.04, ease: 'power2.out', scrollTrigger: { trigger: '.plans', start: 'top 80%', once: true } });
-
-  /* ---------- Bilder: leichter Zoom ---------- */
-  if ($('.about-img img')) gsap.fromTo('.about-img img', { scale: 1.12 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '.about-frame', start: 'top bottom', end: 'bottom 40%', scrub: true } });
-
-  /* ---------- Footer-Schriftzug ---------- */
-  var fb = $('#footerBig');
-  if (fb && Split) {
-    var fs = new Split(fb, { type: 'chars', charsClass: 'sf-char' });
-    gsap.from(fs.chars, { yPercent: 100, autoAlpha: 0, stagger: 0.04, ease: 'power3.out', scrollTrigger: { trigger: fb, start: 'top 98%', end: 'bottom 85%', scrub: 0.8 } });
-  }
+  
+    /* Aufwendige Effekte erst vorbereiten, wenn der Abschnitt näher kommt (spart Rechenzeit beim Laden) */
+    var near = function (el, fn) {
+      if (!('IntersectionObserver' in window)) return fn();
+      var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); fn(); } }, { rootMargin: '400px 0px' });
+      io.observe(el);
+    };
+  
+    /* ---------- ScrollFloat (React Bits) – Überschriften Buchstabe für Buchstabe ---------- */
+    if (Split) $$('.section h2, .compare-title').forEach(function (h) {
+      if (hero && hero.contains(h)) return;
+      gsap.set(h, { autoAlpha: 0 });
+      near(h, function () {
+      gsap.set(h, { autoAlpha: 1 });
+      var s = new Split(h, { type: 'words,chars', wordsClass: 'sf-word', charsClass: 'sf-char' });
+      gsap.fromTo(s.chars, { yPercent: 120, scaleY: 2.2, scaleX: 0.7, autoAlpha: 0, transformOrigin: '50% 0%' },
+        { yPercent: 0, scaleY: 1, scaleX: 1, autoAlpha: 1, stagger: 0.025, ease: 'back.inOut(2)',
+          scrollTrigger: { trigger: h, start: 'top 92%', end: 'top 58%', scrub: 0.6 } });
+      });
+    });
+  
+    /* ---------- ScrollReveal (React Bits) – Text füllt sich Wort für Wort ---------- */
+    if (Split) $$('.about .lead + .lead, .why-head .lead').forEach(function (el) {
+      near(el, function () {
+        var words = new Split(el, { type: 'words', wordsClass: 'sr-word', aria: 'none' }).words;
+        gsap.fromTo(words, { opacity: 0.15 }, { opacity: 1, stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true } });
+      });
+    });
+  
+    /* ---------- RotatingText (React Bits) ---------- */
+    var rot = $('#rotator');
+    if (rot) {
+      var words = $$('.rot-word', rot);
+      words.forEach(function (w) { w.innerHTML = w.textContent.split('').map(function (c) { return '<span class="rc">' + (c === ' ' ? '&nbsp;' : c) + '</span>'; }).join(''); });
+      rot.classList.add('rot-fx');
+      gsap.set(words, { autoAlpha: 0 }); gsap.set(words[0], { autoAlpha: 1 });
+      var wi = 0;
+      var next = function () {
+        var cur = words[wi]; wi = (wi + 1) % words.length; var nxt = words[wi];
+        gsap.to($$('.rc', cur), { yPercent: -110, duration: 0.45, stagger: 0.02, ease: 'power3.in', onComplete: function () { gsap.set(cur, { autoAlpha: 0 }); gsap.set($$('.rc', cur), { yPercent: 0 }); } });
+        gsap.set(nxt, { autoAlpha: 1 });
+        gsap.fromTo($$('.rc', nxt), { yPercent: 110 }, { yPercent: 0, duration: 0.6, stagger: 0.025, ease: 'back.out(1.6)', delay: 0.25 });
+      };
+      var loop = gsap.delayedCall(2.4, function tick() { next(); loop = gsap.delayedCall(2.6, tick); });
+    }
+  
+    /* ---------- ScrollVelocity (React Bits) – Marquee reagiert aufs Scrollen ---------- */
+    var track = $('.marquee-track');
+    if (track) {
+      var x = 0, vel = 0, dir = -1, inView = false, skew = gsap.quickSetter(track, 'skewX', 'deg'), setX = gsap.quickSetter(track, 'x', 'px');
+      ST.create({ trigger: '.marquee', start: 'top bottom', end: 'bottom top', onToggle: function (s) { inView = s.isActive; },
+        onUpdate: function (s) { vel = s.getVelocity(); if (vel) dir = vel > 0 ? -1 : 1; } });
+      gsap.ticker.add(function (t, dt) {
+        if (!inView) return;
+        var half = track.scrollWidth / 2;
+        var speed = 0.06 * dt * (1 + Math.min(6, Math.abs(vel) / 300));
+        x += speed * dir; if (x <= -half) x += half; if (x > 0) x -= half;
+        setX(x); skew(gsap.utils.clamp(-8, 8, -vel / 250)); vel *= 0.92;
+      });
+    }
+  
+    /* ---------- Ergebnis-Zahlen ---------- */
+    $$('.result strong').forEach(function (el) {
+      if (!/^\d/.test(el.textContent.trim())) return;
+      ST.create({ trigger: el, start: 'top 88%', once: true, onEnter: function () { countUp(el, 0.1); } });
+    });
+  
+    /* ---------- Ablauf: Linie folgt dem Scrollen ---------- */
+    $$('.steps').forEach(function (steps) {
+      ST.create({ trigger: steps, start: 'top 75%', end: 'bottom 55%', scrub: true, onUpdate: function (s) { steps.style.setProperty('--p', s.progress.toFixed(3)); } });
+    });
+  
+    /* ---------- Pakete: Zeilen nacheinander ---------- */
+    if ($('.plans tbody')) gsap.from('.plans tbody tr', { x: -24, autoAlpha: 0, duration: 0.6, stagger: 0.04, ease: 'power2.out', scrollTrigger: { trigger: '.plans', start: 'top 80%', once: true } });
+  
+    /* ---------- Bilder: leichter Zoom ---------- */
+    if ($('.about-img img')) gsap.fromTo('.about-img img', { scale: 1.12 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '.about-frame', start: 'top bottom', end: 'bottom 40%', scrub: true } });
+  
+    /* ---------- Footer-Schriftzug ---------- */
+    var fb = $('#footerBig');
+    if (fb && Split) {
+      var fs = new Split(fb, { type: 'chars', charsClass: 'sf-char', aria: 'none' });
+      gsap.from(fs.chars, { yPercent: 100, autoAlpha: 0, stagger: 0.04, ease: 'power3.out', scrollTrigger: { trigger: fb, start: 'top 98%', end: 'bottom 85%', scrub: 0.8 } });
+    }
+    ST.refresh();
+  };
+  if (document.readyState === 'complete') idle(later); else addEventListener('load', function () { idle(later); });
 
   /* Positionen neu berechnen, sobald Bilder & Schriften geladen sind */
   addEventListener('load', function () { ST.refresh(); });
