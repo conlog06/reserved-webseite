@@ -48,6 +48,7 @@ function rs_lead_score(array $d): int {
     if (($d['firma'] ?? '') !== '') $s += 6;
     if (($d['insta'] ?? '') !== '') $s += 5;
     if (mb_strlen($d['nachricht'] ?? '') > 40) $s += 8;
+    if (($d['budget'] ?? '') !== '' && stripos($d['budget'], 'weiß') === false) $s += 8;
     return min(100, $s);
 }
 function rs_lead_temp(int $score): array {
@@ -70,6 +71,7 @@ function rs_lead_create(array $in): array {
         'branche' => $pick('branche'), 'branche_text' => $str('branche_text', 80), 'stand' => $pick('stand'), 'umfang' => $pick('umfang'),
         'start' => $pick('start'), 'kontakt' => $pick('kontakt') ?: 'mail', 'paket' => $str('paket', 40),
         'follower' => $pick('follower'), 'posting' => $pick('posting'),
+        'budget' => in_array((string)($in['budget'] ?? ''), (array)(rs_config()['check']['budget'] ?? []), true) ? (string)$in['budget'] : '',
         'ziele' => array_values(array_intersect(array_map('strval', (array)($in['ziele'] ?? [])), array_keys($o['ziele']))),
     ];
     $d['name'] = str_replace("\n", ' ', $d['name']);
@@ -110,6 +112,7 @@ function rs_lead_summary(array $lead): string {
     $t .= 'Social Media:    ' . $lbl('stand') . "\n";
     if (($d['follower'] ?? '') !== '') $t .= 'Follower:        ' . $o['follower'][$d['follower']] . "\n";
     if (($d['posting'] ?? '') !== '') $t .= 'Postet aktuell:  ' . $o['posting'][$d['posting']] . "\n";
+    if (($d['budget'] ?? '') !== '') $t .= 'Budget:          ' . $d['budget'] . "\n";
     $t .= 'Umfang:          ' . $lbl('umfang') . "\n";
     $t .= 'Start:           ' . $lbl('start') . "\n";
     if ($d['paket'] !== '') $t .= "Paket gewählt:   {$d['paket']}\n";

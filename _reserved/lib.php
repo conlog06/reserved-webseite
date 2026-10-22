@@ -101,6 +101,10 @@ function rs_defaults(): array {
             'cta' => 'Los geht\'s',
             'done_title' => 'Danke dir!',
             'done_text' => 'Ich schaue mir deine Antworten persönlich an und melde mich bei dir.',
+            'budget_on' => true,
+            'budget_q' => 'Welches Budget hast du ungefähr eingeplant?',
+            'budget_sub' => 'Keine Sorge, das ist unverbindlich – so kann ich dir direkt etwas Passendes vorschlagen.',
+            'budget' => ['Unter 500 € im Monat', '500 – 1.000 € im Monat', '1.000 – 2.000 € im Monat', 'Über 2.000 € im Monat', 'Weiß ich noch nicht'],
         ],
         'angebot' => [
             'on' => true,

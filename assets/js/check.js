@@ -14,6 +14,8 @@
   const steps = $$('.fc-step', form);
   const LAST = steps.length - 2;            // letzter Frageschritt (Kontakt)
   let cur = 0, busy = false;
+  // Fragen fortlaufend nummerieren (falls die Budget-Frage ausgeschaltet ist)
+  steps.forEach((s, i) => { const n = $('.fc-num', s); if (n) n.firstChild.textContent = i; });
 
   // Profilbild aus dem Admin
   const av = $('[data-cms-img="avatar"]');
@@ -139,7 +141,7 @@
     const data = {
       name: val('name'), email: val('email'), telefon: val('telefon'), firma: val('firma'), ort: val('ort'), insta: val('insta').replace(/^neu$/i, ''),
       nachricht: val('nachricht'), branche: radio('branche'), branche_text: val('branche_text'), ziele: checks('ziele'),
-      follower: radio('follower'), posting: radio('posting'), stand: stand(), umfang: radio('umfang'), start: radio('start'),
+      follower: radio('follower'), posting: radio('posting'), budget: radio('budget'), stand: stand(), umfang: radio('umfang'), start: radio('start'),
       kontakt: radio('kontakt') || 'mail', consent: 1, website: val('website'), t: Date.now() - started, src, page: 'check'
     };
     let [rec, why] = recommend();
@@ -149,7 +151,7 @@
         `Name: ${data.name}`, data.firma && `Unternehmen: ${data.firma}`, data.ort && `Ort: ${data.ort}`, data.insta && `Instagram: ${data.insta}`,
         `Branche: ${data.branche === 'andere' && data.branche_text ? data.branche_text : label('branche')}`,
         `Ziele: ${$$('input[name="ziele"]:checked + span b', form).map(b => b.textContent).join(', ') || '–'}`,
-        `Follower: ${label('follower')}`, `Postet aktuell: ${label('posting')}`, `Umfang: ${label('umfang')}`, `Start: ${label('start')}`,
+        `Follower: ${label('follower')}`, `Postet aktuell: ${label('posting')}`, radio('budget') && `Budget: ${radio('budget')}`, `Umfang: ${label('umfang')}`, `Start: ${label('start')}`,
         data.telefon && `Telefon: ${data.telefon}`, `Am liebsten per: ${label('kontakt')}`, `Empfehlung laut Fit-Check: ${rec}`].filter(Boolean).join('\n');
       location.href = `mailto:reserved.social@web.de?subject=${encodeURIComponent('Fit-Check: ' + (data.firma || data.name))}&body=${encodeURIComponent(body)}`;
     } else {

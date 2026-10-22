@@ -34,7 +34,7 @@ function rs_stats_clicks(): array {
 
 /** Schritte des Fit-Checks (für den Trichter im Admin) */
 function rs_check_steps(): array {
-    return ['Start', 'Unternehmen', 'Instagram', 'Branche', 'Ziele', 'Follower', 'Posten', 'Umfang', 'Start-Zeit', 'Nachricht', 'Kontakt', 'Gesendet'];
+    return ['Start', 'Unternehmen', 'Instagram', 'Branche', 'Ziele', 'Follower', 'Posten', 'Umfang', 'Start-Zeit', 'Budget', 'Nachricht', 'Kontakt', 'Gesendet'];
 }
 
 function rs_stats_is_bot(string $ua): bool {

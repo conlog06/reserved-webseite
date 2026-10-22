@@ -113,13 +113,13 @@ if ($post) {
             header('Content-Disposition: attachment; filename="reserved-anfragen-' . date('Y-m-d') . '.csv"');
             $o = rs_lead_options(); $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
-            fputcsv($f, ['Datum', 'Status', 'Priorität', 'Empfehlung', 'Name', 'Unternehmen', 'Branche', 'Ort', 'E-Mail', 'Telefon', 'Instagram', 'Kontakt per', 'Ziele', 'Social Media', 'Umfang', 'Start', 'Paket', 'Nachricht', 'Herkunft', 'Gerät'], ';');
+            fputcsv($f, ['Datum', 'Status', 'Priorität', 'Empfehlung', 'Name', 'Unternehmen', 'Branche', 'Ort', 'E-Mail', 'Telefon', 'Instagram', 'Kontakt per', 'Ziele', 'Social Media', 'Umfang', 'Start', 'Budget', 'Paket', 'Nachricht', 'Herkunft', 'Gerät'], ';');
             foreach (array_reverse(rs_leads()) as $x) {
                 $d = $x['data'];
                 fputcsv($f, [date('d.m.Y H:i', $x['created']), rs_lead_status()[$x['status']] ?? $x['status'], $x['score'], $x['rec'], $d['name'], $d['firma'],
                     $d['branche'] === 'andere' ? $d['branche_text'] : ($o['branche'][$d['branche']] ?? ''), $d['ort'], $d['email'], $d['telefon'], $d['insta'],
                     $o['kontakt'][$d['kontakt']] ?? '', implode(', ', array_map(fn($z) => $o['ziele'][$z] ?? $z, $d['ziele'])), $o['stand'][$d['stand']] ?? '',
-                    $o['umfang'][$d['umfang']] ?? '', $o['start'][$d['start']] ?? '', $d['paket'], $d['nachricht'], $x['src'], $x['device']], ';');
+                    $o['umfang'][$d['umfang']] ?? '', $o['start'][$d['start']] ?? '', $d['budget'] ?? '', $d['paket'], $d['nachricht'], $x['src'], $x['device']], ';');
             }
             exit;
 
@@ -172,7 +172,9 @@ if ($post) {
             $S[$key] = $rel . '?v=' . time(); rs_save_config($c); flash('Bild aktualisiert.'); back($anchor);
         case 'check':
             $c['check']['on'] = !empty($_POST['fc_on']);
-            foreach (['title' => 90, 'text' => 300, 'cta' => 40, 'done_title' => 60, 'done_text' => 300] as $k => $max) $c['check'][$k] = $str('fc_' . $k, $max) ?: $c['check'][$k];
+            foreach (['title' => 90, 'text' => 300, 'cta' => 40, 'done_title' => 60, 'done_text' => 300, 'budget_q' => 120, 'budget_sub' => 200] as $k => $max) $c['check'][$k] = $str('fc_' . $k, $max) ?: $c['check'][$k];
+            $c['check']['budget_on'] = !empty($_POST['fc_budget_on']);
+            $c['check']['budget'] = array_slice(array_values(array_filter(array_map(fn($b) => rs_cut($b, 60), explode("\n", str_replace("\r", '', (string)($_POST['fc_budget'] ?? '')))), fn($b) => $b !== '')), 0, 8);
             rs_save_config($c); flash('Fit-Check gespeichert.'); back('#fitcheck');
 
         /* ----- Seiten: Status, Vor-Launch, Zugänge, Landingpage ----- */
@@ -454,6 +456,7 @@ head('Admin – Reserved.', true);
         <?php if ($d['paket']): ?><dt>Paket geklickt</dt><dd><?= e($d['paket']) ?></dd><?php endif; ?>
         <?php if (($d['follower'] ?? '') !== ''): ?><dt>Follower</dt><dd><?= e($o['follower'][$d['follower']] ?? '') ?></dd><?php endif; ?>
         <?php if (($d['posting'] ?? '') !== ''): ?><dt>Postet aktuell</dt><dd><?= e($o['posting'][$d['posting']] ?? '') ?></dd><?php endif; ?>
+        <?php if (($d['budget'] ?? '') !== ''): ?><dt>Budget</dt><dd><strong><?= e($d['budget']) ?></strong></dd><?php endif; ?>
         <dt>Seite</dt><dd><?= ['angebot' => '<span class="chip-s">Landingpage /angebot</span>', 'check' => '<span class="chip-s">Fit-Check /start</span>'][$one['page'] ?? ''] ?? 'Startseite' ?></dd>
       </dl>
       <?php if ($d['nachricht']): ?><h3>Nachricht</h3><p class="msg"><?= nl2br(e($d['nachricht'])) ?></p><?php endif; ?>
@@ -803,7 +806,13 @@ head('Admin – Reserved.', true);
       <div class="cols"><label>Begrüßung<input name="fc_title" value="<?= e($K['title']) ?>" maxlength="90"></label><label>Button<input name="fc_cta" value="<?= e($K['cta']) ?>" maxlength="40"></label></div>
       <label>Text unter der Begrüßung<textarea name="fc_text" rows="2" maxlength="300"><?= e($K['text']) ?></textarea></label>
       <div class="cols"><label>Danke-Überschrift<input name="fc_done_title" value="<?= e($K['done_title']) ?>" maxlength="60"></label><label>Danke-Text<input name="fc_done_text" value="<?= e($K['done_text']) ?>" maxlength="300"></label></div>
-      <p class="hint">Die Fragen (Unternehmen, Instagram, Branche, Ziele, Follower, Posten, Umfang, Start, Nachricht, Kontakt) sind fest, damit Empfehlung, Priorität und Statistik zuverlässig funktionieren.</p>
+      <fieldset><legend>Budget-Frage <?= !empty($K['budget_on']) ? '<span class="tag on">an</span>' : '<span class="tag">aus</span>' ?></legend>
+        <p class="hint">Statt Preise vorzugeben, fragt der Fit-Check nach einer Spanne. Die Antwort steht in der Anfrage und fließt in die Priorität ein.</p>
+        <label class="check"><input type="checkbox" name="fc_budget_on" value="1"<?= !empty($K['budget_on']) ? ' checked' : '' ?>> Budget-Frage anzeigen</label>
+        <div class="cols"><label>Frage<input name="fc_budget_q" value="<?= e($K['budget_q']) ?>" maxlength="120"></label><label>Text darunter<input name="fc_budget_sub" value="<?= e($K['budget_sub']) ?>" maxlength="200"></label></div>
+        <label>Antworten <small>(eine pro Zeile, max. 8 – z. B. „Unter 500 € im Monat“)</small><textarea name="fc_budget" rows="5"><?= e(implode("\n", (array)$K['budget'])) ?></textarea></label>
+      </fieldset>
+      <p class="hint">Die Fragen (Unternehmen, Instagram, Branche, Ziele, Follower, Posten, Umfang, Start, Budget, Nachricht, Kontakt) sind fest, damit Empfehlung, Priorität und Statistik zuverlässig funktionieren.</p>
       <button class="btn">Fit-Check speichern</button>
     </form>
   </section>

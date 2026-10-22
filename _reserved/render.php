@@ -303,6 +303,13 @@ function rs_render_check(string $html, array $c): string {
         $v = $K[$m[3]] ?? null;
         return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
     }, $html);
+    $bud = array_values(array_filter(array_map('trim', (array)($K['budget'] ?? [])), fn($b) => $b !== ''));
+    if (empty($K['budget_on']) || !$bud) $html = rs_block($html, 'fcbudget', '');
+    else {
+        $o = '';
+        foreach ($bud as $i => $b) $o .= '<label class="fc-opt"><input type="radio" name="budget" value="' . e($b) . '"><span><kbd>' . chr(65 + min($i, 25)) . '</kbd><b>' . e($b) . '</b></span></label>';
+        $html = (string)preg_replace_callback('~(<!--cms:fcbudget-->.*?<div class="fc-opts" data-auto>).*?(</div></section><!--/cms:fcbudget-->)~s', fn($m) => $m[1] . $o . $m[2], $html, 1);
+    }
     if (!empty($S['img_avatar'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="avatar"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($S['img_avatar'])) . '"', $html);
     return $html;
 }
