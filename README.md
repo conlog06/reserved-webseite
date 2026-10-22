@@ -27,10 +27,13 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 5. Unter **Instagram** den Zugangsschlüssel eintragen (Schritt-für-Schritt-Anleitung im Admin).
 
 ## Lokal testen
+**Windows:** `Test starten.bat` doppelklicken (installiert PHP bei Bedarf einmalig über winget).
+
+**Sonst:**
 ```
-php -S localhost:8000 _reserved/testserver.php
+php -S localhost:8123 _reserved/testserver.php
 ```
-Seite: http://localhost:8000 · Admin: http://localhost:8000/admin/ (Einrichtungscode wird lokal direkt angezeigt, E-Mails landen in `_reserved/data/mail-test.log`).
+Seite: http://localhost:8123 · Admin: http://localhost:8123/admin/ (Einrichtungscode wird lokal direkt angezeigt, E-Mails landen in `_reserved/data/mail-test.log`).
 
 ## Struktur
 ```
