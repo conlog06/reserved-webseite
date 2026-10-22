@@ -8,6 +8,16 @@
 declare(strict_types=1);
 date_default_timezone_set('Europe/Berlin');
 
+/* Ersatz, falls die PHP-Erweiterung "mbstring" fehlt (z. B. frisch installiertes PHP unter Windows) */
+if (!function_exists('mb_substr')) {
+    function mb_substr(string $s, int $start, ?int $length = null, ?string $enc = null): string {
+        $a = preg_split('//u', $s, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        return implode('', array_slice($a, $start, $length));
+    }
+    function mb_strlen(string $s, ?string $enc = null): int { return (int)preg_match_all('/./us', $s); }
+    function mb_strtolower(string $s, ?string $enc = null): string { return strtr(strtolower($s), ['Ä' => 'ä', 'Ö' => 'ö', 'Ü' => 'ü']); }
+}
+
 const RS_DATA = __DIR__ . '/data';
 const RS_GUARD = "<?php exit; ?>\n";
 
