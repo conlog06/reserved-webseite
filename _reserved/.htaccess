@@ -1,0 +1,7 @@
+# Nur Torwächter und Schnittstelle dürfen direkt aufgerufen werden
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "^(gate|api)\.php$">
+  Require all granted
+</FilesMatch>

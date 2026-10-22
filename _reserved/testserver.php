@@ -1,0 +1,12 @@
+<?php
+/* Nur zum Testen auf dem eigenen Rechner:  php -S localhost:8000 _reserved/testserver.php
+   Bildet die Regeln der .htaccess für den eingebauten PHP-Server nach. */
+if (PHP_SAPI !== 'cli-server') { http_response_code(404); exit; }
+$root = dirname(__DIR__);
+$path = (string)parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+if ($path === '/admin') { header('Location: /admin/'); return true; }
+if (preg_match('#^/admin/(index\.php)?$#', $path)) { $_SERVER['SCRIPT_NAME'] = '/admin/index.php'; require $root . '/admin/index.php'; return true; }
+if ($path === '/_reserved/api.php') { $_SERVER['SCRIPT_NAME'] = '/_reserved/api.php'; require $root . '/_reserved/api.php'; return true; }
+if (preg_match('#^/_reserved/#', $path)) { http_response_code(403); echo 'Gesperrt'; return true; }
+if ($path === '/' || $path === '/index.html') { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
+return false;

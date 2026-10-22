@@ -1,0 +1,7 @@
+# Laufzeitdaten (Passwort, Anfragen, Statistik, Instagram-Schlüssel) nie ins Repo
+_reserved/data/*.php
+_reserved/data/*.tmp
+_reserved/data/*.lock
+_reserved/data/*.log
+assets/ig/*.jpg
+assets/img/*-upload.*
