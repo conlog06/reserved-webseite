@@ -7,6 +7,10 @@
 
 declare(strict_types=1);
 date_default_timezone_set('Europe/Berlin');
+// Fehler nie auf der Seite anzeigen, sondern in _reserved/data/php-fehler.log schreiben
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+if (is_dir(__DIR__ . '/data')) ini_set('error_log', __DIR__ . '/data/php-fehler.log');
 
 /* Ersatz, falls die PHP-Erweiterung "mbstring" fehlt (z. B. frisch installiertes PHP unter Windows) */
 if (!function_exists('mb_substr')) {

@@ -260,7 +260,7 @@ function insights(array $st, array $leads, array $igHist, int $range): array {
     if (array_sum($st['h']) >= 10) {
         $h = array_search(max($st['h']), $st['h'], true); $wdn = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
         $wd = array_search(max($st['wd']), $st['wd'], true);
-        $o[] = ['time', "Die meisten Besuche: <b>{$wdn[$wd]}s</b> gegen <b>$h–" . ($h + 1) . " Uhr</b> – guter Zeitpunkt für neue Posts."];
+        $o[] = ['time', "Die meisten Besuche: <b>{$wdn[$wd]}s</b> gegen <b>{$h}–" . ($h + 1) . " Uhr</b> – guter Zeitpunkt für neue Posts."];
     }
     $mob = $st['g']['m'] ?? 0; $all = array_sum($st['g']);
     if ($all >= 5) $o[] = ['phone', '<b>' . round($mob / $all * 100) . ' %</b> der Besucher sind am Handy unterwegs.'];
@@ -272,7 +272,7 @@ function insights(array $st, array $leads, array $igHist, int $range): array {
     if ($fs >= 3) $o[] = ['form', "<b>{$fs}×</b> wurde das Formular begonnen, <b>{$st['a']}×</b> abgeschickt (" . round($st['a'] / $fs * 100) . ' %).'];
     if (count($igHist) >= 2) {
         $vals = array_filter(array_column($igHist, 'f'), fn($v) => $v !== null);
-        if (count($vals) >= 2) { $diff = end($vals) - reset($vals); $o[] = ['ig', 'Instagram: ' . ($diff >= 0 ? '+' : '') . $diff . ' Follower seit ' . date('d.m.', strtotime((string)array_key_first($igHist))) . '.']; }
+        if (count($vals) >= 2) { $diff = end($vals) - reset($vals); $o[] = ['ig', 'Instagram: ' . ($diff >= 0 ? '+' : '') . $diff . ' Follower seit ' . date('d.m.', strtotime((string)array_key_first($igHist)))]; }
     }
     $hot = array_filter($leads, fn($x) => $x['status'] === 'neu' && $x['score'] >= 65);
     if ($hot) array_unshift($o, ['hot', '<b>' . count($hot) . ' heiße Anfrage' . (count($hot) > 1 ? 'n' : '') . '</b> warten auf Antwort – am besten heute melden.']);
