@@ -6,7 +6,10 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 
 ## Funktionen
 
-**Webseite**
+**Webseite** (Aufbau: Start-Kacheln → Für wen → Rhythmus → Leistungen → Instagram → Vergleich → Stimmen → Monatspakete → Über uns → Kontakt)
+- Startbereich als Kachel-Raster: großer Titel „Dein Platz im Feed ist reserviert.“, Handy mit Live-Beiträgen, Wochenrhythmus, die 4 neuesten Instagram-Beiträge, Kennzahlen und Frage-Kachel.
+- „Rhythmus“: Jahresgrafik (ohne vs. mit festem Rhythmus), Monate und Kalenderwoche passen sich automatisch an das heutige Datum an.
+- Alle Überschriften und Texte der Abschnitte sind im Admin unter **Inhalte** änderbar.
 - Instagram direkt angebunden: Profil (Beiträge, Follower), Raster der neuesten Beiträge wie in der App, Großansicht mit Karussell/Video, Likes, Kommentaren und Caption. Bilder werden auf den eigenen Server kopiert (schnell + datenschutzfreundlich), Abgleich alle 30 Minuten.
 - Smarte Anfrage in 3 Schritten (Branche → Ziele → Kontakt) mit **Live-Paket-Empfehlung**, Bestätigungs-Mail an die Kund:in, Spam-Schutz (Honeypot, Zeitsperre, Rate-Limit).
 - Für Handys optimiert: Notch/Safe-Area (iPhone & Android), feste Anfrage-Leiste über der Home-Leiste, 16-px-Eingabefelder (kein Zoom auf iOS), große Touch-Flächen, Vollbild-Großansicht, kleine Displays (iPhone SE) und Querformat, App-Icon für den Homescreen.

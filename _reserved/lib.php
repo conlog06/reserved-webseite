@@ -138,15 +138,37 @@ function rs_defaults(): array {
             'instagram' => 'reserved.social',
             'mail_from' => '',                    // z. B. noreply@reserved-social.de (eigene Domain, sonst Spam)
             'response_text' => 'Wir melden uns in der Regel innerhalb von 24 Stunden.',
-            'hero_kicker' => 'Social-Media-Agentur für lokale Unternehmen',
-            'hero_title' => 'Weder Zeit noch Personal für Social Media?',
-            'hero_script' => 'Wir übernehmen.',
-            'hero_lead' => 'Reserved. macht lokale Unternehmen und Selbstständige sichtbar – mit Videos, Fotos und Content, der **jeden Monat** kommt. Du kümmerst dich um dein Geschäft, wir um deinen Feed.',
+            'hero_badge' => 'Made in Osnabrück',
+            'hero_kicker' => 'Social-Media-Agentur',
+            'hero_title' => 'Dein Platz im Feed ist',
+            'hero_script' => 'reserviert.',
+            'hero_lead' => 'Wir drehen bei dir vor Ort, schneiden, texten und posten. Jede Woche, im festen Rhythmus. Du kümmerst dich um deinen Laden – wir uns um deinen **Feed**.',
             'proof' => [
-                ['v' => '5×', 't' => 'mehr Aufrufe als eigene Beiträge'],
-                ['v' => '8', 't' => 'Videos pro Monat im Standard-Paket'],
-                ['v' => '2', 't' => 'Plattformen: Instagram & TikTok'],
+                ['v' => '1×', 't' => 'Drehtermin im Monat, mindestens. Steht vorher fest im Kalender.'],
+                ['v' => '4–8', 't' => 'Videos im Monat, je nach Paket. Fotos und Storys kommen dazu.'],
+                ['v' => '60', 't' => 'Minuten Umkreis um Osnabrück. Wir kommen zu dir, nicht umgekehrt.'],
             ],
+            'ask_q' => 'Keine Zeit für Social Media?',
+            'ask_a' => 'Genau dafür gibt’s uns.',
+            'fw_title' => 'Gemacht für Betriebe', 'fw_script' => 'von hier.',
+            'fw_sub' => 'Osnabrück und eine Stunde drumherum, der Landkreis gehört dazu. So bleiben die Wege kurz und die Drehtermine fest.',
+            'fw_lead' => 'Du verkaufst an Kunden aus der Region und hast keine eigene Marketingabteilung? Dann bist du hier richtig.',
+            'fw_not' => 'Onlineshops und Firmen, die bundesweit verkaufen. Dafür gibt es Agenturen, die besser passen.',
+            'rh_title' => 'Ein Kanal, der', 'rh_script' => 'nicht einschläft.',
+            'rh_lead' => 'Einmal motiviert anfangen und dann wieder aufhören? Verwaiste Profile schaden dem Image mehr, als sie nutzen. Wir nehmen dir den Aufwand ab und sagen dir einen festen Rhythmus zu – ob wir ihn halten, siehst du jede Woche in deinem Feed.',
+            'rh_fig' => '36 %',
+            'rh_fig_text' => 'der Firmen ohne Social Media nennen den Personalaufwand als Grund – häufiger als jeden anderen. Quelle: Bitkom, 2017.',
+            'sv_title' => 'Alles, was dein Kanal', 'sv_script' => 'braucht.',
+            'sv_lead' => 'Du gibst uns Zugang zu deinen Accounts und einen Drehtermin. Um den Rest kümmern wir uns – von der ersten Idee bis zum fertigen Post.',
+            'sv_note' => 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.',
+            'vg_title' => 'Wir kommen nicht aus deiner Branche.', 'vg_script' => 'Zum Glück.',
+            'vg_lead' => 'Das ist Absicht. Wir fragen wie Laien und erklären dein Angebot so, dass deine Kunden es verstehen. Branchenagenturen produzieren oft für Kollegen.',
+            'case_quote' => 'Mit Immobilienagenturen hatte ich schon gearbeitet, aber deren Content war mir zu immolastig. Gebucht habe ich Reserved., gerade weil sie nicht aus meiner Branche kommen: Sie produzieren für Käufer, nicht für Kollegen. Ich glaube, so geht es vielen Branchen.',
+            'case_name' => 'Frauke Imming', 'case_role' => 'Inhaberin von Imming Immobilien, Osnabrück',
+            'pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.',
+            'ct_title' => 'Bereit für deinen', 'ct_script' => 'Stammplatz?',
+            'ct_lead' => 'Schreib uns kurz, was du machst und wo dein Betrieb sitzt. Wir melden uns für ein kostenloses Erstgespräch – dann schauen wir gemeinsam, welches Paket passt.',
+            'area' => 'etwa eine Stunde Umkreis',
             'bar_on' => false, 'bar_text' => '', 'bar_link_text' => '', 'bar_link' => '#kontakt',
             'plans' => [
                 ['tier' => 'Einstieg', 'name' => 'Starter', 'price' => ''],
@@ -233,6 +255,11 @@ function rs_config(): array {
         if (!array_key_exists($k, $c)) $c[$k] = $v;
         elseif (is_array($v) && is_array($c[$k]) && array_keys($v) !== range(0, count($v) - 1)) $c[$k] = array_merge($v, $c[$k]);
     }
+    /* Neuer Aufbau der Startseite: alte, nie geänderte Standardtexte durch die neuen ersetzen */
+    $old = ['hero_kicker' => 'Social-Media-Agentur für lokale Unternehmen', 'hero_title' => 'Weder Zeit noch Personal für Social Media?', 'hero_script' => 'Wir übernehmen.',
+            'hero_lead' => 'Reserved. macht lokale Unternehmen und Selbstständige sichtbar – mit Videos, Fotos und Content, der **jeden Monat** kommt. Du kümmerst dich um dein Geschäft, wir um deinen Feed.'];
+    foreach ($old as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
+    if (($c['site']['proof'][0]['v'] ?? '') === '5×' && ($c['site']['proof'][1]['t'] ?? '') === 'Videos pro Monat im Standard-Paket') $c['site']['proof'] = $d['site']['proof'];
     return $c;
 }
 function rs_save_config(array $c): void { rs_write('config', $c); }

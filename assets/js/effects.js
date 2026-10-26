@@ -78,7 +78,7 @@
 
   /* ---------- SpotlightCard (React Bits) ---------- */
   if (fine) {
-    var spotSel = '.service, .quote, .card, .result, .pcard, .lead-form, .ig-profile, .way, .offer, .why-item, .extra';
+    var spotSel = '.service, .svc-card, .fact, .quote, .card, .result, .pcard, .lead-form, .ig-profile, .way, .offer, .why-item, .extra';
     $$(spotSel).forEach(function (c) { c.classList.add('spot'); });
     document.addEventListener('pointermove', function (e) {
       var c = e.target.closest && e.target.closest('.spot'); if (!c) return;
@@ -100,7 +100,7 @@
   });
 
   /* ---------- TiltedCard (React Bits) – Instagram-Kacheln ---------- */
-  if (fine) $$('.tile').forEach(function (t) {
+  if (fine) $$('.tile, .ptile').forEach(function (t) {
     var rx = gsap.quickTo(t, 'rotationX', { duration: 0.5, ease: 'power3' }), ry = gsap.quickTo(t, 'rotationY', { duration: 0.5, ease: 'power3' });
     gsap.set(t, { transformPerspective: 700 });
     t.addEventListener('pointermove', function (e) { var r = t.getBoundingClientRect(); ry(((e.clientX - r.left) / r.width - 0.5) * 12); rx(-((e.clientY - r.top) / r.height - 0.5) * 12); });
@@ -118,7 +118,8 @@
 
   /* ---------- Hero-Einstieg ---------- */
   var hero = $('.hero, .lp-hero');
-  var heroReveals = hero ? $$('.reveal', hero) : [];
+  // nur was beim Laden sichtbar ist, gehört zum Einstieg – der Rest blendet beim Scrollen ein
+  var heroReveals = hero ? $$('.reveal', hero).filter(function (el) { return el.getBoundingClientRect().top < innerHeight; }) : [];
   var intro = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.1 });
   if ($('#nav')) intro.from('#nav', { y: -20, duration: 0.7 }, 0);
   if (hero) {
@@ -133,10 +134,11 @@
     } else if (h1) intro.from(h1, { y: 18, duration: 0.9 }, 0.05);
     if (script && big) intro.fromTo(script, { clipPath: 'inset(-20% 100% -20% 0)' }, { clipPath: 'inset(-20% 0% -20% 0)', duration: 1.5, ease: 'power2.inOut' }, 0.75);
     intro.from(heroReveals.filter(function (el) { return el !== h1 && !el.classList.contains('pill'); }), { y: 22, duration: 0.9, stagger: 0.08 }, 0.15);
-    $$('.hero-proof strong').forEach(function (el, i) { countUp(el, 1 + i * 0.12); });
+    $$('.hero-proof strong, .fact strong').forEach(function (el, i) { if (el.getBoundingClientRect().top < innerHeight) countUp(el, 1 + i * 0.12); else ST.create({ trigger: el, start: 'top 90%', once: true, onEnter: function () { countUp(el, 0.2); } }); });
+    if ($('#weekDays')) intro.from('#weekDays i', { scale: 0, duration: 0.5, stagger: 0.06, ease: 'back.out(3)' }, 1.3);
     if ($('.phone')) {
       intro.from('.phone', { y: 90, rotate: 14, autoAlpha: 0, duration: 1.4, ease: 'power4.out' }, 0.4);
-      intro.from('.blob', { scale: 0.6, autoAlpha: 0, duration: 1.4 }, 0.4);
+      if ($('.blob')) intro.from('.blob', { scale: 0.6, autoAlpha: 0, duration: 1.4 }, 0.4);
       intro.from('.float-card', { scale: 0.6, autoAlpha: 0, duration: 0.9, stagger: 0.15, ease: 'back.out(1.8)' }, 1.1);
       intro.from('.badge', { scale: 0, rotate: -120, duration: 1, ease: 'back.out(1.6)' }, 1.25);
     }
@@ -148,10 +150,11 @@
     // Parallaxe beim Herausscrollen
     var scrub = { trigger: hero, start: 'top top', end: 'bottom top', scrub: true };
     if ($('.phone')) {
-      gsap.to('.phone', { yPercent: -10, rotate: -2, ease: 'none', scrollTrigger: scrub });
-      gsap.to('.blob', { scale: 1.2, ease: 'none', scrollTrigger: scrub });
+      gsap.fromTo('.phone', { yPercent: 0, rotate: 2 }, { yPercent: -10, rotate: -2, ease: 'none', immediateRender: false, scrollTrigger: scrub });
+      if ($('.blob')) gsap.to('.blob', { scale: 1.2, ease: 'none', scrollTrigger: scrub });
       gsap.to('.badge svg', { rotate: 160, ease: 'none', scrollTrigger: scrub });
-      gsap.to('.float-quote', { yPercent: -40, ease: 'none', scrollTrigger: scrub });
+      if ($('.float-quote')) gsap.to('.float-quote', { yPercent: -40, ease: 'none', scrollTrigger: scrub });
+      if ($('.float-like')) gsap.to('.float-like', { yPercent: -60, ease: 'none', scrollTrigger: scrub });
     }
     if ($('.lp-stack')) gsap.to('.lp-stack', { yPercent: -8, ease: 'none', scrollTrigger: scrub });
   }
@@ -160,16 +163,26 @@
      (die Seite ist dadurch schneller bedienbar). */
   var idle = function (fn) { (window.requestIdleCallback || function (f) { return setTimeout(f, 1); })(fn, { timeout: 1500 }); };
   var later = function () {
-  /* ---------- Einblenden: ScrollTrigger.batch ---------- */
-    var reveals = $$('.reveal').filter(function (el) { return heroReveals.indexOf(el) < 0; });
-    reveals.forEach(function (el) { gsap.set(el, { autoAlpha: 0, y: 44 }); });
-    ST.batch(reveals, {
-      start: 'top 90%', once: true,
-      onEnter: function (batch) {
-        gsap.to(batch, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.09, ease: 'power3.out', overwrite: true,
-          onComplete: function () { batch.forEach(function (el) { gsap.set(el, { clearProps: 'transform' }); el.classList.add('in'); }); } });
-      }
-    });
+  /* ---------- Einblenden: IntersectionObserver + CSS-Übergänge (läuft auf dem Compositor, kein Layout-Stau) ---------- */
+    var reveals = $$('.reveal').filter(function (el) { return heroReveals.indexOf(el) < 0 && el.getBoundingClientRect().top > innerHeight; });
+    if ('IntersectionObserver' in window) {
+      root.classList.add('rv');
+      var rio = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) { var t = en.target; t.classList.add('in'); rio.unobserve(t); setTimeout(function () { t.classList.remove('rv-wait'); }, 1500); } }); }, { rootMargin: '0px 0px -8% 0px' });
+      reveals.forEach(function (el) { el.classList.add('rv-wait'); rio.observe(el); });
+      // Sicherheitsnetz bei sehr schnellem Scrollen (z. B. Sprung per Menü): alles Überscrollte sofort zeigen
+      var pend = reveals.slice(), tId = 0;
+      addEventListener('scroll', function () {
+        if (tId || !pend.length) return;
+        tId = setTimeout(function () {
+          tId = 0;
+          pend = pend.filter(function (el) {
+            if (el.classList.contains('in')) return false;
+            if (el.getBoundingClientRect().top < innerHeight * 0.92 && el.offsetParent !== null) { el.classList.add('in'); rio.unobserve(el); setTimeout(function () { el.classList.remove('rv-wait'); }, 1500); return false; }
+            return true;
+          });
+        }, 200);
+      }, { passive: true });
+    }
   
     /* Aufwendige Effekte erst vorbereiten, wenn der Abschnitt näher kommt (spart Rechenzeit beim Laden) */
     var near = function (el, fn) {
@@ -181,9 +194,9 @@
     /* ---------- ScrollFloat (React Bits) – Überschriften Buchstabe für Buchstabe ---------- */
     if (Split) $$('.section h2, .compare-title').forEach(function (h) {
       if (hero && hero.contains(h)) return;
-      gsap.set(h, { autoAlpha: 0 });
+      gsap.set(h, { opacity: 0 }); // opacity statt visibility: Überschrift bleibt für Screenreader da
       near(h, function () {
-      gsap.set(h, { autoAlpha: 1 });
+      gsap.set(h, { opacity: 1 });
       var s = new Split(h, { type: 'words,chars', wordsClass: 'sf-word', charsClass: 'sf-char' });
       gsap.fromTo(s.chars, { yPercent: 120, scaleY: 2.2, scaleX: 0.7, autoAlpha: 0, transformOrigin: '50% 0%' },
         { yPercent: 0, scaleY: 1, scaleX: 1, autoAlpha: 1, stagger: 0.025, ease: 'back.inOut(2)',
@@ -192,7 +205,7 @@
     });
   
     /* ---------- ScrollReveal (React Bits) – Text füllt sich Wort für Wort ---------- */
-    if (Split) $$('.about .lead + .lead, .why-head .lead').forEach(function (el) {
+    if (Split) $$('.about .lead + .lead, .why-head .lead, .fw-lead .lead, .rh-intro .lead').forEach(function (el) {
       near(el, function () {
         var words = new Split(el, { type: 'words', wordsClass: 'sr-word', aria: 'none' }).words;
         gsap.fromTo(words, { opacity: 0.15 }, { opacity: 1, stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true } });
@@ -231,6 +244,18 @@
       });
     }
   
+    /* ---------- Für wen: Branchen wachsen von unten herein ---------- */
+    if ($('.trades')) gsap.from('.trades span', { yPercent: matchMedia('(max-width: 720px)').matches ? 60 : -100, autoAlpha: 0, duration: 1, stagger: 0.07, ease: 'power4.out', scrollTrigger: { trigger: '.trades', start: 'top 82%', once: true } });
+
+    /* ---------- Rhythmus: ein Jahr im Feed – Punkte erscheinen Woche für Woche ---------- */
+    if ($('#rhChart')) {
+      var tl = gsap.timeline({ scrollTrigger: { trigger: '#rhChart', start: 'top 78%', once: true } });
+      tl.from('.track-off .dot', { scale: 0, duration: 0.35, stagger: 0.018, ease: 'back.out(3)' }, 0)
+        .from('.track-on .dot', { scale: 0, duration: 0.35, stagger: 0.018, ease: 'back.out(3)' }, 0.25)
+        .from('.zzz', { autoAlpha: 0, y: 10, duration: 0.6 }, 1.1)
+        .from('.chart-now', { scaleY: 0, transformOrigin: '50% 0%', duration: 0.6, ease: 'power2.out' }, 0.9);
+    }
+
     /* ---------- Ergebnis-Zahlen ---------- */
     $$('.result strong').forEach(function (el) {
       if (!/^\d/.test(el.textContent.trim())) return;

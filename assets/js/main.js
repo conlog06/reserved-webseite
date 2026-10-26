@@ -138,6 +138,37 @@
     box.addEventListener('close', () => { root.classList.remove('dlg-open'); $$('video', box).forEach(v => v.pause()); });
   }
   $$('#igGrid .tile').forEach(t => t.addEventListener('click', () => { openPost(+t.dataset.i); track('ig-post'); }));
+  // Kacheln im Startbereich öffnen dieselbe Großansicht
+  $$('[data-ig-open]').forEach(t => t.addEventListener('click', () => { openPost(+t.dataset.igOpen); track('ig-hero'); }));
+
+  /* ---------- Startbereich: "Diese Woche" – heutiger Tag ---------- */
+  const today = (new Date().getDay() + 6) % 7; // Mo = 0
+  $$('#weekDays li').forEach((li, i) => li.classList.toggle('today', i === today));
+
+  /* ---------- Rhythmus: Monate & Kalenderwoche passend zu heute ---------- */
+  const kw = (d) => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7); };
+  if ($('#rhKw')) $('#rhKw').textContent = kw(new Date());
+  const months = $('#rhMonths');
+  if (months) {
+    const M = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    months.innerHTML = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(Date.now() + (-26 + i * 52 / 12 + 2) * 7 * 864e5);
+      const n = M[d.getMonth()] + (d.getMonth() === 0 ? ' ’' + String(d.getFullYear()).slice(2) : '');
+      return `<span><b>${n}</b><i>${n[0]}</i></span>`;
+    }).join('');
+  }
+
+  /* ---------- Vergleich: Initialen der Kundenstimme ---------- */
+  const caseName = $('.case [data-cms="case_name"]'), caseAv = $('.case-av');
+  if (caseName && caseAv) caseAv.textContent = caseName.textContent.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+  /* ---------- Kontakt: "Reserviert für …" zeigt den eingetippten Betrieb ---------- */
+  const slotName = $('#slotName'), firma = $('#f-firma');
+  if (slotName && firma) firma.addEventListener('input', () => {
+    const v = firma.value.trim();
+    slotName.textContent = v || 'Name des Betriebs';
+    slotName.classList.toggle('filled', !!v);
+  });
 
   /* ---------- Feedback: Filter & "mehr" ---------- */
   const wall = $('#wall');

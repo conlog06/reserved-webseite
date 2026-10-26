@@ -64,9 +64,9 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
         $html = (string)preg_replace('~<html\b~i', '<html class="has-bar"', $html, 1);
     }
 
-    /* Kennzahlen im Hero */
-    $proof = '';
-    foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') $proof .= '<div><strong>' . e($p['v']) . '</strong><span>' . e($p['t']) . '</span></div>';
+    /* Kennzahlen-Kacheln im Startbereich */
+    $proof = ''; $i = 0;
+    foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') { $proof .= '<div class="fact reveal' . ($i ? ' d' . $i : '') . '"><strong>' . e($p['v']) . '</strong><p>' . e($p['t']) . '</p></div>'; $i++; }
     if ($proof !== '') $html = rs_block($html, 'proof', $proof);
 
     /* Pakete */
@@ -96,6 +96,7 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
                       : '<img class="on" src="' . e(rs_url($p['img'])) . '"' . $set . $alt . ' fetchpriority="high">';
         }
         $html = rs_block($html, 'phone', $ph);
+        $html = rs_block($html, 'heroposts', rs_render_heroposts($ig));
     }
     if ($handle !== 'reserved.social') $html = str_replace(['instagram.com/reserved.social/', 'ig.me/m/reserved.social'], ['instagram.com/' . e($handle) . '/', 'ig.me/m/' . e($handle)], $html);
 
@@ -195,6 +196,22 @@ function rs_render_ig(?array $ig, array $S): string {
     $o .= '<div class="ig-more"><a class="link-arrow" href="https://www.instagram.com/' . e($handle) . '/" target="_blank" rel="noopener" data-track="ig-follow">Alle Beiträge auf Instagram →</a></div>';
     $data = json_encode(['profile' => ['username' => $P['username'] ?: $handle, 'pic' => $P['pic'] ? rs_url($P['pic']) : ''], 'posts' => $json], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
     return $o . '<script type="application/json" id="igData">' . $data . '</script>';
+}
+
+/** Vier neueste Beiträge als Kacheln unter dem Startbereich (öffnen die Großansicht) */
+function rs_render_heroposts(array $ig): string {
+    $types = ['VIDEO' => ['Reel', 'i-reel'], 'CAROUSEL_ALBUM' => ['Karussell', 'i-stack'], 'IMAGE' => ['Beitrag', '']];
+    $o = '';
+    foreach (array_slice($ig['posts'], 0, 4) as $i => $p) {
+        [$k, $ico] = $types[$p['type']] ?? ['Beitrag', ''];
+        if (!empty($p['ts'])) $k .= ' · ' . date('j.', (int)$p['ts']) . ' ' . ['', 'Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'][(int)date('n', (int)$p['ts'])];
+        $cap = trim((string)preg_replace('/\s+/', ' ', (string)preg_replace('/[#@][\wÄÖÜäöüß.]+/u', '', $p['caption'])));
+        $cap = mb_strlen($cap) > 90 ? rtrim(mb_substr($cap, 0, 88)) . ' …' : ($cap ?: 'Beitrag auf Instagram');
+        $o .= '<button type="button" class="ptile reveal' . ($i ? ' d' . $i : '') . '" data-ig-open="' . $i . '"><span class="ptile-media"><img src="' . e(rs_url($p['img'])) . '"' . rs_ig_srcset($p['img'])
+            . ' sizes="(max-width: 720px) 46vw, 290px" alt="" loading="lazy" decoding="async" width="1080" height="1350">'
+            . ($ico ? '<span class="tile-ico"><svg><use href="#' . $ico . '"/></svg></span>' : '') . '</span><span class="ptile-meta"><span class="ptile-k">' . e($k) . '</span><span class="ptile-h">' . e($cap) . '</span></span></button>';
+    }
+    return $o;
 }
 
 function rs_render_impressum(array $S): string {
