@@ -64,9 +64,9 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
         $html = (string)preg_replace('~<html\b~i', '<html class="has-bar"', $html, 1);
     }
 
-    /* Kennzahlen-Kacheln im Startbereich */
-    $proof = ''; $i = 0;
-    foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') { $proof .= '<div class="fact reveal' . ($i ? ' d' . $i : '') . '"><strong>' . e($p['v']) . '</strong><p>' . e($p['t']) . '</p></div>'; $i++; }
+    /* Kennzahlen im Hero */
+    $proof = '';
+    foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') $proof .= '<div><strong>' . e($p['v']) . '</strong><span>' . e($p['t']) . '</span></div>';
     if ($proof !== '') $html = rs_block($html, 'proof', $proof);
 
     /* Pakete */

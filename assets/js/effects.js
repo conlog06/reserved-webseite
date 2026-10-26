@@ -244,8 +244,18 @@
       });
     }
   
-    /* ---------- Für wen: Branchen wachsen von unten herein ---------- */
-    if ($('.trades')) gsap.from('.trades span', { yPercent: matchMedia('(max-width: 720px)').matches ? 60 : -100, autoAlpha: 0, duration: 1, stagger: 0.07, ease: 'power4.out', scrollTrigger: { trigger: '.trades', start: 'top 82%', once: true } });
+    /* ---------- Für wen: Umkreis – Ringe ziehen auf, Orte erscheinen von innen nach außen ---------- */
+    if ($('.radius')) {
+      var towns = $$('.radius .town').sort(function (a, b) {
+        var d = function (g) { var c = g.querySelector('circle'); return Math.hypot(c.getAttribute('cx') - 200, c.getAttribute('cy') - 200); };
+        return d(a) - d(b);
+      });
+      gsap.timeline({ scrollTrigger: { trigger: '.radius', start: 'top 75%', once: true } })
+        .from('.radius .rings circle, .radius .area', { scale: 0, transformOrigin: '200px 200px', duration: 1.2, stagger: 0.12, ease: 'power3.out' }, 0)
+        .from('.radius .home', { scale: 0, transformOrigin: '200px 200px', duration: 0.7, ease: 'back.out(2.5)' }, 0.2)
+        .from(towns, { autoAlpha: 0, y: 6, duration: 0.5, stagger: 0.09, ease: 'power2.out' }, 0.6)
+        .from('.radius .ring-l text', { autoAlpha: 0, duration: 0.6, stagger: 0.1 }, 1);
+    }
 
     /* ---------- Rhythmus: ein Jahr im Feed – Punkte erscheinen Woche für Woche ---------- */
     if ($('#rhChart')) {

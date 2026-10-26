@@ -18,8 +18,8 @@ function rs_stats_pages(): array {
 }
 /** Abschnitte der Seite in Reihenfolge (für den "Wie weit wird gescrollt"-Trichter) */
 function rs_stats_sections(): array {
-    return ['hero' => 'Start', 'fuer-wen' => 'Für wen', 'rhythmus' => 'Rhythmus', 'leistungen' => 'Leistungen', 'feed' => 'Instagram',
-            'vergleich' => 'Vergleich', 'feedback' => 'Stimmen', 'pakete' => 'Pakete', 'ueber' => 'Über uns', 'kontakt' => 'Kontakt'];
+    return ['hero' => 'Start', 'fuer-wen' => 'Für wen', 'warum' => 'Warum Social Media', 'rhythmus' => 'Rhythmus', 'leistungen' => 'Leistungen',
+            'vergleich' => 'Warum wir', 'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über uns', 'kontakt' => 'Kontakt'];
 }
 /** Klickziele mit lesbarem Namen */
 function rs_stats_clicks(): array {
@@ -27,7 +27,7 @@ function rs_stats_clicks(): array {
     foreach (rs_config()['site']['plans'] as $i => $p) $plans['plan-' . ($i + 1)] = 'Paket „' . $p['name'] . '“ angefragt';
     $check = [];
     foreach (rs_check_steps() as $i => $t) $check['check-' . ($i + 1)] = 'Fit-Check ' . ($i + 1) . ': ' . $t;
-    return $plans + $check + ['cta-hero' => 'Start: Schreib uns', 'cta-ask' => 'Kachel: Keine Zeit für Social Media?', 'cta-pakete' => 'Pakete: Paket anfragen', 'ig-hero' => 'Start: Beitrag geöffnet', 'cta-nav' => 'Menü: Schreib uns', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
+    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
             'mail' => 'E-Mail-Adresse geklickt', 'dm' => 'Instagram-DM geklickt', 'ig-follow' => 'Instagram: Folgen', 'ig-post' => 'Instagram-Post geöffnet',
             'ig-open' => 'Post auf Instagram geöffnet', 'check-cta' => 'Fit-Check-Link geklickt', 'form-start' => 'Anfrage begonnen', 'form-step2' => 'Anfrage: Schritt 2', 'form-step3' => 'Anfrage: Schritt 3'];
 }
@@ -147,7 +147,7 @@ function rs_stats_track(string $page): void {
 function rs_stats_event(array $in): void {
     $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
     if (rs_stats_skip($ua) || rs_is_admin()) return;
-    $secs = array_values(array_intersect(array_map('strval', (array)($in['s'] ?? [])), array_merge(array_keys(rs_stats_sections()), ['warum'])));
+    $secs = array_values(array_intersect(array_map('strval', (array)($in['s'] ?? [])), array_keys(rs_stats_sections())));
     $clicks = array_values(array_intersect(array_map('strval', (array)($in['c'] ?? [])), array_keys(rs_stats_clicks())));
     $dur = max(0, min(1800, (int)($in['d'] ?? 0)));
     $engaged = !empty($in['e']);

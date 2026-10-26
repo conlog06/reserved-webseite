@@ -125,16 +125,14 @@ if ($post) {
 
         /* ----- Inhalte ----- */
         case 'content_hero':
-            foreach (['hero_badge' => 40, 'hero_kicker' => 90, 'hero_title' => 120, 'hero_script' => 60, 'hero_lead' => 400, 'ask_q' => 60, 'ask_a' => 60,
-                      'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300, 'fw_lead' => 300, 'fw_not' => 240,
+            foreach (['hero_kicker' => 90, 'hero_title' => 120, 'hero_script' => 60, 'hero_lead' => 400,
+                      'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300, 'fw_not' => 240,
                       'rh_title' => 80, 'rh_script' => 40, 'rh_lead' => 600, 'rh_fig' => 12, 'rh_fig_text' => 240,
-                      'sv_title' => 80, 'sv_script' => 40, 'sv_lead' => 300, 'sv_note' => 300,
-                      'vg_title' => 80, 'vg_script' => 40, 'vg_lead' => 300, 'case_quote' => 600, 'case_name' => 60, 'case_role' => 120,
-                      'pk_lead' => 300, 'ct_title' => 80, 'ct_script' => 40, 'ct_lead' => 400, 'area' => 80,
+                      'sv_lead' => 300, 'sv_note' => 300, 'vg_title' => 80, 'vg_script' => 40, 'vg_lead' => 300, 'pk_lead' => 300,
                       'response_text' => 160, 'about_lead' => 400, 'about_text' => 1200, 'bar_text' => 180, 'bar_link_text' => 40] as $k => $max) $S[$k] = $str($k, $max);
             $S['bar_on'] = !empty($_POST['bar_on']);
             $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt';
-            $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 120)], array_slice($list('proof'), 0, 3));
+            $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
             rs_save_config($c); flash('Texte gespeichert – sofort auf der Webseite sichtbar.'); back('#hero');
         case 'content_plans':
             $S['plans'] = array_map(fn($p) => ['tier' => rs_cut((string)($p['tier'] ?? ''), 30), 'name' => rs_cut((string)($p['name'] ?? ''), 30) ?: 'Paket', 'price' => rs_cut((string)($p['price'] ?? ''), 40)], array_slice($list('plans'), 0, 3));
@@ -571,12 +569,10 @@ head('Admin – Reserved.', true);
     <h2>Texte &amp; Hinweise</h2>
     <form method="post" class="form"><?= $hidden('content_hero') ?>
       <fieldset><legend>Startbereich</legend>
-        <div class="cols"><label>Aufkleber<input name="hero_badge" value="<?= e($S['hero_badge']) ?>" maxlength="40"></label><label>Zeile daneben<input name="hero_kicker" value="<?= e($S['hero_kicker']) ?>" maxlength="90"></label></div>
+        <label>Zeile über der Überschrift<input name="hero_kicker" value="<?= e($S['hero_kicker']) ?>" maxlength="90"></label>
         <div class="cols"><label>Überschrift<input name="hero_title" value="<?= e($S['hero_title']) ?>" maxlength="120"></label><label>Schreibschrift-Zeile<input name="hero_script" value="<?= e($S['hero_script']) ?>" maxlength="60"></label></div>
         <label>Text<textarea name="hero_lead" rows="3" maxlength="400"><?= e($S['hero_lead']) ?></textarea></label>
-        <p class="hint">Darunter: die 4 neuesten Instagram-Beiträge (automatisch), drei Kennzahlen-Kacheln und eine Frage-Kachel.</p>
-        <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $p = $S['proof'][$i] ?? ['v' => '', 't' => '']; ?><div class="mini-f"><label>Kennzahl <?= $i + 1 ?><input name="proof[<?= $i ?>][v]" value="<?= e($p['v']) ?>" maxlength="12" placeholder="z. B. 1×"></label><label>Beschreibung<textarea name="proof[<?= $i ?>][t]" rows="2" maxlength="120"><?= e($p['t']) ?></textarea></label></div><?php endforeach; ?></div>
-        <div class="cols"><label>Frage-Kachel<input name="ask_q" value="<?= e($S['ask_q']) ?>" maxlength="60"></label><label>Antwort darunter<input name="ask_a" value="<?= e($S['ask_a']) ?>" maxlength="60"></label></div>
+        <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $p = $S['proof'][$i] ?? ['v' => '', 't' => '']; ?><div class="mini-f"><label>Kennzahl <?= $i + 1 ?><input name="proof[<?= $i ?>][v]" value="<?= e($p['v']) ?>" maxlength="12" placeholder="z. B. 1×"></label><label>Beschreibung<input name="proof[<?= $i ?>][t]" value="<?= e($p['t']) ?>" maxlength="60"></label></div><?php endforeach; ?></div>
       </fieldset>
       <?php $sec = function (string $legend, array $f) use ($S) {
           echo '<fieldset><legend>' . e($legend) . '</legend>';
@@ -588,11 +584,11 @@ head('Admin – Reserved.', true);
           }
           echo '</fieldset>';
       };
-      $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text unter der Überschrift', 300, 2]], [['fw_lead', 'Großer Satz links', 300, 2]], [['fw_not', '„Nicht gemeint“', 240, 2]]]);
-      $sec('Rhythmus', [[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]);
-      $sec('Leistungen', [[['sv_title', 'Überschrift', 80, 0], ['sv_script', 'Schreibschrift', 40, 0]], [['sv_lead', 'Text', 300, 2]], [['sv_note', 'Hinweis unter den Karten', 300, 2]]]);
-      $sec('Vergleich', [[['vg_title', 'Überschrift', 80, 0], ['vg_script', 'Schreibschrift', 40, 0]], [['vg_lead', 'Text', 300, 2]], [['case_quote', 'Kundenstimme „Aus der Praxis“', 600, 4]], [['case_name', 'Name', 60, 0], ['case_role', 'Rolle / Unternehmen', 120, 0]]]);
-      $sec('Pakete & Kontakt', [[['pk_lead', 'Text unter „Monatspakete“', 300, 2]], [['ct_title', 'Kontakt – Überschrift', 80, 0], ['ct_script', 'Schreibschrift', 40, 0]], [['ct_lead', 'Kontakt – Text', 400, 3]], [['area', 'Einsatzgebiet (Fußzeile)', 80, 0]]]);
+      $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]], [['fw_not', '„Nicht gemeint“', 240, 2]]]);
+      $sec('Fester Rhythmus', [[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]);
+      $sec('Leistungen', [[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]);
+      $sec('Warum wir', [[['vg_title', 'Überschrift', 80, 0], ['vg_script', 'Schreibschrift', 40, 0]], [['vg_lead', 'Text', 300, 2]]]);
+      $sec('Pakete', [[['pk_lead', 'Text neben der Überschrift', 300, 2]]]);
       ?>
       <fieldset><legend>Ankündigungsleiste <?= !empty($S['bar_on']) && $S['bar_text'] ? '<span class="tag on">sichtbar</span>' : '<span class="tag">aus</span>' ?></legend>
         <label class="check"><input type="checkbox" name="bar_on" value="1"<?= !empty($S['bar_on']) ? ' checked' : '' ?>> Leiste ganz oben anzeigen</label>
