@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Besucherstatistik (ohne Cookies, ohne gespeicherte IP-Adressen)
+   reserved.social – Besucherstatistik (ohne Cookies, ohne gespeicherte IP-Adressen)
    Server zählt jeden Seitenaufruf (Seite, Herkunft, Gerät, System, Browser,
    Uhrzeit). Ein kleines Signal aus dem Browser ergänzt: welche Abschnitte
    gesehen wurden, Klicks auf Buttons und die Verweildauer.
@@ -18,8 +18,8 @@ function rs_stats_pages(): array {
 }
 /** Abschnitte der Seite in Reihenfolge (für den "Wie weit wird gescrollt"-Trichter) */
 function rs_stats_sections(): array {
-    return ['hero' => 'Start', 'fuer-wen' => 'Für wen', 'warum' => 'Warum Social Media', 'rhythmus' => 'Rhythmus', 'leistungen' => 'Leistungen',
-            'vergleich' => 'Warum wir', 'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über uns', 'kontakt' => 'Kontakt'];
+    return ['hero' => 'Start', 'warum' => 'Das Problem', 'fuer-wen' => 'Für wen', 'leistungen' => 'Leistungen', 'rhythmus' => 'Rhythmus', 'ablauf' => 'Ablauf',
+            'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über mich', 'faq' => 'Häufige Fragen', 'kontakt' => 'Kontakt'];
 }
 /** Klickziele mit lesbarem Namen */
 function rs_stats_clicks(): array {
@@ -27,7 +27,7 @@ function rs_stats_clicks(): array {
     foreach (rs_config()['site']['plans'] as $i => $p) $plans['plan-' . ($i + 1)] = 'Paket „' . $p['name'] . '“ angefragt';
     $check = [];
     foreach (rs_check_steps() as $i => $t) $check['check-' . ($i + 1)] = 'Fit-Check ' . ($i + 1) . ': ' . $t;
-    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
+    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'whatsapp' => 'WhatsApp geöffnet', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
             'mail' => 'E-Mail-Adresse geklickt', 'dm' => 'Instagram-DM geklickt', 'ig-follow' => 'Instagram: Folgen', 'ig-post' => 'Instagram-Post geöffnet',
             'ig-open' => 'Post auf Instagram geöffnet', 'check-cta' => 'Fit-Check-Link geklickt', 'form-start' => 'Anfrage begonnen', 'form-step2' => 'Anfrage: Schritt 2', 'form-step3' => 'Anfrage: Schritt 3'];
 }

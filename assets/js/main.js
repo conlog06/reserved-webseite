@@ -204,7 +204,7 @@
   // Dieselbe Logik wie in _reserved/leads.php
   const recommend = () => {
     const goals = checks('ziele'), u = radio('umfang');
-    if (u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie Reserved. arbeitet.'];
+    if (u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'];
     if (u === 'all') return ['Premium', 'Wir übernehmen alles: Strategie, Content, Posten und Community – du musst dich um nichts kümmern.'];
     const strategic = goals.some(g => ['events', 'anfragen', 'personal'].includes(g));
     if (radio('stand') === 'regular' || goals.length >= 3 || strategic)
@@ -282,7 +282,7 @@
       if (!LIVE) { // ohne Server (z. B. GitHub Pages): E-Mail-Programm öffnen
         const o = (sel) => $(`input[name="${sel}"]:checked + span`, form)?.firstChild?.textContent?.trim() || '–';
         const goals = $$('input[name="ziele"]:checked + span', form).map(s => s.textContent.trim()).join(', ') || '–';
-        const body = [`Hallo Victoria,`, ``, data.nachricht || 'ich interessiere mich für Social Media mit Reserved.', ``,
+        const body = [`Hallo Victoria,`, ``, data.nachricht || 'ich interessiere mich für Social Media mit reserved.social', ``,
           `Name: ${data.name}`, data.firma && `Unternehmen: ${data.firma}`, `Branche: ${data.branche === 'andere' && data.branche_text ? data.branche_text : o('branche')}`,
           data.ort && `Ort: ${data.ort}`, data.telefon && `Telefon: ${data.telefon}`, data.insta && `Instagram: ${data.insta}`,
           `Ziele: ${goals}`, `Social Media aktuell: ${o('stand')}`, `Umfang: ${o('umfang')}`, `Start: ${o('start')}`,

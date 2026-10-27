@@ -1,4 +1,4 @@
-/* Reserved. – Fit-Check „Zusammenarbeit starten“ (/start/)
+/* reserved.social – Fit-Check „Zusammenarbeit starten“ (/start/)
    Eine Frage pro Bildschirm: Antippen oder Buchstabe (A, B, C …) wählt aus,
    Enter geht weiter, Esc/Zurück geht zurück. Läuft auch ohne GSAP. */
 (() => {
@@ -55,7 +55,7 @@
   // gleiche Empfehlung wie _reserved/leads.php
   const recommend = () => {
     const g = checks('ziele'), u = radio('umfang');
-    if (u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie Reserved. arbeitet.'];
+    if (u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'];
     if (u === 'all') return ['Premium', 'Wir übernehmen alles: Strategie, Content, Posten und Community – du musst dich um nichts kümmern.'];
     if (stand() === 'regular' || g.length >= 3 || g.some(x => ['events', 'anfragen', 'personal'].includes(x)))
       return ['Standard', `Genug Content für regelmäßige Präsenz inklusive Stories – ideal, um ${g.length > 1 ? 'mehrere Ziele' : 'dein Ziel'} gezielt anzugehen.`];

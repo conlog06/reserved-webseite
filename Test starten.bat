@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
-title Reserved. - Testserver
+title reserved.social - Testserver
 cd /d "%~dp0"
 echo.
-echo   Reserved. - Testversion
+echo   reserved.social - Testversion
 echo   ========================
 echo.
 

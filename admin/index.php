@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Admin-Bereich  (…/admin/)
+   reserved.social – Admin-Bereich  (…/admin/)
    Übersicht · Anfragen · Statistik · Inhalte · Instagram · Einstellungen
    ========================================================================== */
 declare(strict_types=1);
@@ -28,7 +28,7 @@ function setup_code(): string {
         if (!is_dir(RS_DATA)) mkdir(RS_DATA, 0750, true);
         $a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; $s = '';
         for ($i = 0; $i < 16; $i++) $s .= $a[random_int(0, strlen($a) - 1)] . (in_array($i, [3, 7, 11], true) ? '-' : '');
-        file_put_contents($file, RS_GUARD . "Einrichtungscode für den Reserved.-Admin-Bereich:\n$s\n", LOCK_EX);
+        file_put_contents($file, RS_GUARD . "Einrichtungscode für den reserved.social-Admin-Bereich:\n$s\n", LOCK_EX);
     }
     preg_match('/[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/', (string)file_get_contents($file), $m);
     return $m[0] ?? '';
@@ -128,11 +128,13 @@ if ($post) {
             foreach (['hero_kicker' => 90, 'hero_title' => 120, 'hero_script' => 60, 'hero_lead' => 400,
                       'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300, 'fw_not' => 240,
                       'rh_title' => 80, 'rh_script' => 40, 'rh_lead' => 600, 'rh_fig' => 12, 'rh_fig_text' => 240,
-                      'sv_lead' => 300, 'sv_note' => 300, 'vg_title' => 80, 'vg_script' => 40, 'vg_lead' => 300, 'pk_lead' => 300,
+                      'sv_lead' => 300, 'sv_note' => 300, 'pk_lead' => 300,
                       'response_text' => 160, 'about_lead' => 400, 'about_text' => 1200, 'bar_text' => 180, 'bar_link_text' => 40] as $k => $max) $S[$k] = $str($k, $max);
             $S['bar_on'] = !empty($_POST['bar_on']);
             $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt';
             $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
+            $S['faq'] = [];
+            foreach ($list('hfaq') as $f) if (trim((string)($f['q'] ?? '')) !== '') $S['faq'][] = ['q' => rs_cut((string)$f['q'], 160), 'a' => rs_cut((string)($f['a'] ?? ''), 1200)];
             rs_save_config($c); flash('Texte gespeichert – sofort auf der Webseite sichtbar.'); back('#hero');
         case 'content_plans':
             $S['plans'] = array_map(fn($p) => ['tier' => rs_cut((string)($p['tier'] ?? ''), 30), 'name' => rs_cut((string)($p['name'] ?? ''), 30) ?: 'Paket', 'price' => rs_cut((string)($p['price'] ?? ''), 40)], array_slice($list('plans'), 0, 3));
@@ -282,6 +284,7 @@ if ($post) {
             $from = trim((string)($_POST['mail_from'] ?? ''));
             $S['mail_from'] = $from === '' || filter_var($from, FILTER_VALIDATE_EMAIL) ? $from : $S['mail_from'];
             $S['instagram'] = ltrim(rs_cut((string)($_POST['instagram'] ?? ''), 60), '@') ?: $S['instagram'];
+            $S['whatsapp'] = rs_cut((string)($_POST['whatsapp'] ?? ''), 30);
             foreach (['imp_name' => 80, 'imp_business' => 120, 'imp_address' => 300, 'imp_ustid' => 30, 'datenschutz' => 20000] as $k => $max) $S[$k] = $str($k, $max);
             rs_save_config($c); flash('Einstellungen gespeichert.'); back();
         case 'stats':
@@ -295,7 +298,7 @@ if ($post) {
             else { $c['admin_hash'] = password_hash((string)$_POST['new'], PASSWORD_DEFAULT); rs_save_config($c); flash('Passwort geändert.'); }
             back();
         case 'test_mail':
-            $ok = rs_mail($S['email'], 'Test-E-Mail von deiner Webseite', "Hallo!\n\nWenn du diese E-Mail liest, kommen Anfragen von der Webseite richtig bei dir an.\n\nReserved. Webseite");
+            $ok = rs_mail($S['email'], 'Test-E-Mail von deiner Webseite', "Hallo!\n\nWenn du diese E-Mail liest, kommen Anfragen von der Webseite richtig bei dir an.\n\nreserved.social Webseite");
             flash($ok ? 'Test-E-Mail an ' . $S['email'] . ' verschickt – bitte auch im Spam-Ordner nachsehen.' : 'Versand fehlgeschlagen. Beim Hoster prüfen, ob PHP-Mail aktiv ist, und eine Absender-Adresse der eigenen Domain eintragen.', $ok ? 'ok' : 'error');
             back();
     }
@@ -365,10 +368,10 @@ function lead_wa(string $tel): string {
     return $d;
 }
 
-head('Admin – Reserved.', true);
+head('Admin – reserved.social', true);
 ?>
 <header class="top">
-  <a class="brand" href="?tab=start">Reserved<span>.</span> <small>Admin</small></a>
+  <a class="brand" href="?tab=start">reserved<span>.social</span> <small>Admin</small></a>
   <nav class="tabs" aria-label="Bereiche">
     <?php foreach ($tabs as $k => $t): ?><a href="?tab=<?= $k ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= icon($k) ?><span><?= $t ?></span><?= $k === 'anfragen' && $newLeads ? '<i class="badge-n">' . $newLeads . '</i>' : '' ?></a><?php endforeach; ?>
   </nav>
@@ -428,8 +431,8 @@ head('Admin – Reserved.', true);
   foreach ($leads as $x) if ($x['id'] === $id) $one = $x;
   if ($one && empty($one['seen'])) rs_locked('leads', function () use ($id) { $l = rs_leads(); foreach ($l as &$x) if ($x['id'] === $id) $x['seen'] = true; unset($x); rs_save_leads($l); });
   if ($one): $d = $one['data']; [$tk, $tl] = rs_lead_temp($one['score']); $first = explode(' ', $d['name'])[0];
-    $mailBody = "Hallo $first,\n\nvielen Dank für deine Anfrage bei Reserved.!\n\n";
-    $mailto = 'mailto:' . rawurlencode($d['email']) . '?subject=' . rawurlencode('Deine Anfrage bei Reserved.') . '&body=' . rawurlencode($mailBody);
+    $mailBody = "Hallo $first,\n\nvielen Dank für deine Anfrage bei reserved.social!\n\n";
+    $mailto = 'mailto:' . rawurlencode($d['email']) . '?subject=' . rawurlencode('Deine Anfrage bei reserved.social') . '&body=' . rawurlencode($mailBody);
 ?>
   <a href="?tab=anfragen" class="backlink">← Alle Anfragen</a>
   <div class="page-head">
@@ -441,7 +444,7 @@ head('Admin – Reserved.', true);
       <div class="quick">
         <a class="btn" href="<?= e($mailto) ?>">✉️ Per E-Mail antworten</a>
         <?php if ($d['telefon']): ?><a class="btn btn-ghost" href="tel:<?= e(preg_replace('/[^\d+]/', '', $d['telefon'])) ?>">📞 Anrufen</a>
-        <a class="btn btn-ghost" href="https://wa.me/<?= e(lead_wa($d['telefon'])) ?>?text=<?= rawurlencode("Hallo $first, hier ist Victoria von Reserved. – danke für deine Anfrage!") ?>" target="_blank" rel="noopener">💬 WhatsApp</a><?php endif; ?>
+        <a class="btn btn-ghost" href="https://wa.me/<?= e(lead_wa($d['telefon'])) ?>?text=<?= rawurlencode("Hallo $first, hier ist Victoria von reserved.social – danke für deine Anfrage!") ?>" target="_blank" rel="noopener">💬 WhatsApp</a><?php endif; ?>
         <?php if ($d['insta']): ?><a class="btn btn-ghost" href="https://www.instagram.com/<?= e(rawurlencode($d['insta'])) ?>/" target="_blank" rel="noopener">📷 @<?= e($d['insta']) ?></a><?php endif; ?>
       </div>
       <div class="rec-box"><span>Empfehlung der Webseite</span><b><?= e($one['rec']) ?></b><small><?= e($one['why']) ?></small></div>
@@ -587,9 +590,13 @@ head('Admin – Reserved.', true);
       $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]], [['fw_not', '„Nicht gemeint“', 240, 2]]]);
       $sec('Fester Rhythmus', [[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]);
       $sec('Leistungen', [[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]);
-      $sec('Warum wir', [[['vg_title', 'Überschrift', 80, 0], ['vg_script', 'Schreibschrift', 40, 0]], [['vg_lead', 'Text', 300, 2]]]);
       $sec('Pakete', [[['pk_lead', 'Text neben der Überschrift', 300, 2]]]);
       ?>
+      <fieldset><legend>Häufige Fragen <small>(leer = Abschnitt ausgeblendet)</small></legend>
+        <div id="hFaq" class="qlist"><?php foreach ((array)($S['faq'] ?? []) as $i => $f): ?><div class="qed"><input name="hfaq[<?= $i ?>][q]" value="<?= e($f['q']) ?>" placeholder="Frage" maxlength="160"><textarea name="hfaq[<?= $i ?>][a]" rows="2" maxlength="1200" placeholder="Antwort"><?= e($f['a']) ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
+        <template id="tpl-hfaq"><div class="qed"><input name="hfaq[__][q]" placeholder="Frage" maxlength="160"><textarea name="hfaq[__][a]" rows="2" maxlength="1200" placeholder="Antwort"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-hfaq" data-to="hFaq">+ Frage</button>
+      </fieldset>
       <fieldset><legend>Ankündigungsleiste <?= !empty($S['bar_on']) && $S['bar_text'] ? '<span class="tag on">sichtbar</span>' : '<span class="tag">aus</span>' ?></legend>
         <label class="check"><input type="checkbox" name="bar_on" value="1"<?= !empty($S['bar_on']) ? ' checked' : '' ?>> Leiste ganz oben anzeigen</label>
         <label>Text<input name="bar_text" value="<?= e($S['bar_text']) ?>" maxlength="180" placeholder="z. B. Noch 2 Plätze für Dezember frei"></label>
@@ -844,6 +851,7 @@ head('Admin – Reserved.', true);
         <div class="cols">
           <label>E-Mail <small>(Empfänger der Anfragen)</small><input type="email" name="email" value="<?= e($S['email']) ?>" required></label>
           <label>Instagram-Name<input name="instagram" value="<?= e($S['instagram']) ?>" maxlength="60"></label>
+          <label>WhatsApp-Nummer <small>(leer = nicht anzeigen)</small><input name="whatsapp" value="<?= e($S['whatsapp'] ?? '') ?>" maxlength="30" placeholder="0176 …"></label>
           <label class="span2">Absender-Adresse für E-Mails <small>(eine Adresse deiner Domain, z. B. noreply@deine-domain.de – sonst landen Mails eher im Spam)</small><input type="email" name="mail_from" value="<?= e($S['mail_from']) ?>"></label>
         </div>
       </fieldset>
@@ -916,9 +924,9 @@ function icon(string $k): string {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
 function render_auth(string $type, ?string $error): void {
-    head($type === 'setup' ? 'Einrichtung – Reserved. Admin' : 'Anmelden – Reserved. Admin'); ?>
+    head($type === 'setup' ? 'Einrichtung – reserved.social Admin' : 'Anmelden – reserved.social Admin'); ?>
 <main class="auth"><form method="post" class="card auth-card">
-  <span class="brand big">Reserved<span>.</span></span>
+  <span class="brand big">reserved<span>.social</span></span>
   <?php if ($type === 'setup'): ?>
     <h1>Admin einrichten</h1>
     <p class="hint">Den Einrichtungscode findest du auf dem Webspace in <code>_reserved/data/einrichtungscode.php</code> (z. B. über den Webspace-Explorer deines Hosters oder per FTP).</p>
@@ -944,7 +952,7 @@ function head(string $title, bool $app = false): void { ?>
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#2B2622"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Reserved. Admin"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2B2622"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="reserved.social Admin"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title><?= e($title) ?></title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%232B2622'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Georgia,serif' font-size='30' fill='%23D98A73'%3ER.%3C/text%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="<?= e(rs_url('assets/img/apple-touch-icon.png')) ?>">

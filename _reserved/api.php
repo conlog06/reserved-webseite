@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Schnittstelle für die Webseite
+   reserved.social – Schnittstelle für die Webseite
    POST ?a=anfrage   Anfrage aus dem Formular (JSON)
    POST ?a=t         Statistik-Signal (gesehene Abschnitte, Klicks, Verweildauer)
    ========================================================================== */

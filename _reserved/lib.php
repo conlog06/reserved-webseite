@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – gemeinsame Funktionen (PHP 8.1+, ohne Datenbank)
+   reserved.social – gemeinsame Funktionen (PHP 8.1+, ohne Datenbank)
    Daten liegen in _reserved/data/*.php und beginnen mit "<?php exit; ?>",
    sind also selbst dann nicht lesbar, wenn .htaccess ignoriert würde.
    ========================================================================== */
@@ -90,13 +90,13 @@ function rs_defaults(): array {
             'kicker' => 'Bald online',
             'title' => 'Etwas Neues',
             'script' => 'kommt bald.',
-            'text' => 'Die neue Webseite von Reserved. startet in Kürze. Trag dich ein und erfahre als Erstes, wenn es losgeht.',
+            'text' => 'Die neue Webseite von reserved.social startet in Kürze. Trag dich ein und erfahre als Erstes, wenn es losgeht.',
             'signup' => true,
             'notify_mail' => true,
         ],
         'check' => [
             'on' => true,
-            'title' => 'Hey, ich bin Victoria von Reserved.',
+            'title' => 'Hey, ich bin Victoria von reserved.social',
             'text' => 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, welches Paket zu dir passt. Bereit?',
             'cta' => 'Los geht\'s',
             'done_title' => 'Danke dir!',
@@ -138,10 +138,10 @@ function rs_defaults(): array {
             'instagram' => 'reserved.social',
             'mail_from' => '',                    // z. B. noreply@reserved-social.de (eigene Domain, sonst Spam)
             'response_text' => 'Wir melden uns in der Regel innerhalb von 24 Stunden.',
-            'hero_kicker' => 'Social-Media-Agentur für lokale Unternehmen',
+            'hero_kicker' => 'Social Media für lokale Unternehmen & Selbstständige · Osnabrück',
             'hero_title' => 'Weder Zeit noch Personal für Social Media?',
             'hero_script' => 'Wir übernehmen.',
-            'hero_lead' => 'Reserved. macht lokale Unternehmen und Selbstständige sichtbar – mit Videos, Fotos und Content, der **jeden Monat** kommt. Du kümmerst dich um dein Geschäft, wir um deinen Feed.',
+            'hero_lead' => 'Wir übernehmen Instagram & TikTok für Betriebe und Personal Brands in Osnabrück und Umgebung – **Monat für Monat**, von der Idee über den Dreh bis zum Community Management. Du kümmerst dich ums Geschäft.',
             'proof' => [
                 ['v' => '1×', 't' => 'Drehtermin im Monat – fest im Kalender'],
                 ['v' => '4–8', 't' => 'Videos im Monat, je nach Paket'],
@@ -193,12 +193,21 @@ function rs_defaults(): array {
                 ['v' => 'Neue Gäste', 't' => 'Gäste sind aufgrund des Videos gekommen – aus einer Zielgruppe, die sonst kaum erreichbar war.', 'l' => 'Le Feu'],
             ],
             'quotes' => rs_default_quotes(),
-            'about_lead' => 'Hinter Reserved. steht Victoria. Sie plant, dreht und schneidet – und ist dabei direkt bei dir vor Ort, nicht nur am Telefon.',
-            'about_text' => 'Lokale Unternehmen haben selten Zeit oder Personal für Social Media. Genau da setzen wir an: Du bekommst Content, der authentisch wirkt, deine Produkte schön in Szene setzt und Menschen erreicht, die dich bisher noch nicht kannten. Manche Kund:innen begleiten wir schon seit Jahren.',
+            'about_lead' => 'Hi, ich bin Victoria. Seit Jahren drehe ich Content für Unternehmen: als UGC-Creatorin für Marken, ein Jahr lang bei Beiersdorf und für Hotels und Restaurants im Ausland.',
+            'about_text' => 'Vor einem Jahr habe ich mit **Westerberg Chaya** meine eigene Personal Brand gestartet und in kurzer Zeit über 10.000 Menschen auf Instagram und TikTok erreicht. Dabei habe ich mit vielen Osnabrücker Unternehmen zusammengearbeitet und gemerkt: Die meisten haben tolle Geschichten, aber niemanden, der sie erzählt. Nach meinem Masterabschluss habe ich deshalb reserved.social gegründet.',
+            'whatsapp' => '0176 22876980',
+            'faq' => [
+                ['q' => 'Für wen ist reserved.social gedacht?', 'a' => 'Für lokale Unternehmen in Osnabrück und Umgebung wie Cafés, Restaurants, Hotels, Läden, Salons, Praxen und Handwerksbetriebe. Und für Selbstständige, die eine Personal Brand aufbauen wollen, z. B. Versicherungsberater:innen, Coaches oder Makler:innen.'],
+                ['q' => 'Muss ich selbst posten?', 'a' => 'Im Starter- und Standard-Paket bekommst du fertig geschnittene Inhalte mit Captions und Hashtags und postest selbst. Im Premium-Paket übernehmen wir das Posten und das Community Management komplett.'],
+                ['q' => 'Wer kommt ins Bild?', 'a' => 'Wer aus deinem Team Lust hat, ist herzlich willkommen – echte Menschen wirken am besten. Kund:innen kommen nur mit ihrem Einverständnis ins Bild.'],
+                ['q' => 'Wie lange dauert ein Drehtermin?', 'a' => 'Ca. 2–4 Stunden. Am besten drehen wir zu einer ruhigen Zeit. Den Zeitplan bekommst du vorab.'],
+                ['q' => 'Darf ich die Inhalte auch auf meiner Website nutzen?', 'a' => 'Ja, alle Inhalte darfst du auf deinen eigenen Kanälen nutzen: Instagram, TikTok und Website. Für Werbeanzeigen, Print oder die Weitergabe an Dritte sprich uns bitte vorher an.'],
+                ['q' => 'Was kostet die Zusammenarbeit?', 'a' => 'Das hängt davon ab, was du brauchst. Im kostenlosen Erstgespräch schauen wir uns deine Ziele an und machen dir ein individuelles Angebot. Innerhalb von Osnabrück ist die Anfahrt immer inklusive.'],
+            ],
             'img_about' => '',
             'img_avatar' => '',
             'imp_name' => 'Victoria Franz',
-            'imp_business' => 'Reserved. – Social Media für lokale Unternehmen',
+            'imp_business' => 'reserved.social – Social Media für lokale Unternehmen',
             'imp_address' => "c/o IP-Management #6193\nLudwig-Erhard-Straße 18\n20459 Hamburg",
             'imp_ustid' => 'DE358083332',
             'datenschutz' => '',
@@ -222,7 +231,7 @@ function rs_defaults(): array {
 function rs_default_quotes(): array {
     $q = fn($t, $n, $c, $note = '', $blue = false) => ['t' => $t, 'n' => $n, 'c' => $c, 'note' => $note, 'blue' => $blue, 'on' => true];
     return [
-        $q('Mit Immobilienagenturen hatte ich schon gearbeitet, aber deren Content war mir zu immolastig. Gebucht habe ich Reserved., gerade weil sie nicht aus meiner Branche kommen: Sie produzieren für Käufer, nicht für Kollegen.', 'Frauke Imming', 'Imming Immobilien', 'Inhaberin, Osnabrück', true),
+        $q('Mit Immobilienagenturen hatte ich schon gearbeitet, aber deren Content war mir zu immolastig. Gebucht habe ich reserved.social, gerade weil sie nicht aus meiner Branche kommen: Sie produzieren für Käufer, nicht für Kollegen.', 'Frauke Imming', 'Imming Immobilien', 'Inhaberin, Osnabrück', true),
         $q('Du hast sofort verstanden, was uns wichtig ist und was wir mit dem Video transportieren möchten.', 'Florian', 'Le Feu', 'Auch vor Ort war alles sehr entspannt und professionell.'),
         $q('Die Videos erzielen mindestens fünfmal so viele Aufrufe wie unsere eigenen Beiträge.', 'Dajana', 'Skin Aesthetics', 'Das zeigt, welchen Unterschied professionell produzierter Content machen kann.', true),
         $q('Nach deiner Werbung hatten wir direkte Reaktionen und auch Verkäufe. Das beste Feedback überhaupt.', 'Aline', 'Art Cake'),
@@ -246,10 +255,21 @@ function rs_config(): array {
         if (!array_key_exists($k, $c)) $c[$k] = $v;
         elseif (is_array($v) && is_array($c[$k]) && array_keys($v) !== range(0, count($v) - 1)) $c[$k] = array_merge($v, $c[$k]);
     }
+    /* Name ist „reserved.social“: alte Schreibweise in gespeicherten Texten korrigieren */
+    $fix = function (&$v) use (&$fix) {
+        if (is_array($v)) { foreach ($v as &$x) $fix($x); unset($x); }
+        elseif (is_string($v) && str_contains($v, 'Reserved')) $v = str_replace('Reserved<span>.</span>', 'reserved<span>.social</span>', (string)preg_replace('/Reserved\.(?!social)/', 'reserved.social', $v));
+    };
+    foreach (['site', 'check', 'prelaunch', 'angebot'] as $k) if (isset($c[$k])) $fix($c[$k]);
+    if (isset($c['maintenance_text'])) $fix($c['maintenance_text']);
     /* Kennzahlen im Hero: alte Standardwerte durch die neuen ersetzen (nur wenn nie geändert) */
     if (($c['site']['proof'][0]['v'] ?? '') === '5×' && ($c['site']['proof'][1]['t'] ?? '') === 'Videos pro Monat im Standard-Paket') $c['site']['proof'] = $d['site']['proof'];
     foreach ((array)($c['site']['proof'] ?? []) as $i => $p) if (($p['t'] ?? '') === ($old = ['Drehtermin im Monat, mindestens. Steht vorher fest im Kalender.', 'Videos im Monat, je nach Paket. Fotos und Storys kommen dazu.', 'Minuten Umkreis um Osnabrück. Wir kommen zu dir, nicht umgekehrt.'][$i] ?? null)) $c['site']['proof'][$i]['t'] = $d['site']['proof'][$i]['t'];
-    foreach (['hero_kicker' => 'Social-Media-Agentur', 'hero_title' => 'Dein Platz im Feed ist', 'hero_script' => 'reserviert.'] as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
+    foreach (['hero_kicker' => ['Social-Media-Agentur', 'Social-Media-Agentur für lokale Unternehmen'], 'hero_title' => ['Dein Platz im Feed ist'], 'hero_script' => ['reserviert.'],
+              'hero_lead' => ['reserved.social macht lokale Unternehmen und Selbstständige sichtbar – mit Videos, Fotos und Content, der **jeden Monat** kommt. Du kümmerst dich um dein Geschäft, wir um deinen Feed.'],
+              'about_lead' => ['Hinter reserved.social steht Victoria. Sie plant, dreht und schneidet – und ist dabei direkt bei dir vor Ort, nicht nur am Telefon.'],
+              'about_text' => ['Lokale Unternehmen haben selten Zeit oder Personal für Social Media. Genau da setzen wir an: Du bekommst Content, der authentisch wirkt, deine Produkte schön in Szene setzt und Menschen erreicht, die dich bisher noch nicht kannten. Manche Kund:innen begleiten wir schon seit Jahren.']] as $k => $olds)
+        if (in_array($c['site'][$k] ?? null, $olds, true)) $c['site'][$k] = $d['site'][$k];
     if (str_starts_with((string)($c['site']['hero_lead'] ?? ''), 'Wir drehen bei dir vor Ort, schneiden, texten und posten.')) $c['site']['hero_lead'] = $d['site']['hero_lead'];
     return $c;
 }
@@ -309,7 +329,7 @@ function rs_mail(string $to, string $subject, string $text, string $replyTo = ''
         $from = 'noreply@' . $host;
     }
     $clean = fn($s) => str_replace(["\r", "\n"], ' ', $s);
-    $headers = 'From: =?UTF-8?B?' . base64_encode('Reserved.') . "?= <$from>\r\n";
+    $headers = 'From: =?UTF-8?B?' . base64_encode('reserved.social') . "?= <$from>\r\n";
     if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
         $headers .= 'Reply-To: ' . ($replyName !== '' ? '=?UTF-8?B?' . base64_encode($clean($replyName)) . '?= ' : '') . "<$replyTo>\r\n";
     }
@@ -407,10 +427,10 @@ function rs_launch_notify(): int {
         $c['launch_mailed'] = true; rs_save_config($c);
         $n = 0; $url = rs_abs_url('');
         foreach (rs_signups() as $s) {
-            $text = "Hallo!\n\nDu wolltest Bescheid wissen, sobald es losgeht – jetzt ist es so weit: Die neue Webseite von Reserved. ist online.\n\n$url\n\n"
-                  . "Social Media für lokale Unternehmen – wir freuen uns auf dich!\n\nVictoria\nReserved.\n\n"
+            $text = "Hallo!\n\nDu wolltest Bescheid wissen, sobald es losgeht – jetzt ist es so weit: Die neue Webseite von reserved.social ist online.\n\n$url\n\n"
+                  . "Social Media für lokale Unternehmen – wir freuen uns auf dich!\n\nVictoria\nreserved.social\n\n"
                   . "(Du bekommst diese E-Mail einmalig, weil du dich auf der Vor-Launch-Seite eingetragen hast. Deine Adresse wird danach gelöscht.)";
-            if (rs_mail((string)$s['email'], 'Reserved. ist online', $text, (string)$c['site']['email'], 'Reserved.')) $n++;
+            if (rs_mail((string)$s['email'], 'reserved.social ist online', $text, (string)$c['site']['email'], 'reserved.social')) $n++;
         }
         rs_write('signups', []); // Datensparsam: nach dem Versand löschen
         return $n;

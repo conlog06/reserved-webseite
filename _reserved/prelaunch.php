@@ -1,5 +1,5 @@
 <?php
-/* Reserved. – Vor-Launch-Seite (wird von gate.php eingebunden)
+/* reserved.social – Vor-Launch-Seite (wird von gate.php eingebunden)
    @var array $c  @var ?string $msg  @var string $msgType  @var bool $openCode */
 $P = $c['prelaunch']; $S = $c['site'];
 $launch = rs_ts($c['launch_at']);
@@ -14,7 +14,7 @@ $v = fn(string $f) => e(rs_url($f)) . '?v=' . (int)@filemtime(rs_root() . '/' . 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Reserved. – <?= e($P['kicker']) ?></title>
+<title>reserved.social – <?= e($P['kicker']) ?></title>
 <meta name="description" content="<?= e($P['text']) ?>">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#F4F1EA">
@@ -30,7 +30,7 @@ $v = fn(string $f) => e(rs_url($f)) . '?v=' . (int)@filemtime(rs_root() . '/' . 
 </svg>
 <div class="pl">
   <main class="pl-main">
-    <a class="logo pl-logo" href="<?= e(rs_url('')) ?>">Reserved<span>.</span></a>
+    <a class="logo pl-logo" href="<?= e(rs_url('')) ?>">reserved<span>.social</span></a>
     <span class="pill pl-in"><span class="dot"></span><?= e($P['kicker']) ?></span>
     <h1 class="pl-title pl-in"><span class="pl-t1"><?= e($P['title']) ?></span> <span class="script"><?= e($P['script']) ?></span></h1>
     <p class="lead pl-in"><?= nl2br(e($P['text'])) ?></p>
@@ -70,7 +70,7 @@ $v = fn(string $f) => e(rs_url($f)) . '?v=' . (int)@filemtime(rs_root() . '/' . 
         <button class="btn btn-ghost" type="submit">Öffnen</button></form>
     </details>
 
-    <footer class="pl-foot"><span>© <?= date('Y') ?> Reserved.</span><button type="button" class="linklike" data-open="impressum">Impressum</button><button type="button" class="linklike" data-open="datenschutz">Datenschutz</button></footer>
+    <footer class="pl-foot"><span>© <?= date('Y') ?> reserved.social</span><button type="button" class="linklike" data-open="impressum">Impressum</button><button type="button" class="linklike" data-open="datenschutz">Datenschutz</button></footer>
   </main>
   <aside class="pl-wall" aria-hidden="true">
     <div class="pl-col"><div class="pl-track"><?= $col(array_slice($imgs, 0, $half)) ?></div></div>

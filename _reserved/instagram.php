@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Instagram-Anbindung (Instagram API mit Instagram-Login)
+   reserved.social – Instagram-Anbindung (Instagram API mit Instagram-Login)
    - Holt Profil (Follower, Beiträge) und die neuesten Beiträge.
    - Bilder werden auf den eigenen Server kopiert (assets/ig/): schneller,
      und Besucher laden nichts von Meta-Servern (Datenschutz).

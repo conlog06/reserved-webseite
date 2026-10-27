@@ -1,4 +1,4 @@
-/* Reserved. Admin – kleine Helfer */
+/* reserved.social Admin – kleine Helfer */
 (() => {
   // Listen: Zeilen hinzufügen / löschen
   document.addEventListener('click', (e) => {

@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Torwächter: liefert Startseite und /angebot/ aus.
+   reserved.social – Torwächter: liefert Startseite und /angebot/ aus.
    live        → Seite mit den Inhalten aus dem Admin
    prelaunch   → Vor-Launch-Seite mit Countdown (geht zum Zeitpunkt automatisch online)
    maintenance → Wartungsseite (HTTP 503)
@@ -88,9 +88,9 @@ if ($admin && ($_GET['vorschau'] ?? '') === 'launch') { header('Cache-Control: n
 if ($mode === 'maintenance' && !$bypass) {
     http_response_code(503); header('Retry-After: 3600'); header('X-Robots-Tag: noindex');
     $mail = e($c['site']['email']); $ig = e($c['site']['instagram']);
-    echo '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Reserved. – gleich zurück</title>'
+    echo '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>reserved.social – gleich zurück</title>'
        . '<link rel="stylesheet" href="' . e(rs_url('assets/css/style.css')) . '"><style>body{display:grid;place-items:center;min-height:100vh;min-height:100dvh;padding:24px;text-align:center}main{max-width:560px}h1{font-size:clamp(2.6rem,9vw,4.4rem);margin:18px 0}p{color:var(--mokka)}.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px}</style></head>'
-       . '<body><main><span class="logo">Reserved<span>.</span></span><h1>Wir sind <span class="script">gleich zurück.</span></h1><p>' . e($c['maintenance_text']) . '</p>'
+       . '<body><main><span class="logo">reserved<span>.social</span></span><h1>Wir sind <span class="script">gleich zurück.</span></h1><p>' . e($c['maintenance_text']) . '</p>'
        . '<div class="btns"><a class="btn btn-primary" href="mailto:' . $mail . '">E-Mail schreiben</a><a class="btn btn-ghost" href="https://ig.me/m/' . $ig . '">Instagram-DM</a></div></main></body></html>';
     $track('(wartung)'); exit;
 }

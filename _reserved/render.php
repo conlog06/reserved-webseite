@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Inhalte aus dem Admin-Bereich in die index.html einsetzen
+   reserved.social – Inhalte aus dem Admin-Bereich in die index.html einsetzen
    - <!--cms:name--> … <!--/cms:name-->  ganze Blöcke (Pakete, Feedback, Instagram …)
    - data-cms="schlüssel"                einzelne Texte
    Ohne PHP (z. B. GitHub Pages) bleibt einfach der Inhalt der index.html stehen.
@@ -46,8 +46,11 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $html = (string)preg_replace('~(<[a-z]+\b[^>]*\bdata-cms-ig="handle"[^>]*>)[^<]*~i', '${1}' . e($handle), $html);
 
     /* Links */
-    $html = (string)preg_replace_callback('~<a\b([^>]*\bdata-cms-href="(mailto|dm|ig)"[^>]*)>~i', function ($m) use ($S, $handle) {
-        $href = ['mailto' => 'mailto:' . $S['email'], 'dm' => 'https://ig.me/m/' . rawurlencode($handle), 'ig' => 'https://www.instagram.com/' . rawurlencode($handle) . '/'][$m[2]];
+    $wa = preg_replace('/\D+/', '', (string)($S['whatsapp'] ?? ''));
+    if ($wa !== '' && $wa[0] === '0') $wa = '49' . substr($wa, 1);
+    if ($wa === '') $html = (string)preg_replace('~\s*<a class="way"[^>]*data-cms-href="wa".*?</a>~s', '', $html);
+    $html = (string)preg_replace_callback('~<a\b([^>]*\bdata-cms-href="(mailto|dm|ig|wa)"[^>]*)>~i', function ($m) use ($S, $handle, $wa) {
+        $href = ['mailto' => 'mailto:' . $S['email'], 'dm' => 'https://ig.me/m/' . rawurlencode($handle), 'ig' => 'https://www.instagram.com/' . rawurlencode($handle) . '/', 'wa' => 'https://wa.me/' . $wa][$m[2]];
         return '<a' . preg_replace('/\bhref="[^"]*"/', 'href="' . e($href) . '"', $m[1]) . '>';
     }, $html);
 
@@ -68,6 +71,12 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $proof = '';
     foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') $proof .= '<div><strong>' . e($p['v']) . '</strong><span>' . e($p['t']) . '</span></div>';
     if ($proof !== '') $html = rs_block($html, 'proof', $proof);
+
+    /* Häufige Fragen */
+    $faq = '';
+    foreach ((array)($S['faq'] ?? []) as $f) if (trim($f['q'] ?? '') !== '') $faq .= '<details><summary>' . e($f['q']) . '</summary><p>' . rs_fmt((string)$f['a']) . '</p></details>';
+    if ($faq !== '') $html = rs_block($html, 'homefaq', $faq);
+    else $html = (string)preg_replace('~\s*<!-- =+ FAQ =+ -->.*?</section>~s', '', $html, 1);
 
     /* Pakete */
     $html = rs_block($html, 'plans', rs_render_plans($S));
@@ -171,7 +180,7 @@ function rs_render_ig(?array $ig, array $S): string {
     $num = fn($n) => $n === null ? '–' : ($n >= 10000 ? number_format($n / 1000, 1, ',', '.') . ' Tsd.' : number_format((int)$n, 0, ',', '.'));
     $pic = $P['pic'] ? '<img src="' . e(rs_url($P['pic'])) . '" alt="">' : '<span>R.</span>';
     $o = '<div class="ig-wrap"><aside class="ig-profile reveal"><div class="ig-head"><span class="ig-pic">' . $pic . '</span><div class="ig-id"><b>' . e($P['username'] ?: $handle) . '</b>'
-       . '<span>' . e($P['name'] ?: 'Reserved. | Social Media Agentur') . '</span></div></div><ul class="ig-stats">'
+       . '<span>' . e($P['name'] ?: 'reserved.social | Social Media Agentur') . '</span></div></div><ul class="ig-stats">'
        . '<li><b>' . $num($P['media']) . '</b><span>Beiträge</span></li>'
        . ($P['followers'] !== null ? '<li><b>' . $num($P['followers']) . '</b><span>Follower</span></li>' : '')
        . ($P['follows'] !== null ? '<li><b>' . $num($P['follows']) . '</b><span>Gefolgt</span></li>' : '')

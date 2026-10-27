@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Reserved. – effects.js
+   reserved.social – effects.js
    Animationen & Scroll-Verhalten mit GSAP (ScrollTrigger, SplitText) und Lenis.
 
    Vanilla-JS-Nachbauten von Komponenten aus React Bits:
@@ -140,7 +140,7 @@
       intro.from('.phone', { y: 90, rotate: 14, autoAlpha: 0, duration: 1.4, ease: 'power4.out' }, 0.4);
       if ($('.blob')) intro.from('.blob', { scale: 0.6, autoAlpha: 0, duration: 1.4 }, 0.4);
       intro.from('.float-card', { scale: 0.6, autoAlpha: 0, duration: 0.9, stagger: 0.15, ease: 'back.out(1.8)' }, 1.1);
-      intro.from('.badge', { scale: 0, rotate: -120, duration: 1, ease: 'back.out(1.6)' }, 1.25);
+      if ($('.badge')) intro.from('.badge', { scale: 0, rotate: -120, duration: 1, ease: 'back.out(1.6)' }, 1.25);
     }
     if ($('.lp-stack')) {
       var imgs = $$('.lp-stack img');
@@ -152,7 +152,7 @@
     if ($('.phone')) {
       gsap.fromTo('.phone', { yPercent: 0, rotate: 2 }, { yPercent: -10, rotate: -2, ease: 'none', immediateRender: false, scrollTrigger: scrub });
       if ($('.blob')) gsap.to('.blob', { scale: 1.2, ease: 'none', scrollTrigger: scrub });
-      gsap.to('.badge svg', { rotate: 160, ease: 'none', scrollTrigger: scrub });
+      if ($('.badge')) gsap.to('.badge svg', { rotate: 160, ease: 'none', scrollTrigger: scrub });
       if ($('.float-quote')) gsap.to('.float-quote', { yPercent: -40, ease: 'none', scrollTrigger: scrub });
       if ($('.float-like')) gsap.to('.float-like', { yPercent: -60, ease: 'none', scrollTrigger: scrub });
     }
@@ -205,7 +205,7 @@
     });
   
     /* ---------- ScrollReveal (React Bits) – Text füllt sich Wort für Wort ---------- */
-    if (Split) $$('.about .lead + .lead, .why-head .lead, .fw-lead .lead, .rh-intro .lead').forEach(function (el) {
+    if (Split) $$('.about .lead + .lead, .why-head .lead').forEach(function (el) {
       near(el, function () {
         var words = new Split(el, { type: 'words', wordsClass: 'sr-word', aria: 'none' }).words;
         gsap.fromTo(words, { opacity: 0.15 }, { opacity: 1, stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true } });

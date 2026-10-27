@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   Reserved. – Anfragen
+   reserved.social – Anfragen
    Mehrstufiges Formular → Paket-Empfehlung, Priorität (heiß/warm/kalt),
    E-Mail an Victoria, automatische Bestätigung an die Kund:in,
    Postfach mit Status im Admin-Bereich.
@@ -30,7 +30,7 @@ function rs_lead_status(): array {
 function rs_lead_recommend(array $d): array {
     $goals = $d['ziele'] ?? [];
     $u = $d['umfang'] ?? '';
-    if ($u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie Reserved. arbeitet.'];
+    if ($u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'];
     if ($u === 'all') return ['Premium', 'Wir übernehmen alles: Strategie, Content, Posten und Community – du musst dich um nichts kümmern.'];
     $strategic = array_intersect($goals, ['events', 'anfragen', 'personal']);
     if (($d['stand'] ?? '') === 'regular' || count($goals) >= 3 || $strategic) {
@@ -135,12 +135,12 @@ function rs_lead_mails(array $lead): void {
     if (!empty($c['leads']['autoreply'])) {
         $first = explode(' ', $d['name'])[0];
         $r  = "Hallo $first,\n\n";
-        $r .= "danke für deine Anfrage bei Reserved.! Sie ist gut bei uns angekommen. " . $c['site']['response_text'] . "\n\n";
+        $r .= "danke für deine Anfrage bei reserved.social! Sie ist gut bei uns angekommen. " . $c['site']['response_text'] . "\n\n";
         $r .= "Unsere erste Einschätzung: Das Paket „{$lead['rec']}“ könnte gut zu dir passen.\n{$lead['why']}\n";
         $r .= "Im Gespräch schauen wir gemeinsam, was wirklich zu dir passt.\n\n";
         $r .= "Deine Angaben im Überblick:\n---------------------------\n" . rs_lead_summary($lead);
-        $r .= "\nBis bald\nVictoria\nReserved. – Social Media für lokale Unternehmen\nInstagram: @{$c['site']['instagram']}\n";
-        rs_mail($d['email'], 'Danke für deine Anfrage – Reserved.', $r, $c['site']['email'], 'Reserved.');
+        $r .= "\nBis bald\nVictoria\nreserved.social – Social Media für lokale Unternehmen\nInstagram: @{$c['site']['instagram']}\n";
+        rs_mail($d['email'], 'Danke für deine Anfrage – reserved.social', $r, $c['site']['email'], 'reserved.social');
     }
 }
 

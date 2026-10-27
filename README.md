@@ -1,6 +1,6 @@
-# Reserved. – Webseite
+# reserved.social – Webseite
 
-One-Page-Webseite für **Reserved. – Social Media für lokale Unternehmen**, mit Admin-Bereich, Instagram-Live-Feed, smarter Anfrage und eigener Statistik (ohne Cookies).
+One-Page-Webseite für **reserved.social – Social Media für lokale Unternehmen**, mit Admin-Bereich, Instagram-Live-Feed, smarter Anfrage und eigener Statistik (ohne Cookies).
 
 Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten liegen geschützt in Dateien), läuft auf jedem Webspace mit PHP 8.1+ (z. B. IONOS). Ohne PHP (z. B. GitHub Pages) funktioniert die Seite trotzdem – dann mit festen Inhalten, Beispiel-Feed und Formular per E-Mail-Programm.
 
