@@ -39,5 +39,5 @@ echo   Zum Beenden dieses Fenster schliessen.
 echo.
 start "" "http://localhost:8123/"
 start "" "http://localhost:8123/admin/"
-"%PHPEXE%" -S localhost:8123 _reserved/testserver.php
+"%PHPEXE%" -d upload_max_filesize=200M -d post_max_size=210M -S localhost:8123 _reserved/testserver.php
 pause

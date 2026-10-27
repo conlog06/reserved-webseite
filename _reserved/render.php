@@ -35,6 +35,7 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $handle = $S['instagram'] ?: 'reserved.social';
 
     $html = (string)preg_replace('~<html\b~i', '<html data-cms-live data-api="' . e(rs_url('_reserved/api.php')) . '"', $html, 1);
+    if (empty($c['ugc']['on'])) for ($i = 0; $i < 4 && str_contains($html, '<!--cms:ugclink-->'); $i++) $html = rs_block($html, 'ugclink', '');
 
     /* Einzelne Texte */
     $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($S) {
@@ -429,5 +430,76 @@ function rs_render_check(string $html, array $c): string {
         $html = (string)preg_replace_callback('~(<!--cms:fcbudget-->.*?<div class="fc-opts" data-auto>).*?(</div></section><!--/cms:fcbudget-->)~s', fn($m) => $m[1] . $o . $m[2], $html, 1);
     }
     if (!empty($S['img_avatar'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="avatar"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($S['img_avatar'])) . '"', $html);
+    return $html;
+}
+
+/* ==========================================================================
+   UGC-Seite /ugc/ (Victorias Creator Kit)
+   ========================================================================== */
+/** „a | b | c“-Zeilen in Arrays zerlegen (leere Zeilen fallen weg) */
+function rs_lines(string $s, int $parts = 2): array {
+    $out = [];
+    foreach (preg_split('/\R/', $s) ?: [] as $l) {
+        if (trim($l) === '') continue;
+        $p = array_map('trim', explode('|', $l, $parts));
+        $out[] = array_pad($p, $parts, '');
+    }
+    return $out;
+}
+function rs_ugc_blocks(array $U): array {
+    $B = [];
+    $B['ugstats'] = implode('', array_map(fn($x) => '<div class="ug-stat reveal"><b>' . e($x[0]) . '</b><span>' . e($x[1]) . '</span></div>', rs_lines((string)$U['stats'])));
+    $card = function (string $name, string $head, string $ages, string $facts) {
+        $rows = rs_lines($ages); $f = rs_lines($facts);
+        if ($head === '' && !$rows && !$f) return '';
+        $max = 0.0; foreach ($rows as $r) $max = max($max, (float)str_replace(',', '.', (string)preg_replace('/[^\d,.]/', '', $r[1])));
+        $o = '<article class="ug-aud reveal"><h3>' . e($name) . '</h3>' . ($head !== '' ? '<p class="ug-aud-h">' . e($head) . '</p>' : '');
+        if ($rows) {
+            $o .= '<ul class="ug-bars">';
+            foreach ($rows as $r) { $v = (float)str_replace(',', '.', (string)preg_replace('/[^\d,.]/', '', $r[1])); $w = $max > 0 ? round($v / $max * 100) : 0;
+                $o .= '<li><span>' . e($r[0]) . '</span><i><s style="width:' . $w . '%"></s></i><b>' . e($r[1]) . '</b></li>'; }
+            $o .= '</ul>';
+        }
+        if ($f) { $o .= '<dl class="ug-facts">'; foreach ($f as $x) $o .= '<div><dt>' . e($x[0]) . '</dt><dd>' . e($x[1]) . '</dd></div>'; $o .= '</dl>'; }
+        return $o . '</article>';
+    };
+    $B['ugaud'] = $card('Instagram', (string)$U['ig_head'], (string)$U['ig_ages'], (string)$U['ig_facts']) . $card('TikTok', (string)$U['tt_head'], (string)$U['tt_ages'], (string)$U['tt_facts']);
+    $price = trim((string)$U['price_label']);
+    $B['ugsvc'] = implode('', array_map(function ($x) use ($price) {
+        $pts = array_filter(array_map('trim', explode(';', $x[2])), fn($p) => $p !== '');
+        return '<div class="ug-svc reveal"><div class="ug-svc-h"><h3>' . e($x[0]) . '</h3>' . ($x[1] !== '' ? '<p>' . e($x[1]) . '</p>' : '') . '</div>'
+             . '<ul>' . implode('', array_map(fn($p) => '<li>' . e($p) . '</li>', $pts)) . '</ul>' . ($price !== '' ? '<span class="ug-price script">' . e($price) . '</span>' : '') . '</div>';
+    }, rs_lines((string)$U['services'], 3)));
+    $i = 0;
+    $B['ugsteps'] = implode('', array_map(function ($x) use (&$i) { $i++; return '<li class="reveal"><span class="ug-n">' . $i . '</span><h3>' . e($x[0]) . '</h3><p>' . e($x[1]) . '</p></li>'; }, rs_lines((string)$U['steps'])));
+    $B['ugbrands'] = implode('', array_map(function ($x) {
+        $names = array_filter(array_map('trim', explode(',', $x[1])), fn($n) => $n !== '');
+        return '<div class="ug-brand reveal"><h3>' . e($x[0]) . '</h3><ul>' . implode('', array_map(fn($n) => '<li>' . e($n) . '</li>', $names)) . '</ul></div>';
+    }, rs_lines((string)$U['brands'])));
+    $v = '';
+    foreach ((array)($U['videos'] ?? []) as $x) {
+        if (empty($x['file'])) continue;
+        $v .= '<figure class="ug-vid reveal"><video src="' . e(rs_url($x['file'])) . '"' . (!empty($x['poster']) ? ' poster="' . e(rs_url($x['poster'])) . '"' : '') . ' preload="' . (!empty($x['poster']) ? 'none' : 'metadata') . '" playsinline></video>'
+            . '<button type="button" class="ug-play" aria-label="Video abspielen' . (!empty($x['title']) ? ': ' . e($x['title']) : '') . '"><svg><use href="#i-play"/></svg></button>'
+            . (!empty($x['title']) ? '<figcaption>' . e($x['title']) . '</figcaption>' : '') . '</figure>';
+    }
+    $B['ugvideos'] = $v === '' ? '' : '<section class="section ug-videos" data-sec="videos"><div class="container"><div class="section-head"><div><span class="eyebrow reveal">Content</span><h2 class="reveal d1">Beispiel<span class="script">videos.</span></h2></div></div><div class="ug-vids">' . $v . '</div></div></section>';
+    return $B;
+}
+function rs_render_ugc(string $html, array $c): string {
+    $U = $c['ugc'];
+    $html = rs_render_page($html, $c);
+    $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms-ug="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($U) {
+        $v = $U[$m[3]] ?? null;
+        return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
+    }, $html);
+    $hrefs = ['mail' => $U['email'] !== '' ? 'mailto:' . $U['email'] : '', 'ig' => $U['ig'] !== '' ? 'https://www.instagram.com/' . rawurlencode($U['ig']) . '/' : '',
+              'tt' => $U['tt'] !== '' ? 'https://www.tiktok.com/@' . rawurlencode($U['tt']) : '', 'portfolio' => preg_match('~^https://~i', (string)$U['portfolio']) ? $U['portfolio'] : ''];
+    $html = (string)preg_replace_callback('~<a\b([^>]*?)\bhref="[^"]*"([^>]*?\bdata-ug-href="([a-z]+)"[^>]*)>~i', function ($m) use ($hrefs) {
+        $h = $hrefs[$m[3]] ?? '';
+        return '<a' . $m[1] . 'href="' . e($h) . '"' . $m[2] . ($h === '' ? ' hidden' : '') . '>';
+    }, $html);
+    foreach (rs_ugc_blocks($U) as $k => $v) $html = rs_block($html, $k, $v);
+    if (!empty($c['site']['img_ugc'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="ugc"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($c['site']['img_ugc'])) . '"', $html);
     return $html;
 }

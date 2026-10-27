@@ -30,6 +30,8 @@ AddType application/manifest+json .webmanifest
   # Über mich
   RewriteRule ^ueber-mich$ ueber-mich/ [R=301,L]
   RewriteRule ^ueber-mich/(index\.html?)?$ _reserved/gate.php [L,QSA]
+  RewriteRule ^ugc$ ugc/ [R=301,L]
+  RewriteRule ^ugc/(index\.html?)?$ _reserved/gate.php [L,QSA]
   # Fit-Check „Zusammenarbeit starten“
   RewriteRule ^start$ start/ [R=301,L]
   RewriteRule ^start/(index\.html?)?$ _reserved/gate.php [L,QSA]

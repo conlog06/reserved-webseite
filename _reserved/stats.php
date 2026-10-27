@@ -14,12 +14,12 @@ declare(strict_types=1);
 const RS_STATS_KEEP_MONTHS = 14;
 
 function rs_stats_pages(): array {
-    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', 'start/index.html' => 'Fit-Check /start', 'ueber-mich/index.html' => 'Über mich /ueber-mich', 'plan/index.html' => 'Download /plan', 'plan/danke/index.html' => 'Danke-Seite /plan/danke', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
+    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', 'start/index.html' => 'Fit-Check /start', 'ueber-mich/index.html' => 'Über mich /ueber-mich', 'ugc/index.html' => 'UGC /ugc', 'plan/index.html' => 'Download /plan', 'plan/danke/index.html' => 'Danke-Seite /plan/danke', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
 }
 /** Abschnitte der Seite in Reihenfolge (für den "Wie weit wird gescrollt"-Trichter) */
 function rs_stats_sections(): array {
     return ['hero' => 'Start', 'warum' => 'Das Problem', 'fuer-wen' => 'Für wen', 'leistungen' => 'Leistungen', 'rhythmus' => 'Rhythmus', 'ablauf' => 'Ablauf',
-            'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über mich', 'faq' => 'Häufige Fragen', 'kontakt' => 'Kontakt', 'reels' => 'Reel-Statistiken'];
+            'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über mich', 'faq' => 'Häufige Fragen', 'kontakt' => 'Kontakt', 'reels' => 'Reel-Statistiken', 'reichweite' => 'UGC: Reichweite', 'zielgruppe' => 'UGC: Zielgruppe', 'videos' => 'UGC: Videos', 'marken' => 'UGC: Marken'];
 }
 /** Klickziele mit lesbarem Namen */
 function rs_stats_clicks(): array {
@@ -27,7 +27,7 @@ function rs_stats_clicks(): array {
     foreach (rs_config()['site']['plans'] as $i => $p) $plans['plan-' . ($i + 1)] = 'Paket „' . $p['name'] . '“ angefragt';
     $check = [];
     foreach (rs_check_steps() as $i => $t) $check['check-' . ($i + 1)] = 'Fit-Check ' . ($i + 1) . ': ' . $t;
-    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'whatsapp' => 'WhatsApp geöffnet', 'about-page' => 'Link zu „Über mich“', 'about-hero' => 'Start: Victoria / Über mich', 'plan-signup' => 'Funnel: eingetragen', 'plan-confirm' => 'Funnel: E-Mail bestätigt', 'plan-download' => 'Funnel: PDF geladen', 'book-call' => 'Funnel: Termin buchen geklickt', 'book-free' => 'Funnel: Erstgespräch geklickt', 'plan-cta' => 'Link zum Download geklickt', 'freebie' => 'Content-Plan Starter angefragt (DM)', 'offer-dfy' => 'Angebot: Wir machen das für dich', 'offer-coaching' => 'Angebot: Coaching anfragen', 'reel-case' => 'Reel-Statistik geöffnet', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
+    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'whatsapp' => 'WhatsApp geöffnet', 'about-page' => 'Link zu „Über mich“', 'about-hero' => 'Start: Victoria / Über mich', 'plan-signup' => 'Funnel: eingetragen', 'plan-confirm' => 'Funnel: E-Mail bestätigt', 'plan-download' => 'Funnel: PDF geladen', 'book-call' => 'Funnel: Termin buchen geklickt', 'book-free' => 'Funnel: Erstgespräch geklickt', 'plan-cta' => 'Link zum Download geklickt', 'freebie' => 'Content-Plan Starter angefragt (DM)', 'offer-dfy' => 'Angebot: Wir machen das für dich', 'offer-coaching' => 'Angebot: Coaching anfragen', 'reel-case' => 'Reel-Statistik geöffnet', 'ugc-page' => 'Link zur UGC-Seite', 'ugc-mail' => 'UGC: Anfrage per Mail', 'ugc-ig' => 'UGC: Instagram', 'ugc-tt' => 'UGC: TikTok', 'ugc-portfolio' => 'UGC: Model-Portfolio', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
             'mail' => 'E-Mail-Adresse geklickt', 'dm' => 'Instagram-DM geklickt', 'ig-follow' => 'Instagram: Folgen', 'ig-post' => 'Instagram-Post geöffnet',
             'ig-open' => 'Post auf Instagram geöffnet', 'check-cta' => 'Fit-Check-Link geklickt', 'form-start' => 'Anfrage begonnen', 'form-step2' => 'Anfrage: Schritt 2', 'form-step3' => 'Anfrage: Schritt 3'];
 }

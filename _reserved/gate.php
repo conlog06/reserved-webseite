@@ -23,8 +23,9 @@ $isCheck = (bool)preg_match('~^/start(/|/index\.html)?$~', $uri);
 $isAbout = (bool)preg_match('~^/ueber-mich(/|/index\.html)?$~', $uri);
 $isPlan = (bool)preg_match('~^/plan(/|/index\.html)?$~', $uri);
 $isDanke = (bool)preg_match('~^/plan/danke(/|/index\.html)?$~', $uri);
-$page = $isLp ? 'angebot/index.html' : ($isCheck ? 'start/index.html' : ($isAbout ? 'ueber-mich/index.html' : ($isPlan ? 'plan/index.html' : ($isDanke ? 'plan/danke/index.html' : 'index.html'))));
-$here = rs_url($isLp ? 'angebot/' : ($isCheck ? 'start/' : ($isAbout ? 'ueber-mich/' : ($isPlan ? 'plan/' : ($isDanke ? 'plan/danke/' : '')))));
+$isUgc = (bool)preg_match('~^/ugc(/|/index\.html)?$~', $uri);
+$page = $isLp ? 'angebot/index.html' : ($isCheck ? 'start/index.html' : ($isAbout ? 'ueber-mich/index.html' : ($isPlan ? 'plan/index.html' : ($isDanke ? 'plan/danke/index.html' : ($isUgc ? 'ugc/index.html' : 'index.html')))));
+$here = rs_url($isLp ? 'angebot/' : ($isCheck ? 'start/' : ($isAbout ? 'ueber-mich/' : ($isPlan ? 'plan/' : ($isDanke ? 'plan/danke/' : ($isUgc ? 'ugc/' : ''))))));
 
 /* ---------- Automatischer Launch ---------- */
 $mode = rs_effective_mode($c);
@@ -104,11 +105,12 @@ if ($mode === 'prelaunch' && !$bypass) {
 }
 if ($isLp && empty($c['angebot']['on']) && !$admin) { header('Location: ' . rs_url(''), true, 302); exit; }
 if (($isPlan || $isDanke) && empty($c['funnel']['on']) && !$admin) { header('Location: ' . rs_url(''), true, 302); exit; }
+if ($isUgc && empty($c['ugc']['on']) && !$admin) { header('Location: ' . rs_url('ueber-mich/'), true, 302); exit; }
 if ($isCheck && empty($c['check']['on']) && !$admin) { header('Location: ' . rs_url('#kontakt'), true, 302); exit; }
 
 /* ---------- Echte Seite ---------- */
 $tpl = (string)file_get_contents(rs_root() . '/' . $page);
-$html = $isLp ? rs_render_angebot($tpl, $c) : ($isCheck ? rs_render_check($tpl, $c) : ($isAbout ? rs_render_about($tpl, $c) : ($isPlan || $isDanke ? rs_render_plan($tpl, $c, $isDanke) : rs_render_page($tpl, $c, $admin))));
+$html = $isLp ? rs_render_angebot($tpl, $c) : ($isCheck ? rs_render_check($tpl, $c) : ($isAbout ? rs_render_about($tpl, $c) : ($isPlan || $isDanke ? rs_render_plan($tpl, $c, $isDanke) : ($isUgc ? rs_render_ugc($tpl, $c) : rs_render_page($tpl, $c, $admin)))));
 if ($admin || $bypass) {
     header('Cache-Control: no-store');
     if ($mode !== 'live') header('X-Robots-Tag: noindex');

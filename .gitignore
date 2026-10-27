@@ -5,3 +5,4 @@ _reserved/data/*.lock
 _reserved/data/*.log
 assets/ig/*.jpg
 assets/img/*-upload.*
+assets/img/ugc-*

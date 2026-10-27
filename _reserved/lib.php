@@ -230,6 +230,7 @@ function rs_defaults(): array {
             ],
             'img_about' => '',
             'img_avatar' => '',
+            'img_ugc' => '',
             'imp_name' => 'Victoria Franz',
             'imp_business' => 'reserved.social – Social Media für lokale Unternehmen',
             'imp_address' => "c/o IP-Management #6193\nLudwig-Erhard-Straße 18\n20459 Hamburg",
@@ -255,6 +256,34 @@ function rs_defaults(): array {
             'booking_label' => 'Strategie-Call buchen',
             'notify' => false,
             'nl_tool' => 'none', 'nl_key' => '', 'nl_list' => '',
+        ],
+        /* UGC-Seite /ugc/ (Victorias Creator Kit). Listen: eine Zeile pro Eintrag, Teile mit „|“ getrennt. */
+        'ugc' => [
+            'on' => true,
+            'title' => 'Victoria Franz', 'script' => 'aka Westerberg-Chaya',
+            'tags' => 'Model · UGC Creator · Local Creator',
+            'intro' => 'Die arrogante Rothaarige. Ich zeige (nicht nur) die schönsten Spots in und um Osnabrück. Für Marken produziere ich UGC auf Deutsch und Englisch, der verkauft.',
+            'email' => 'booking.vfranz@web.de',
+            'ig' => 'victoria.frz', 'tt' => 'victoriafrz', 'portfolio' => 'https://linktr.ee/victoria.frz',
+            'reach_title' => 'Viel mehr Aufrufe', 'reach_script' => 'als Follower.',
+            'stats' => "4,3 Mio. | Aufrufe auf Instagram in 30 Tagen\n7,1 Mio. | Aufrufe auf Instagram in 60 Tagen\n94 % | der Aufrufe von Nicht-Followern, also neue Menschen\n10k+ | Aufrufe pro Reel, bei jedem Reel",
+            'stats_src' => 'Quelle: Instagram- und TikTok-Insights, August bis Oktober 2026.',
+            'ig_head' => '9.390 Follower · @victoria.frz',
+            'ig_ages' => "18–24 | 18,1 %\n25–34 | 44,1 %\n35–44 | 21,0 %\n45–54 | 9,1 %",
+            'ig_facts' => "Frauen | 64,1 %\nTop-Stadt Osnabrück | 19,6 %\nSprache Deutsch | 70,5 %",
+            'tt_head' => '10.566 Follower · 1,7 Mio. Likes · @victoriafrz',
+            'tt_ages' => "18–24 | 46,9 %\n25–34 | 38,6 %\n35–44 | 6,6 %\n45–54 | 5,6 %",
+            'tt_facts' => "Frauen | 69 %\nSpitze an einem Tag | ~90.000 Aufrufe\nZielgruppe | 18–34 Jahre",
+            'services' => "Spot-Feature | Für Cafés, Restaurants, Hotels und Läden in und um Osnabrück | Reel auf Instagram und TikTok; Story mit Standort und Verlinkung; Dreh vor Ort, Schnitt, Musik, Caption\n"
+                        . "Brand Collab | Für überregionale Marken, die meine Reichweite nutzen wollen | Reel auf Instagram und TikTok; Idee und Umsetzung im Stil meines Accounts; Story-Set auf Wunsch dazu\n"
+                        . "UGC-Video | Content für deine Kanäle und Ads, auf Deutsch oder Englisch | Ein Video inkl. organischer Nutzung und einer Korrekturschleife; Optional: Nutzung in Paid Ads, zusätzliche Hook-Varianten, Rohmaterial",
+            'price_label' => 'auf Anfrage',
+            'note' => 'UGC und Posting lassen sich kombinieren: Du bekommst das Video für deine Ads und die Reichweite auf meinem Account, als Paket günstiger. Bezahlte Beiträge kennzeichne ich als Werbung. Preise erhältst du auf Anfrage, passend zu Umfang und Nutzung.',
+            'steps' => "Anfrage | Kurze Mail mit Produkt oder Location, Ziel und Zeitraum.\nBriefing | Wir legen Idee, Hook und Leistungen fest. Du bekommst ein festes Angebot.\nDreh | Ich drehe, schneide und schicke dir das Video zur Freigabe.\nLive | Nach einer Korrekturschleife geht es online oder an dich raus.",
+            'brands' => "Beauty & Pflege | L'Oréal Paris, NYX Professional, Makeup, e.l.f., Redken, Labello, Batiste, The Gloria Skincare, Hydraid\n"
+                      . "Fashion & Lifestyle | Tinder, Casetify, Mejuri, Souleway, Olistic, emgrace, The Cocoon Family\n"
+                      . "Osnabrück & Region | Doppio Padel, Café Rubbenbruchsee, Alines Artcake, Skin Aesthetics, Eat Spain Drink Spain, Le Feu, Teeamo, Stadtwerke Osnabrück, Mywellness",
+            'videos' => [],
         ],
         'ig' => [
             'on' => true,
