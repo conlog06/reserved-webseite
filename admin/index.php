@@ -297,36 +297,41 @@ if ($post) {
                 flash($r['ok'] ? 'Instagram verbunden – ' . $r['count'] . ' Beiträge geladen.' : 'Gespeichert, aber Instagram meldet: ' . $r['error'], $r['ok'] ? 'ok' : 'error');
             } else flash('Gespeichert.');
             back();
-        /* ----- Terminbuchung ----- */
+        /* ----- Termine ----- */
+        case 'booking_new':
+            [$ok, $res, $clash] = rs_booking_create($_POST);
+            if (!$ok) { flash($res, 'error'); back('&' . http_build_query(array_intersect_key($_POST, array_flip(['name', 'email', 'lead', 'art', 'date', 'time']))) . '#neu'); }
+            if (!empty($_POST['save_tpl'])) { $c = rs_config(); $c['booking']['mail_subject'] = $res['mail_subject']; $c['booking']['mail_text'] = $res['mail_text']; rs_save_config($c); }
+            if ($res['lead'] !== '') rs_locked('leads', function () use ($res) { $l = rs_leads(); foreach ($l as &$x) if ($x['id'] === $res['lead']) { $x['notes'][] = ['ts' => time(), 't' => 'Termin vorgeschlagen: ' . $res['type_name'] . ', ' . rs_booking_when($res), 'sys' => true]; if ($x['status'] === 'neu') $x['status'] = 'kontaktiert'; } unset($x); rs_save_leads($l); });
+            flash('Vorschlag an ' . $res['email'] . ' geschickt' . ($res['sent'] ? '' : ' – die E-Mail konnte aber nicht versendet werden, bitte Einstellungen prüfen') . '.' . ($clash ? ' Achtung: überschneidet sich mit „' . $clash['type_name'] . ' – ' . $clash['name'] . '“.' : ''), $clash || !$res['sent'] ? 'error' : 'ok');
+            back();
+        case 'booking_cancel':
+            flash(rs_booking_cancel((string)($_POST['id'] ?? ''), $str('msg', 600)) ? 'Termin abgesagt – die Person hat eine E-Mail bekommen.' : 'Termin nicht gefunden.'); back();
+        case 'booking_move':
+            flash(rs_booking_move((string)($_POST['id'] ?? ''), $str('date', 12), $str('time', 6)) ? 'Neuer Vorschlag verschickt.' : 'Bitte Datum und Uhrzeit prüfen.'); back();
+        case 'booking_resend':
+            $b = null; foreach (rs_bookings() as $x) if ($x['id'] === ($_POST['id'] ?? '')) $b = $x;
+            flash($b && rs_booking_send($b) ? 'E-Mail erneut verschickt.' : 'Konnte nicht verschickt werden.'); back();
+        case 'booking_delete':
+            $id = (string)($_POST['id'] ?? '');
+            rs_locked('bookings', function () use ($id) { rs_bookings_save(array_filter(rs_bookings(), fn($b) => $b['id'] !== $id)); });
+            flash('Eintrag gelöscht.'); back();
         case 'booking':
             $B = &$c['booking'];
-            $B['on'] = !empty($_POST['bk_on']); $B['notify'] = !empty($_POST['bk_notify']);
-            foreach (['title' => 60, 'script' => 60, 'lead' => 400, 'confirm_text' => 400] as $k => $max) { $v = trim($str('bk_' . $k, $max)); if ($v !== '' || $k === 'confirm_text') $B[$k] = $v; }
+            $B['notify'] = !empty($_POST['bk_notify']);
             $types = []; $seen = [];
             foreach ($list('bk_types') as $t) {
                 $name = rs_cut(trim((string)($t['name'] ?? '')), 60); if ($name === '') continue;
                 $id = preg_match('/^[a-z0-9-]{2,40}$/', (string)($t['id'] ?? '')) ? (string)$t['id'] : substr(rs_slug($name), 0, 40);
                 while (isset($seen[$id])) $id .= '-2';
                 $seen[$id] = true;
-                $types[] = ['id' => $id, 'name' => $name, 'min' => max(10, min(240, (int)($t['min'] ?? 30))), 'desc' => rs_cut(trim((string)($t['desc'] ?? '')), 240), 'where' => rs_cut(trim((string)($t['where'] ?? '')), 80)];
-                if (count($types) >= 6) break;
+                $types[] = ['id' => $id, 'name' => $name, 'min' => max(10, min(480, (int)($t['min'] ?? 30))), 'where' => rs_cut(trim((string)($t['where'] ?? '')), 200)];
+                if (count($types) >= 8) break;
             }
             if ($types) $B['types'] = $types;
-            foreach (range(1, 7) as $d) $B['hours'][(string)$d] = rs_cut(trim((string)($_POST['bk_hours'][$d] ?? '')), 120);
-            $B['step'] = in_array((int)($_POST['bk_step'] ?? 30), [15, 20, 30, 45, 60], true) ? (int)$_POST['bk_step'] : 30;
-            $B['buffer'] = max(0, min(120, (int)($_POST['bk_buffer'] ?? 15)));
-            $B['notice'] = max(0, min(336, (int)($_POST['bk_notice'] ?? 24)));
-            $B['days'] = max(3, min(120, (int)($_POST['bk_days'] ?? 28)));
-            $B['max_per_day'] = max(0, min(20, (int)($_POST['bk_max'] ?? 0)));
-            $B['blocked'] = $str('bk_blocked', 3000);
-            unset($B); rs_save_config($c); flash('Terminbuchung gespeichert.'); back('#einstellungen');
-        case 'booking_cancel':
-            $t = (string)($_POST['token'] ?? '');
-            flash(rs_booking_cancel($t, 'admin') ? 'Termin abgesagt – die Person hat eine E-Mail bekommen.' : 'Termin nicht gefunden.'); back();
-        case 'booking_delete':
-            $id = (string)($_POST['id'] ?? '');
-            rs_locked('bookings', function () use ($id) { rs_bookings_save(array_filter(rs_bookings(), fn($b) => $b['id'] !== $id)); });
-            flash('Eintrag gelöscht.'); back();
+            $subj = trim($str('bk_subject', 200)); if ($subj !== '') $B['mail_subject'] = $subj;
+            $txt = trim($str('bk_text', 5000)); if ($txt !== '') $B['mail_text'] = $txt;
+            unset($B); rs_save_config($c); flash('Gespeichert.'); back('#einstellungen');
         case 'ig_source':
             $c['ig']['source'] = ($_POST['source'] ?? '') === 'api' ? 'api' : 'manual';
             $c['ig']['on'] = !empty($_POST['on']);
@@ -407,6 +412,10 @@ if ($post) {
             foreach (['ig', 'tt'] as $k) $U[$k] = (string)preg_replace('/[^A-Za-z0-9._]/', '', ltrim(trim($str($k, 60)), '@'));
             $pf = trim($str('portfolio', 300)); $U['portfolio'] = preg_match('~^https://~i', $pf) ? $pf : '';
             unset($U); rs_save_config($c); flash('UGC-Seite gespeichert.'); back('#ugc');
+        case 'ugc_msg_delete':
+            $id = (string)($_POST['id'] ?? '');
+            rs_locked('ugc-anfragen', function () use ($id) { rs_write('ugc-anfragen', array_values(array_filter(rs_ugc_msgs(), fn($m) => $m['id'] !== $id))); });
+            flash('Anfrage gelöscht.'); back('#ugc');
         case 'ugc_video':
             $v = $_FILES['video'] ?? null;
             if (count((array)$c['ugc']['videos']) >= 8) { flash('Maximal 8 Videos.', 'error'); back('#ugc'); }
@@ -626,6 +635,7 @@ head('Admin – reserved.social', true);
     <section class="card">
       <div class="quick">
         <a class="btn" href="<?= e($mailto) ?>">✉️ Per E-Mail antworten</a>
+        <a class="btn btn-ghost" href="?tab=termine&amp;<?= e(http_build_query(['name' => $d['name'], 'email' => $d['email'], 'lead' => $one['id']])) ?>#neu">📅 Termin vorschlagen</a>
         <?php if ($d['telefon']): ?><a class="btn btn-ghost" href="tel:<?= e(preg_replace('/[^\d+]/', '', $d['telefon'])) ?>">📞 Anrufen</a>
         <a class="btn btn-ghost" href="https://wa.me/<?= e(lead_wa($d['telefon'])) ?>?text=<?= rawurlencode("Hallo $first, hier ist Victoria von reserved.social – danke für deine Anfrage!") ?>" target="_blank" rel="noopener">💬 WhatsApp</a><?php endif; ?>
         <?php if ($d['insta']): $tt = in_array('tiktok', $d['kanal'] ?? [], true); $ig = in_array('instagram', $d['kanal'] ?? ['instagram'], true) || empty($d['kanal']); ?>
@@ -928,7 +938,7 @@ head('Admin – reserved.social', true);
         <label>Angebot – Text<textarea name="fu_offer_text" rows="2" maxlength="400"><?= e($F['offer_text']) ?></textarea></label>
         <label>Angebot – Punkte <small>(eine Zeile pro Punkt)</small><textarea name="fu_offer_bullets" rows="3"><?= e(implode("\n", $F['offer_bullets'])) ?></textarea></label>
         <div class="cols"><label>Preis <small>(leer = kein Preis)</small><input name="fu_price" value="<?= e($F['price']) ?>" maxlength="40" placeholder="z. B. ab 149 € im Monat"></label><label>Text auf dem Termin-Button<input name="fu_booking_label" value="<?= e($F['booking_label']) ?>" maxlength="40"></label></div>
-        <p class="hint">Die Buttons auf der Danke-Seite führen zur eigenen Terminbuchung (<a href="?tab=termine">Admin → Termine</a>): „<?= e($F['booking_label']) ?>“ zum Strategie-Call, „Kostenloses Erstgespräch“ zum Erstgespräch.</p>
+        <p class="hint">Die Buttons auf der Danke-Seite führen zum Anfrageformular. Den Termin schlägst du danach selbst vor – unter <a href="?tab=termine">Termine</a>.</p>
         <label class="check"><input type="checkbox" name="fu_notify" value="1"<?= $F['notify'] ? ' checked' : '' ?>> Mir bei jedem neuen Download eine E-Mail schicken</label>
       </fieldset>
       <button class="btn">Speichern</button>
@@ -957,90 +967,99 @@ head('Admin – reserved.social', true);
   </section>
 
 <?php /* ======================= TERMINE ======================= */ elseif ($tab === 'termine'):
-  $B = $c['booking']; $all = rs_bookings(); $now = time();
-  $up = array_values(array_filter($all, fn($b) => $b['status'] === 'ok' && (int)$b['end'] >= $now));
-  $past = array_reverse(array_values(array_filter($all, fn($b) => !($b['status'] === 'ok' && (int)$b['end'] >= $now))));
-  $week = count(array_filter($up, fn($b) => (int)$b['start'] < strtotime('monday next week')));
-  $canc = count(array_filter($all, fn($b) => $b['status'] !== 'ok' && ($b['cancelled'] ?? 0) > $now - 30 * 86400));
-  $bkUrl = rs_abs_url('termin/'); $st30 = rs_stats_summary(30);
-  $wd = ['1' => 'Montag', '2' => 'Dienstag', '3' => 'Mittwoch', '4' => 'Donnerstag', '5' => 'Freitag', '6' => 'Samstag', '7' => 'Sonntag'];
+  $B = $c['booking']; $all = rs_bookings(); $now = time(); $types = rs_booking_types($B);
+  $up = array_values(array_filter($all, fn($b) => $b['status'] !== 'abgesagt' && (int)$b['end'] >= $now));
+  $past = array_reverse(array_values(array_filter($all, fn($b) => !($b['status'] !== 'abgesagt' && (int)$b['end'] >= $now))));
+  $cnt = fn($st) => count(array_filter($up, fn($b) => $b['status'] === $st));
+  $pre = ['name' => (string)($_GET['name'] ?? ''), 'email' => (string)($_GET['email'] ?? ''), 'lead' => (string)($_GET['lead'] ?? ''), 'art' => (string)($_GET['art'] ?? ''), 'date' => (string)($_GET['date'] ?? ''), 'time' => (string)($_GET['time'] ?? '')];
+  $selType = rs_booking_type($pre['art'], $B) ?? ($types[0] ?? ['id' => '', 'name' => 'Termin', 'min' => 30, 'where' => '']);
   $typeRow = fn(string $k, array $t) => '<div class="qed"><input type="hidden" name="bk_types[' . $k . '][id]" value="' . e($t['id'] ?? '') . '"><div class="cols c3"><input name="bk_types[' . $k . '][name]" value="' . e($t['name'] ?? '') . '" placeholder="Name, z. B. Strategie-Call" maxlength="60">'
-      . '<select name="bk_types[' . $k . '][min]">' . implode('', array_map(fn($m) => '<option value="' . $m . '"' . ((int)($t['min'] ?? 30) === $m ? ' selected' : '') . '>' . $m . ' Minuten</option>', [15, 20, 30, 45, 60, 90, 120])) . '</select>'
-      . '<input name="bk_types[' . $k . '][where]" value="' . e($t['where'] ?? '') . '" placeholder="Wo? z. B. Video-Call" maxlength="80"></div>'
-      . '<textarea name="bk_types[' . $k . '][desc]" rows="2" maxlength="240" placeholder="Kurz: worum geht es?">' . e($t['desc'] ?? '') . '</textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div>';
+      . '<select name="bk_types[' . $k . '][min]">' . implode('', array_map(fn($m) => '<option value="' . $m . '"' . ((int)($t['min'] ?? 30) === $m ? ' selected' : '') . '>' . ($m < 60 ? $m . ' Minuten' : ($m / 60) . ' Std.') . '</option>', [15, 30, 45, 60, 90, 120, 180, 240])) . '</select>'
+      . '<input name="bk_types[' . $k . '][where]" value="' . e($t['where'] ?? '') . '" placeholder="Wo? z. B. Video-Call" maxlength="200"></div><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div>';
+  $stTag = ['offen' => 'warn', 'bestaetigt' => 'on', 'abgelehnt' => 'bad', 'abgesagt' => ''];
 ?>
-  <div class="page-head"><div><h1>Termine</h1><p class="sub">Eigene Terminbuchung – ohne Calendly, ohne Kosten. Leute buchen auf <b>/termin/</b>, du bekommst eine Mail.</p></div>
-    <a class="btn btn-ghost btn-small" href="<?= e(rs_url('termin/')) ?>" target="_blank" rel="noopener">Buchungsseite ansehen ↗</a></div>
-  <nav class="subnav"><a href="#kommend">Kommende Termine</a><a href="#links">Links</a><a href="#einstellungen">Zeiten &amp; Terminarten</a></nav>
-  <?php if (empty($B['on'])): ?><p class="flash warn">Die Terminbuchung ist ausgeschaltet – Buttons führen zum Kontaktformular.</p><?php endif; ?>
+  <div class="page-head"><div><h1>Termine</h1><p class="sub">Du schlägst einen Termin vor – die Person bekommt eine E-Mail mit Kalendereintrag und bestätigt mit einem Klick.</p></div>
+    <a class="btn btn-small" href="#neu">+ Termin vorschlagen</a></div>
+  <nav class="subnav"><a href="#neu">Neuer Termin</a><a href="#kommend">Kommende Termine</a><a href="#einstellungen">Terminarten &amp; E-Mail</a></nav>
   <div class="kpis">
-    <div class="kpi"><span>Kommende Termine</span><b><?= $n(count($up)) ?></b></div>
-    <div class="kpi"><span>Diese Woche</span><b><?= $n($week) ?></b></div>
-    <div class="kpi"><span>Buchungsseite besucht</span><b><?= $n($st30['p']['termin/index.html'] ?? 0) ?></b><small>letzte 30 Tage</small></div>
-    <div class="kpi"><span>Abgesagt</span><b><?= $n($canc) ?></b><small>letzte 30 Tage</small></div>
+    <div class="kpi"><span>Wartet auf Bestätigung</span><b><?= $n($cnt('offen')) ?></b></div>
+    <div class="kpi"><span>Bestätigt</span><b><?= $n($cnt('bestaetigt')) ?></b><small>kommende</small></div>
+    <div class="kpi"><span>Passt nicht</span><b><?= $n($cnt('abgelehnt')) ?></b><small>neuen Vorschlag schicken</small></div>
+    <div class="kpi"><span>Diese Woche</span><b><?= $n(count(array_filter($up, fn($b) => $b['status'] === 'bestaetigt' && (int)$b['start'] < strtotime('monday next week')))) ?></b></div>
   </div>
+
+  <section class="card" id="neu">
+    <h2>Termin vorschlagen</h2>
+    <p class="hint">Tipp: In einer Anfrage gibt es den Button „Termin vorschlagen“ – dann sind Name und E-Mail schon ausgefüllt.</p>
+    <form method="post" class="form" id="bkNew"><?= $hidden('booking_new') ?><input type="hidden" name="lead" value="<?= e($pre['lead']) ?>">
+      <div class="cols"><label>Name<input name="name" value="<?= e($pre['name']) ?>" required maxlength="80"></label><label>E-Mail<input type="email" name="email" value="<?= e($pre['email']) ?>" required maxlength="200"></label></div>
+      <div class="cols c3">
+        <label>Terminart<select name="art" id="bkArt"><?php foreach ($types as $t): ?><option value="<?= e($t['id']) ?>" data-name="<?= e($t['name']) ?>" data-min="<?= (int)$t['min'] ?>" data-where="<?= e($t['where'] ?? '') ?>"<?= $t['id'] === $selType['id'] ? ' selected' : '' ?>><?= e($t['name']) ?></option><?php endforeach; ?></select></label>
+        <label>Datum<input type="date" name="date" value="<?= e($pre['date']) ?>" min="<?= date('Y-m-d') ?>" required></label>
+        <label>Uhrzeit<input type="time" name="time" value="<?= e($pre['time'] ?: '10:00') ?>" step="300" required></label>
+      </div>
+      <input type="hidden" name="type_name" id="bkTName" value="<?= e($selType['name']) ?>">
+      <div class="cols"><label>Dauer <small>(Minuten)</small><input type="number" name="min" id="bkMin" value="<?= (int)$selType['min'] ?>" min="10" max="480" step="5"></label>
+        <label>Wo? <small>(Adresse, „Telefon“ oder Link zum Video-Call)</small><input name="where" id="bkWhere" value="<?= e($selType['where'] ?? '') ?>" maxlength="200"></label></div>
+      <label>Persönliche Nachricht <small>(optional – erscheint in der E-Mail an der Stelle {nachricht})</small><textarea name="note" rows="2" maxlength="1500" placeholder="z. B. Bring gern zwei, drei Beispiele mit, die dir gefallen."></textarea></label>
+      <details class="tech"><summary>E-Mail ansehen &amp; anpassen</summary>
+        <p class="hint">Platzhalter werden automatisch ersetzt: <code>{vorname}</code> <code>{terminart}</code> <code>{datum}</code> <code>{uhrzeit}</code> <code>{bis}</code> <code>{dauer}</code> <code>{ort}</code> <code>{nachricht}</code> <code>{link}</code> (Link zum Bestätigen). Die Kalender-Datei hängt immer an.</p>
+        <label>Betreff<input name="mail_subject" value="<?= e($B['mail_subject']) ?>" maxlength="200"></label>
+        <label>Text<textarea name="mail_text" rows="12" maxlength="5000"><?= e($B['mail_text']) ?></textarea></label>
+        <label class="check"><input type="checkbox" name="save_tpl" value="1"> <span>Diesen Text als neue Standard-Vorlage speichern</span></label>
+      </details>
+      <button class="btn">Vorschlag per E-Mail senden</button>
+    </form>
+  </section>
 
   <section class="card" id="kommend">
     <h2>Kommende Termine</h2>
-    <?php if (!$up): ?><p class="empty">Noch keine Termine. Teile den Link zur Buchungsseite – z. B. in der Instagram-Bio oder per DM.</p>
+    <?php if (!$up): ?><p class="empty">Noch keine Termine. Schlag oben einen vor – oder direkt aus einer Anfrage.</p>
     <?php else: $lastDay = ''; ?><div class="bk-list"><?php foreach ($up as $b): $day = rs_date_de((int)$b['start'], true, false); ?>
       <?php if ($day !== $lastDay): $lastDay = $day; ?><h3 class="bk-dayh"><?= e($day) ?><?= date('Y-m-d', (int)$b['start']) === date('Y-m-d') ? ' <span class="tag on">heute</span>' : '' ?></h3><?php endif; ?>
       <div class="bk-row">
         <div class="bk-time-a"><b><?= date('H:i', (int)$b['start']) ?></b><small>bis <?= date('H:i', (int)$b['end']) ?></small></div>
-        <div class="bk-who"><b><?= e($b['name']) ?></b> <span class="tag"><?= e($b['type_name']) ?></span>
-          <small><a href="mailto:<?= e($b['email']) ?>"><?= e($b['email']) ?></a><?= $b['phone'] ? ' · <a href="tel:' . e(preg_replace('/[^\d+]/', '', $b['phone'])) . '">' . e($b['phone']) . '</a>' : '' ?><?= $b['firma'] ? ' · ' . e($b['firma']) : '' ?></small>
-          <?php if ($b['note']): ?><p><?= nl2br(e($b['note'])) ?></p><?php endif; ?></div>
+        <div class="bk-who"><b><?= e($b['name']) ?></b> <span class="tag"><?= e($b['type_name']) ?></span> <span class="tag <?= $stTag[$b['status']] ?? '' ?>"><?= e(RS_BK_STATUS[$b['status']] ?? $b['status']) ?></span>
+          <small><a href="mailto:<?= e($b['email']) ?>"><?= e($b['email']) ?></a><?= $b['where'] ? ' · ' . e($b['where']) : '' ?> · vorgeschlagen <?= e(rs_ago((int)$b['created'])) ?><?= $b['answered'] ? ' · Antwort ' . e(rs_ago((int)$b['answered'])) : '' ?></small>
+          <?php if ($b['answer'] !== ''): ?><p class="bk-answer"><b>Antwort:</b> <?= nl2br(e($b['answer'])) ?></p><?php endif; ?>
+          <details class="bk-more"><summary>Verschieben / Absagen</summary>
+            <form method="post" class="inline-f"><?= $hidden('booking_move') ?><input type="hidden" name="id" value="<?= e($b['id']) ?>"><input type="date" name="date" value="<?= date('Y-m-d', (int)$b['start']) ?>" min="<?= date('Y-m-d') ?>" required><input type="time" name="time" value="<?= date('H:i', (int)$b['start']) ?>" step="300" required><button class="btn btn-small">Neuen Vorschlag senden</button></form>
+            <form method="post" class="inline-f" onsubmit="return confirm('Termin absagen? Die Person bekommt eine E-Mail.')"><?= $hidden('booking_cancel') ?><input type="hidden" name="id" value="<?= e($b['id']) ?>"><input name="msg" placeholder="Grund (optional, steht in der Mail)" maxlength="600"><button class="btn btn-small btn-danger">Absagen</button></form>
+          </details></div>
         <div class="btnrow"><a class="btn btn-ghost btn-small" href="<?= e(rs_url('_reserved/api.php?a=termin_ics&t=' . $b['token'])) ?>">In meinen Kalender</a>
-          <form method="post" onsubmit="return confirm('Termin absagen? Die Person bekommt eine E-Mail.')"><?= $hidden('booking_cancel') ?><input type="hidden" name="token" value="<?= e($b['token']) ?>"><button class="btn btn-small btn-danger">Absagen</button></form></div>
+          <?php if ($b['status'] === 'offen'): ?><form method="post"><?= $hidden('booking_resend') ?><input type="hidden" name="id" value="<?= e($b['id']) ?>"><button class="btn btn-ghost btn-small">Erinnern</button></form><?php endif; ?>
+          <a class="btn btn-ghost btn-small" href="<?= e(rs_url('termin/?t=' . $b['token'])) ?>" target="_blank" rel="noopener">Ansicht ↗</a></div>
       </div><?php endforeach; ?></div><?php endif; ?>
     <?php if ($past): ?><details class="tech"><summary>Vergangene &amp; abgesagte Termine <small>(<?= count($past) ?>)</small></summary>
       <div class="table-scroll"><table class="tbl"><thead><tr><th>Termin</th><th>Art</th><th>Name</th><th>Status</th><th></th></tr></thead><tbody>
-      <?php foreach (array_slice($past, 0, 50) as $b): ?><tr><td><?= e(date('d.m.Y H:i', (int)$b['start'])) ?></td><td><?= e($b['type_name']) ?></td><td><?= e($b['name']) ?> <small><?= e($b['email']) ?></small></td>
-        <td><span class="tag<?= $b['status'] === 'ok' ? ' on' : ' warn' ?>"><?= $b['status'] === 'ok' ? 'stattgefunden' : 'abgesagt' . (($b['cancelled_by'] ?? '') === 'admin' ? ' (von dir)' : '') ?></span></td>
+      <?php foreach (array_slice($past, 0, 60) as $b): ?><tr><td><?= e(date('d.m.Y H:i', (int)$b['start'])) ?></td><td><?= e($b['type_name']) ?></td><td><?= e($b['name']) ?> <small><?= e($b['email']) ?></small></td>
+        <td><span class="tag"><?= e($b['status'] === 'abgesagt' ? 'abgesagt' : ($b['status'] === 'bestaetigt' ? 'stattgefunden' : (RS_BK_STATUS[$b['status']] ?? ''))) ?></span></td>
         <td><form method="post" onsubmit="return confirm('Eintrag löschen?')"><?= $hidden('booking_delete') ?><input type="hidden" name="id" value="<?= e($b['id']) ?>"><button class="x" aria-label="Löschen">✕</button></form></td></tr><?php endforeach; ?>
       </tbody></table></div></details><?php endif; ?>
   </section>
 
-  <section class="card" id="links">
-    <h2>Links zum Teilen</h2>
-    <div class="utm"><?php $links = ['Buchungsseite' => $bkUrl, 'Instagram-Bio' => $bkUrl . '?utm_source=instagram-bio'];
-      foreach (rs_booking_types($B) as $t) $links[$t['name']] = $bkUrl . '?art=' . rawurlencode($t['id']);
-      foreach ($links as $t => $u): ?><div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
-  </section>
-
   <section class="card" id="einstellungen">
-    <h2>Zeiten &amp; Terminarten</h2>
+    <h2>Terminarten &amp; E-Mail-Vorlage</h2>
     <form method="post" class="form"><?= $hidden('booking') ?>
-      <label class="check"><input type="checkbox" name="bk_on" value="1"<?= !empty($B['on']) ? ' checked' : '' ?>> Terminbuchung ist online</label>
       <fieldset><legend>Terminarten</legend>
-        <p class="hint">Was kann man buchen? Name, Dauer, wo es stattfindet und ein kurzer Satz dazu.</p>
-        <div id="bkTypes" class="qlist"><?php foreach (rs_booking_types($B) as $i => $t) echo $typeRow((string)$i, $t); ?></div>
-        <template id="tpl-bktype"><?= $typeRow('__', ['min' => 30]) ?></template>
+        <p class="hint">Damit Dauer und Ort beim Vorschlagen schon ausgefüllt sind.</p>
+        <div id="bkTypes" class="qlist"><?php foreach ($types as $i => $t) echo $typeRow((string)$i, $t); ?></div>
+        <template id="tpl-bktype"><?= $typeRow('__', ['min' => 45]) ?></template>
         <button type="button" class="btn btn-ghost btn-small" data-add="tpl-bktype" data-to="bkTypes">+ Terminart</button>
       </fieldset>
-      <fieldset><legend>Wann bist du buchbar?</legend>
-        <p class="hint">Pro Tag ein oder mehrere Zeitfenster, z. B. <code>09:00-12:00, 14:00-17:00</code>. Leer = an dem Tag keine Termine. Termine, die schon gebucht sind, werden automatisch ausgeblendet.</p>
-        <div class="bk-week"><?php foreach ($wd as $d => $name): ?><label><span><?= $name ?></span><input name="bk_hours[<?= $d ?>]" value="<?= e($B['hours'][$d] ?? '') ?>" placeholder="frei"></label><?php endforeach; ?></div>
+      <fieldset><legend>Standard-E-Mail</legend>
+        <p class="hint">Platzhalter: <code>{vorname}</code> <code>{name}</code> <code>{terminart}</code> <code>{datum}</code> <code>{uhrzeit}</code> <code>{bis}</code> <code>{dauer}</code> <code>{ort}</code> <code>{nachricht}</code> <code>{link}</code>. Fehlt <code>{link}</code>, wird der Bestätigungslink automatisch unten angehängt.</p>
+        <label>Betreff<input name="bk_subject" value="<?= e($B['mail_subject']) ?>" maxlength="200"></label>
+        <label>Text<textarea name="bk_text" rows="12" maxlength="5000"><?= e($B['mail_text']) ?></textarea></label>
       </fieldset>
-      <fieldset><legend>Regeln</legend>
-        <div class="cols c3">
-          <label>Startzeiten alle<select name="bk_step"><?php foreach ([15, 20, 30, 45, 60] as $m): ?><option value="<?= $m ?>"<?= (int)$B['step'] === $m ? ' selected' : '' ?>><?= $m ?> Minuten</option><?php endforeach; ?></select></label>
-          <label>Pause zwischen Terminen <small>(Minuten)</small><input type="number" name="bk_buffer" value="<?= (int)$B['buffer'] ?>" min="0" max="120"></label>
-          <label>Frühestens buchbar <small>(Stunden vorher)</small><input type="number" name="bk_notice" value="<?= (int)$B['notice'] ?>" min="0" max="336"></label>
-          <label>Wie weit im Voraus <small>(Tage)</small><input type="number" name="bk_days" value="<?= (int)$B['days'] ?>" min="3" max="120"></label>
-          <label>Höchstens Termine pro Tag <small>(0 = egal)</small><input type="number" name="bk_max" value="<?= (int)$B['max_per_day'] ?>" min="0" max="20"></label>
-        </div>
-        <label>Gesperrte Tage <small>(Urlaub, Feiertage – ein Eintrag pro Zeile, z. B. „24.12.2026“ oder „27.07.2026 bis 09.08.2026“)</small><textarea name="bk_blocked" rows="3" maxlength="3000" placeholder="24.12.2026 bis 01.01.2027"><?= e($B['blocked']) ?></textarea></label>
-      </fieldset>
-      <fieldset><legend>Texte</legend>
-        <div class="cols"><label>Überschrift<input name="bk_title" value="<?= e($B['title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="bk_script" value="<?= e($B['script']) ?>" maxlength="60"></label></div>
-        <label>Text<textarea name="bk_lead" rows="2" maxlength="400"><?= e($B['lead']) ?></textarea></label>
-        <label>Zusatz in der Bestätigungsmail <small>(z. B. wie es abläuft)</small><textarea name="bk_confirm_text" rows="2" maxlength="400"><?= e($B['confirm_text']) ?></textarea></label>
-        <label class="check"><input type="checkbox" name="bk_notify" value="1"<?= !empty($B['notify']) ? ' checked' : '' ?>> Mir bei jeder Buchung eine E-Mail schicken (an <?= e($S['email']) ?>)</label>
-      </fieldset>
+      <label class="check"><input type="checkbox" name="bk_notify" value="1"<?= !empty($B['notify']) ? ' checked' : '' ?>> <span>Mir eine E-Mail schicken, wenn jemand bestätigt oder absagt (an <?= e($S['email']) ?>)</span></label>
       <button class="btn">Speichern</button>
     </form>
   </section>
+  <script>
+    (() => { const s = document.getElementById('bkArt'); if (!s) return;
+      s.addEventListener('change', () => { const o = s.selectedOptions[0]; document.getElementById('bkMin').value = o.dataset.min; document.getElementById('bkWhere').value = o.dataset.where; document.getElementById('bkTName').value = o.dataset.name; }); })();
+  </script>
 
 <?php /* ======================= INSTAGRAM ======================= */ elseif ($tab === 'instagram'):
   $ig = $c['ig']; $connected = $ig['token'] !== ''; $P = $igData['profile'] ?? null;
@@ -1270,6 +1289,16 @@ head('Admin – reserved.social', true);
       <div><p class="hint">Hochformat, JPG/PNG/WebP. Ohne eigenes Bild erscheint das Foto aus dem Creator Kit.</p>
         <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><input type="hidden" name="slot" value="ugc"><label class="btn btn-ghost btn-small file-btn">Neues Bild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
         <?php if ($S['img_ugc'] ?? ''): ?><form method="post"><?= $hidden('image_delete') ?><input type="hidden" name="slot" value="ugc"><button class="btn btn-small btn-danger">Zurücksetzen</button></form><?php endif; ?></div></div>
+    <?php $um = array_reverse(rs_ugc_msgs()); ?>
+    <h3 class="mt">Anfragen von Marken <small>(<?= count($um) ?> – kommen auch per Mail an <?= e($U['email']) ?>)</small></h3>
+    <?php if (!$um): ?><p class="empty">Noch keine Anfragen über das Formular auf der UGC-Seite.</p>
+    <?php else: ?><div class="ugm-list"><?php foreach (array_slice($um, 0, 30) as $m): ?>
+      <details class="ugm"><summary><span class="ugm-d"><?= e(date('d.m.', (int)$m['ts'])) ?></span><b><?= e($m['firma'] ?: $m['name']) ?></b><span class="ugm-s"><?= e($m['betreff'] ?: rs_cut($m['text'], 60)) ?></span></summary>
+        <p class="ugm-from"><?= e($m['name']) ?> · <a href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>"><?= e($m['email']) ?></a> · über <?= e($m['src']) ?></p>
+        <p class="msg"><?= nl2br(e($m['text'])) ?></p>
+        <div class="btnrow"><a class="btn btn-small" href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>">Antworten</a>
+          <form method="post" onsubmit="return confirm('Anfrage löschen?')"><?= $hidden('ugc_msg_delete') ?><input type="hidden" name="id" value="<?= e($m['id']) ?>"><button class="btn btn-small btn-danger">Löschen</button></form></div>
+      </details><?php endforeach; ?></div><?php endif; ?>
     <form method="post" class="form mt"><?= $hidden('ugc') ?>
       <label class="check"><input type="checkbox" name="ug_on" value="1"<?= !empty($U['on']) ? ' checked' : '' ?>> UGC-Seite ist online <small>(aus = Links darauf verschwinden)</small></label>
       <fieldset><legend>Oben</legend>

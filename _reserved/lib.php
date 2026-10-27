@@ -258,19 +258,16 @@ function rs_defaults(): array {
             'booking_label' => 'Strategie-Call buchen',
             'notify' => false,
         ],
-        /* Eigene Terminbuchung /termin/ (keine Kosten, kein externer Dienst) */
+        /* Termine: Victoria schlägt im Admin vor, die Person bestätigt per Link (/termin/?t=…) */
         'booking' => [
             'on' => true,
-            'title' => 'Such dir einen', 'script' => 'Termin aus.',
-            'lead' => 'Wähle, worum es gehen soll, und such dir einen freien Termin aus. Du bekommst sofort eine Bestätigung per E-Mail – mit Kalendereintrag.',
             'types' => [
-                ['id' => 'erstgespraech', 'name' => 'Kostenloses Erstgespräch', 'min' => 45, 'desc' => 'Wir lernen uns kennen und schauen gemeinsam, was zu dir und deinem Unternehmen passt.', 'where' => 'Telefon oder Video-Call'],
-                ['id' => 'strategie', 'name' => 'Strategie-Call', 'min' => 45, 'desc' => 'Wir planen deine Social-Media-Strategie: Ziele, Ideen und deinen Rhythmus für den nächsten Monat.', 'where' => 'Video-Call'],
+                ['id' => 'erstgespraech', 'name' => 'Kostenloses Erstgespräch', 'min' => 45, 'where' => 'Telefon oder Video-Call'],
+                ['id' => 'strategie', 'name' => 'Strategie-Call', 'min' => 45, 'where' => 'Video-Call'],
+                ['id' => 'dreh', 'name' => 'Drehtermin', 'min' => 120, 'where' => 'Bei dir vor Ort'],
             ],
-            'hours' => ['1' => '09:00-12:00, 14:00-17:00', '2' => '09:00-12:00, 14:00-17:00', '3' => '09:00-12:00, 14:00-17:00', '4' => '09:00-12:00, 14:00-17:00', '5' => '09:00-12:00', '6' => '', '7' => ''],
-            'step' => 30, 'buffer' => 15, 'notice' => 24, 'days' => 28, 'max_per_day' => 0,
-            'blocked' => '',
-            'confirm_text' => 'Ich melde mich kurz vorher mit dem Link zum Video-Call bzw. rufe dich an.',
+            'mail_subject' => 'Terminvorschlag: {terminart} am {datum}',
+            'mail_text' => "Hallo {vorname},\n\nich schlage dir folgenden Termin vor:\n\n{terminart}\n{datum}, {uhrzeit}–{bis} Uhr\n{ort}\n\n{nachricht}\n\nPasst dir das? Bitte bestätige kurz über diesen Link – dort kannst du mir auch sagen, wenn es nicht klappt:\n{link}\n\nIm Anhang findest du den Termin für deinen Kalender – einfach antippen.\n\nLiebe Grüße\nVictoria\nreserved.social",
             'notify' => true,
         ],
         /* UGC-Seite /ugc/ (Victorias Creator Kit). Listen: eine Zeile pro Eintrag, Teile mit „|“ getrennt. */
@@ -423,7 +420,7 @@ function rs_hit(string $bucket, int $window = 900): void {
 }
 
 /* ---------- E-Mail ---------- */
-function rs_mail(string $to, string $subject, string $text, string $replyTo = '', string $replyName = ''): bool {
+function rs_mail(string $to, string $subject, string $text, string $replyTo = '', string $replyName = '', array $attach = []): bool {
     $c = rs_config();
     $from = trim((string)$c['site']['mail_from']);
     if ($from === '' || !filter_var($from, FILTER_VALIDATE_EMAIL)) {
@@ -435,12 +432,27 @@ function rs_mail(string $to, string $subject, string $text, string $replyTo = ''
     if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
         $headers .= 'Reply-To: ' . ($replyName !== '' ? '=?UTF-8?B?' . base64_encode($clean($replyName)) . '?= ' : '') . "<$replyTo>\r\n";
     }
-    $headers .= "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n";
+    $body = $text; $logAtt = '';
+    if ($attach) {
+        // Anhänge (z. B. Kalender-Datei .ics): multipart/mixed
+        $bd = 'rs-' . bin2hex(random_bytes(8));
+        $headers .= "MIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"$bd\"\r\n";
+        $body = "--$bd\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n" . str_replace("\n", "\r\n", $text) . "\r\n";
+        foreach ($attach as $a) {
+            $name = preg_replace('/[^\w.\-]/', '_', (string)$a['name']);
+            $body .= "--$bd\r\nContent-Type: {$a['type']}; name=\"$name\"\r\nContent-Disposition: attachment; filename=\"$name\"\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode((string)$a['data'])) . "\r\n";
+            $logAtt .= "[Anhang: $name, " . strlen((string)$a['data']) . " Bytes]\n";
+        }
+        $body .= "--$bd--\r\n";
+    } else {
+        $headers .= "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n";
+    }
     if (PHP_SAPI === 'cli-server') { // lokaler Test: Mail in Datei statt versenden
-        @file_put_contents(RS_DATA . '/mail-test.log', "TO: $to\nSUBJECT: $subject\n$headers\n$text\n\n-----\n", FILE_APPEND);
+        @file_put_contents(RS_DATA . '/mail-test.log', "TO: $to\nSUBJECT: $subject\n$headers\n$text\n$logAtt\n-----\n", FILE_APPEND);
+        foreach ($attach as $a) @file_put_contents(RS_DATA . '/mail-test-' . preg_replace('/[^\w.\-]/', '_', (string)$a['name']), (string)$a['data']);
         return true;
     }
-    return @mail($to, '=?UTF-8?B?' . base64_encode($clean($subject)) . '?=', $text, $headers, '-f' . $from);
+    return @mail($to, '=?UTF-8?B?' . base64_encode($clean($subject)) . '?=', $body, $headers, '-f' . $from);
 }
 
 /** "Dienstag, 4. November 2026, 18:00 Uhr" */
@@ -545,3 +557,4 @@ require_once __DIR__ . '/leads.php';
 require_once __DIR__ . '/render.php';
 require_once __DIR__ . '/funnel.php';
 require_once __DIR__ . '/booking.php';
+require_once __DIR__ . '/ugc.php';

@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Termin buchen – reserved.social</title>
+<title>Dein Termin – reserved.social</title>
+<meta name="robots" content="noindex">
 <meta name="description" content="Buch dir direkt einen Termin mit Victoria von reserved.social: kostenloses Erstgespräch oder Strategie-Call – sofort bestätigt, mit Kalendereintrag.">
 <meta name="theme-color" content="#F4F1EA">
 <meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-title" content="reserved.social">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Termin buchen – reserved.social">
+<meta property="og:title" content="Dein Termin – reserved.social">
 <meta property="og:description" content="Weder Zeit noch Personal für Social Media? Wir übernehmen.">
 <meta property="og:image" content="../assets/img/post-0-cover.webp">
 <meta property="og:locale" content="de_DE">
@@ -59,66 +60,18 @@
   <section class="bk-hero" data-sec="hero">
     <div class="container bk-grid">
       <div class="bk-copy">
-        <a href="../" class="vi-back"><svg><use href="#i-left"/></svg> Zur Startseite</a>
-        <span class="pill reveal"><span class="dot"></span>Termin buchen</span>
-        <h1 class="reveal d1"><span data-cms-bk="title">Such dir einen</span> <span class="script" data-cms-bk="script">Termin aus.</span></h1>
-        <p class="lead reveal d2" data-cms-bk="lead">Wähle, worum es gehen soll, und such dir einen freien Termin aus. Du bekommst sofort eine Bestätigung per E-Mail – mit Kalendereintrag.</p>
-        <ul class="bk-points reveal d2">
-          <li><svg><use href="#i-check"/></svg>Sofort bestätigt – mit Eintrag für deinen Kalender</li>
-          <li><svg><use href="#i-check"/></svg>Absagen jederzeit mit einem Klick</li>
-          <li><svg><use href="#i-check"/></svg>Persönlich mit Victoria, keine Warteschleife</li>
-        </ul>
+        <span class="pill reveal"><span class="dot"></span>Dein Termin</span>
+        <h1 class="reveal d1">Dein Termin <span class="script">mit Victoria.</span></h1>
+        <p class="lead reveal d2">Victoria hat dir einen Termin vorgeschlagen. Sag hier kurz Bescheid, ob er dir passt – mit einem Klick.</p>
         <a class="founder reveal d3" href="../ueber-mich/" data-track="about-page">
           <span class="founder-pic"><img src="../assets/img/victoria-creator.webp" data-cms-img="about" alt="" width="432" height="649" loading="lazy" decoding="async"></span>
-          <span><b>Du sprichst direkt mit Victoria</b><small>Gründerin von reserved.social. <u>Mehr über mich</u> →</small></span>
+          <span><b>Victoria, Gründerin von reserved.social</b><small>Fragen? Antworte einfach auf die E-Mail. <u>Mehr über mich</u> →</small></span>
         </a>
       </div>
-
       <div class="bk-card reveal d1" id="bk" aria-live="polite">
-        <form id="bkForm" novalidate>
-          <div class="bk-step" id="bkStepArt">
-            <h2 class="bk-h"><span>1</span>Worum geht&rsquo;s?</h2>
-            <div class="bk-types" id="bkTypes" role="radiogroup" aria-label="Terminart"><p class="bk-loading">Lädt freie Termine …</p></div>
-          </div>
-          <div class="bk-step">
-            <h2 class="bk-h"><span>2</span>Wann passt es dir?</h2>
-            <div class="bk-days-wrap">
-              <button type="button" class="bk-nav" id="bkPrev" aria-label="Frühere Tage"><svg><use href="#i-left"/></svg></button>
-              <div class="bk-days" id="bkDays" role="radiogroup" aria-label="Tag"></div>
-              <button type="button" class="bk-nav" id="bkNext" aria-label="Spätere Tage"><svg><use href="#i-arrow"/></svg></button>
-            </div>
-            <div class="bk-times" id="bkTimes" role="radiogroup" aria-label="Uhrzeit"></div>
-            <p class="bk-empty" id="bkEmpty" hidden>In den nächsten Wochen ist leider nichts mehr frei. Schreib uns gern eine <a href="../#kontakt">Nachricht</a> – wir finden einen Termin.</p>
-          </div>
-          <div class="bk-step bk-data" id="bkData" hidden>
-            <h2 class="bk-h"><span>3</span>Deine Daten</h2>
-            <p class="bk-sum" id="bkSum"></p>
-            <div class="bk-fields">
-              <div class="pf-field"><label for="b-name">Name</label><input id="b-name" name="name" autocomplete="name" required maxlength="80"></div>
-              <div class="pf-field"><label for="b-mail">E-Mail</label><input id="b-mail" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" required maxlength="200"></div>
-              <div class="pf-field"><label for="b-tel">Telefon <small>(optional)</small></label><input id="b-tel" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="40"></div>
-              <div class="pf-field"><label for="b-firma">Firma / Instagram <small>(optional)</small></label><input id="b-firma" name="firma" maxlength="120"></div>
-              <div class="pf-field bk-wide"><label for="b-note">Worum geht&rsquo;s kurz? <small>(optional)</small></label><textarea id="b-note" name="note" rows="3" maxlength="1500"></textarea></div>
-            </div>
-            <div class="hp" aria-hidden="true"><label>Webseite<input name="website" tabindex="-1" autocomplete="off"></label></div>
-            <p class="pf-error" id="bkError" role="alert" hidden></p>
-            <button class="btn btn-primary" type="submit" id="bkSubmit">Termin verbindlich buchen <svg><use href="#i-arrow"/></svg></button>
-            <p class="bk-legal">Wir nutzen deine Angaben nur, um den Termin mit dir durchzuführen. Mehr in der <button type="button" class="linklike" data-open="datenschutz">Datenschutzerklärung</button>.</p>
-          </div>
-        </form>
-        <div class="bk-done" id="bkDone" hidden tabindex="-1">
-          <span class="done-ic"><svg><use href="#i-check"/></svg></span>
-          <h2>Dein Termin steht!</h2>
-          <p class="bk-done-when" id="bkDoneWhen"></p>
-          <p>Die Bestätigung ist unterwegs an <b id="bkDoneMail"></b> – mit Kalendereintrag und Link zum Absagen.</p>
-          <div class="hero-actions"><a class="btn btn-primary" id="bkIcs" href="#" data-track="termin-ics"><svg><use href="#i-cal"/></svg> In meinen Kalender</a><a class="link-arrow" href="../">Zur Startseite</a></div>
-        </div>
-        <div class="bk-off" id="bkOff" hidden>
-          <span class="done-ic"><svg><use href="#i-cal"/></svg></span>
-          <h2>Terminbuchung kommt gleich</h2>
-          <p>Auf dieser Vorschau ist die Buchung noch nicht aktiv. Schreib uns einfach – wir finden zusammen einen Termin.</p>
-          <div class="hero-actions"><a class="btn btn-primary" href="../#kontakt">Erstgespräch anfragen <svg><use href="#i-arrow"/></svg></a></div>
-        </div>
+        <!--cms:bkcard-->
+        <div class="bk-msg"><span class="done-ic"><svg><use href="#i-cal"/></svg></span><h2>Termin öffnen</h2><p>Öffne diese Seite bitte über den Link in deiner E-Mail von Victoria.</p><div class="hero-actions"><a class="btn btn-primary" href="../#kontakt">Erstgespräch anfragen <svg><use href="#i-arrow"/></svg></a></div></div>
+        <!--/cms:bkcard-->
       </div>
     </div>
   </section>

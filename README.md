@@ -42,10 +42,12 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - Double-Opt-in: Bestätigungsmail → nach dem Klick `/plan/danke/` mit Download, Angebot „Strategie jeden Monat mit Victoria – ab … €“, Termin-Button (Calendly/Cal.com-Link) und kostenlosem Erstgespräch. Zusätzlich Mail mit Download-Link und Abmeldelink.
 - Admin: alle Texte, Preis, eigenes PDF hochladen (sonst Platzhalter), Einträge mit Status + CSV-Export, Zahlen (eingetragen, bestätigt, geladen, Termin geklickt), Links zum Teilen.
 
-**Terminbuchung `/termin/` (Admin → Termine)** – eigenes System, kein Calendly, keine Kosten
-- Terminarten (z. B. kostenloses Erstgespräch, Strategie-Call) mit Dauer, Ort und Kurztext; Wochenplan mit Zeitfenstern, Pause zwischen Terminen, Vorlauf, Buchungszeitraum, gesperrte Tage (Urlaub).
-- Besucher wählen Art → Tag → Uhrzeit → Daten; gebuchte Zeiten verschwinden sofort. Bestätigungsmail mit Kalenderdatei (.ics) und Absage-Link, Mail an Victoria.
-- Admin: kommende Termine nach Tagen, Kalendereintrag, Absagen (Person bekommt eine Mail), Links zum Teilen. Die Buttons auf der Danke-Seite des Funnels und im Kontaktbereich führen hierher.
+**Termine (Admin → Termine)** – eigenes System, kein Calendly, keine Kosten
+- Victoria schlägt einen Termin vor (Name, E-Mail, Terminart, Datum, Uhrzeit, Ort, persönliche Nachricht) – auch direkt aus einer Anfrage („Termin vorschlagen“).
+- Die Person bekommt eine anpassbare E-Mail (Vorlage mit Platzhaltern) mit Kalender-Datei (.ics) im Anhang und einem Link zu `/termin/?t=…`: „Ja, passt mir“ oder „Passt leider nicht“ mit Nachricht.
+- Victoria bekommt eine Mail bei jeder Antwort; im Admin: Status, Erinnern, Verschieben (neuer Vorschlag), Absagen (Kalendereintrag wird entfernt).
+
+**UGC-Anfragen:** Formular im E-Mail-Look auf `/ugc/` (An/Von/Marke/Betreff/Nachricht, Schnellauswahl der Leistungen) → Mail an die Booking-Adresse, Eingangsbestätigung an die Marke, Liste im Admin unter „Seiten → UGC-Seite“.
 
 ## Einrichtung (einmalig)
 1. Alle Dateien per FTP/SFTP in das Web-Verzeichnis hochladen – **inklusive der versteckten `.htaccess`-Dateien**. PHP auf 8.1 oder neuer stellen.

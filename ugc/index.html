@@ -55,7 +55,7 @@
       <li><a href="#leistungen">Leistungen</a></li>
       <li><a href="#marken">Marken</a></li>
     </ul>
-    <a href="mailto:booking.vfranz@web.de" data-ug-href="mail" class="btn btn-dark nav-cta vi-cta" data-track="ugc-mail">Anfrage <svg><use href="#i-arrow"/></svg></a>
+    <a href="#anfrage" class="btn btn-dark nav-cta vi-cta" data-track="ugc-form">Anfrage <svg><use href="#i-arrow"/></svg></a>
   </div>
 </header>
 
@@ -69,7 +69,7 @@
         <p class="ug-tags reveal d2" data-cms-ug="tags">Model · UGC Creator · Local Creator</p>
         <p class="lead reveal d2" data-cms-ug="intro">Die arrogante Rothaarige. Ich zeige (nicht nur) die schönsten Spots in und um Osnabrück. Für Marken produziere ich UGC auf Deutsch und Englisch, der verkauft.</p>
         <div class="hero-actions reveal d3">
-          <a href="mailto:booking.vfranz@web.de" data-ug-href="mail" class="btn btn-primary" data-track="ugc-mail">Zusammenarbeit anfragen <svg><use href="#i-arrow"/></svg></a>
+          <a href="#anfrage" class="btn btn-primary" data-track="ugc-form">Zusammenarbeit anfragen <svg><use href="#i-arrow"/></svg></a>
           <div class="ug-social">
             <a href="https://www.instagram.com/victoria.frz/" data-ug-href="ig" target="_blank" rel="noopener" data-track="ugc-ig"><svg><use href="#i-insta"/></svg><span>@<span data-cms-ug="ig">victoria.frz</span></span></a>
             <a href="https://www.tiktok.com/@victoriafrz" data-ug-href="tt" target="_blank" rel="noopener" data-track="ugc-tt"><svg><use href="#i-tiktok"/></svg><span>@<span data-cms-ug="tt">victoriafrz</span></span></a>
@@ -147,16 +147,42 @@
     </div>
   </section>
 
-  <section class="section ug-end" data-sec="kontakt">
+  <section class="section ug-end" id="anfrage" data-sec="kontakt">
     <div class="container">
       <div class="ug-end-box reveal">
-        <span class="eyebrow">Kontakt</span>
-        <h2>Lass uns etwas <span class="script">zusammen machen.</span></h2>
-        <a href="mailto:booking.vfranz@web.de" data-ug-href="mail" class="ug-mail" data-track="ugc-mail"><span data-cms-ug="email">booking.vfranz@web.de</span> <svg><use href="#i-arrow"/></svg></a>
-        <div class="ug-end-links">
-          <a href="https://www.canva.com/design/DAGyA1-shxs/D5WzFz58AkQSW6XabrofLw/view" data-ug-href="portfolio" target="_blank" rel="noopener">Model-Portfolio ansehen</a>
-          <a href="../">Laufender Content für dein Business: <b>reserved.social</b> <svg><use href="#i-arrow"/></svg></a>
+        <div class="ug-end-copy">
+          <span class="eyebrow">Kontakt</span>
+          <h2>Lass uns etwas <span class="script">zusammen machen.</span></h2>
+          <p class="ug-end-lead">Schreib mir direkt hier – wie eine E-Mail. Am besten mit Produkt oder Location, Ziel und Zeitraum. Ich antworte dir persönlich.</p>
+          <a href="mailto:booking.vfranz@web.de" data-ug-href="mail" class="ug-mail" data-track="ugc-mail"><span data-cms-ug="email">booking.vfranz@web.de</span> <svg><use href="#i-arrow"/></svg></a>
+          <div class="ug-end-links">
+            <a href="https://www.canva.com/design/DAGyA1-shxs/D5WzFz58AkQSW6XabrofLw/view" data-ug-href="portfolio" target="_blank" rel="noopener">Model-Portfolio ansehen</a>
+            <a href="../">Laufender Content für dein Business: <b>reserved.social</b> <svg><use href="#i-arrow"/></svg></a>
+          </div>
         </div>
+
+        <form class="mf" id="ugForm" novalidate aria-label="Nachricht an Victoria">
+          <div class="mf-bar"><span class="mf-dots" aria-hidden="true"><i></i><i></i><i></i></span><b>Neue Nachricht</b></div>
+          <div class="mf-in">
+            <div class="mf-row"><span class="mf-k">An</span><span class="mf-to"><img src="../assets/img/victoria-creator.webp" data-cms-img="ugc" alt="" width="432" height="649" loading="lazy">Victoria Franz <small>&lt;<span data-cms-ug="email">booking.vfranz@web.de</span>&gt;</small></span></div>
+            <div class="mf-row"><label class="mf-k" for="u-name">Von</label><input id="u-name" name="name" placeholder="Dein Name" autocomplete="name" maxlength="80" required><input id="u-mail" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="deine@e-mail.de" maxlength="200" required aria-label="Deine E-Mail-Adresse"></div>
+            <div class="mf-row"><label class="mf-k" for="u-firma">Marke</label><input id="u-firma" name="firma" placeholder="Marke, Unternehmen oder Location" autocomplete="organization" maxlength="120"></div>
+            <div class="mf-row"><label class="mf-k" for="u-subj">Betreff</label><input id="u-subj" name="betreff" placeholder="Worum geht’s?" maxlength="140"></div>
+            <div class="mf-chips" role="group" aria-label="Schnell auswählen"><!--cms:ugchips--><button type="button" data-subj="Spot-Feature">Spot-Feature</button><button type="button" data-subj="Brand Collab">Brand Collab</button><button type="button" data-subj="UGC-Video">UGC-Video</button><!--/cms:ugchips--><button type="button" data-subj="Model-Job">Model-Job</button></div>
+            <textarea name="nachricht" rows="7" maxlength="4000" aria-label="Nachricht" placeholder="Hallo Victoria,&#10;&#10;wir sind … und würden gern …&#10;&#10;Produkt / Location:&#10;Ziel:&#10;Zeitraum:"></textarea>
+            <div class="hp" aria-hidden="true"><label>Webseite<input name="website" tabindex="-1" autocomplete="off"></label></div>
+            <p class="pf-error" id="ugError" role="alert" hidden></p>
+            <div class="mf-foot">
+              <label class="mf-consent"><input type="checkbox" name="consent" value="1"><span>Meine Angaben dürfen zur Beantwortung gespeichert werden. Mehr in der <button type="button" class="linklike" data-open="datenschutz">Datenschutzerklärung</button>.</span></label>
+              <button class="btn btn-primary mf-send" type="submit" id="ugSend">Senden <svg><use href="#i-send"/></svg></button>
+            </div>
+          </div>
+          <div class="mf-done" id="ugDone" hidden tabindex="-1">
+            <span class="done-ic"><svg><use href="#i-check"/></svg></span>
+            <h3>Nachricht gesendet!</h3>
+            <p>Danke! Victoria antwortet dir an <b id="ugDoneMail"></b> – meistens innerhalb von zwei Werktagen.</p>
+          </div>
+        </form>
       </div>
     </div>
   </section>

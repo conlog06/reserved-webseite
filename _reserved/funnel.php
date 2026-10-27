@@ -102,7 +102,7 @@ function rs_funnel_confirm(string $token): ?array {
         $fn = explode(' ', $s['name'])[0];
         $text = (rs_funnel_mode($F) === 'mail' ? "Hallo $fn,\n\nhier ist dein {$F['title']}:\n\n{$L['pdf']}\n\n" : "Hallo $fn,\n\ndanke für deine Bestätigung – ab jetzt bekommst du ab und zu Social-Media-Tipps von mir. Den {$F['title']} findest du weiterhin hier:\n\n{$L['pdf']}\n\n")
               . ($F['offer_title'] !== '' ? $F['offer_title'] . "\n" . rs_plain($F['offer_text']) . "\n\n" : '')
-              . (!empty(rs_config()['booking']['on']) ? "{$F['booking_label']}: " . rs_abs_url('termin/?art=strategie') . "\nKostenloses Erstgespräch: " . rs_abs_url('termin/?art=erstgespraech') . "\n\n" : "Kostenloses Erstgespräch anfragen: " . rs_abs_url('#kontakt') . "\n\n")
+              . "{$F['booking_label']} oder kostenloses Erstgespräch anfragen: " . rs_abs_url('#kontakt') . "\n\n"
               . "Viel Spaß beim Umsetzen!\nVictoria\nreserved.social\n\n—\nKeine Mails mehr von uns? Hier abmelden: {$L['unsub']}\n";
         rs_mail($s['email'], rs_funnel_mode($F) === 'mail' ? 'Dein ' . $F['title'] . ' ist da' : 'Danke für deine Bestätigung', $text);
         if (!empty($F['notify']) && rs_funnel_mode($F) === 'mail') rs_mail($c['site']['email'], 'Neuer Download: ' . $s['name'], "{$s['name']} <{$s['email']}> hat den {$F['title']} heruntergeladen (über {$s['src']}).\n\nAlle Einträge: " . rs_abs_url('admin/?tab=funnel') . "\n");

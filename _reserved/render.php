@@ -35,7 +35,6 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $handle = $S['instagram'] ?: 'reserved.social';
 
     $html = (string)preg_replace('~<html\b~i', '<html data-cms-live data-api="' . e(rs_url('_reserved/api.php')) . '"', $html, 1);
-    if (empty($c['booking']['on'])) $html = (string)preg_replace('~href="(?:\.\./)*termin/[^"]*"~', 'href="' . e(rs_url('#kontakt')) . '"', $html);
     if (empty($c['ugc']['on'])) for ($i = 0; $i < 4 && str_contains($html, '<!--cms:ugclink-->'); $i++) $html = rs_block($html, 'ugclink', '');
 
     /* Einzelne Texte */
@@ -290,7 +289,7 @@ function rs_render_datenschutz(array $S, array $c): string {
 <h4>3. Besucherstatistik ohne Cookies</h4><p>Wir zählen Seitenaufrufe anonym: welche Bereiche angesehen werden, Klicks auf Buttons, Herkunft (z.&nbsp;B. „Instagram“ oder „Google“), Gerätetyp und Verweildauer. Es werden keine Cookies gesetzt und keine IP-Adressen gespeichert. Um Besucher eines Tages nicht doppelt zu zählen, wird ein Prüfwert aus IP-Adresse und Browserkennung mit einem täglich wechselnden Zufallswert gebildet, der nach Ablauf des Tages gelöscht wird – eine Wiedererkennung ist nicht möglich. Wenn dein Browser „Do Not Track“ oder „Global Privacy Control“ sendet, zählen wir nichts. Rechtsgrundlage ist unser berechtigtes Interesse an einer datensparsamen Reichweitenmessung (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;f DSGVO, § 25 Abs.&nbsp;2 TDDDG).</p>
 <h4>4. Anfrageformular und E-Mail</h4><p>Wenn du uns über das Formular oder per E-Mail kontaktierst, verarbeiten wir deine Angaben (Name, Kontaktdaten, Angaben zu deinem Unternehmen und deine Nachricht), um deine Anfrage zu beantworten und ein Angebot zu erstellen (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b DSGVO). Du erhältst eine automatische Bestätigung per E-Mail. Anfragen werden spätestens nach $months Monaten gelöscht, sofern daraus kein Auftrag entsteht und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
 <h4>5. Kostenloser Download und E-Mails</h4><p>Wenn du dir unseren kostenlosen Content-Plan Starter holst, speichern wir deinen Vornamen, deine E-Mail-Adresse, den Zeitpunkt der Anmeldung und der Bestätigung. {$dlText} Rechtsgrundlage ist deine Einwilligung (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;a DSGVO), die du jederzeit über den Abmeldelink in jeder E-Mail oder per Nachricht an uns widerrufen kannst. Nach der Abmeldung löschen wir deine Daten, sofern wir sie nicht als Nachweis der früheren Einwilligung aufbewahren müssen.</p>
-<h4>6. Terminbuchung</h4><p>Termine buchst du direkt auf unserer Webseite – ohne externen Kalender-Dienst. Wir speichern die gewählte Terminart, Datum und Uhrzeit, deinen Namen, deine E-Mail-Adresse und – falls angegeben – Telefonnummer, Unternehmen bzw. Instagram-Namen und deine Nachricht, um den Termin mit dir durchzuführen (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b DSGVO). Du bekommst eine Bestätigung per E-Mail mit einem Link zum Absagen. Die Angaben löschen wir spätestens nach $months Monaten, sofern daraus kein Auftrag entsteht und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
+<h4>6. Termine</h4><p>Termine schlagen wir dir per E-Mail vor – ohne externen Kalender-Dienst. Dafür speichern wir deinen Namen, deine E-Mail-Adresse, Terminart, Datum und Uhrzeit sowie deine Rückmeldung (passt / passt nicht und ggf. deine Nachricht), um den Termin mit dir abzustimmen und durchzuführen (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b DSGVO). Die E-Mail enthält eine Kalender-Datei und einen persönlichen Link, über den du den Termin bestätigst oder absagst. Die Angaben löschen wir spätestens nach $months Monaten, sofern daraus kein Auftrag entsteht und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
 <h4>7. Instagram</h4><p>Unsere Webseite zeigt Beiträge aus unserem Instagram-Profil. Die Bilder liegen auf unserem Server. Erst wenn du einen Link zu Instagram anklickst oder ein Video in der Großansicht abspielst, wird eine Verbindung zu Meta Platforms Ireland Ltd. hergestellt; dann gelten deren Datenschutzbestimmungen.</p>
 <h4>8. Deine Rechte</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren. Schreib uns dafür einfach eine E-Mail.</p>
 HTML;
@@ -510,6 +509,8 @@ function rs_render_ugc(string $html, array $c): string {
         return '<a' . $m[1] . 'href="' . e($h) . '"' . $m[2] . ($h === '' ? ' hidden' : '') . '>';
     }, $html);
     foreach (rs_ugc_blocks($U) as $k => $v) $html = rs_block($html, $k, $v);
+    $chips = implode('', array_map(fn($x) => '<button type="button" data-subj="' . e($x[0]) . '">' . e($x[0]) . '</button>', rs_lines((string)$U['services'], 3)));
+    if ($chips !== '') $html = rs_block($html, 'ugchips', $chips);
     if (!empty($c['site']['img_ugc'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="ugc"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($c['site']['img_ugc'])) . '"', $html);
     return $html;
 }
@@ -518,10 +519,33 @@ function rs_render_ugc(string $html, array $c): string {
    Terminbuchung /termin/
    ========================================================================== */
 function rs_render_termin(string $html, array $c): string {
-    $B = $c['booking'];
     $html = rs_render_page($html, $c);
-    return (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms-bk="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($B) {
-        $v = $B[$m[3]] ?? null;
-        return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
-    }, $html);
+    header('X-Robots-Tag: noindex'); header('Cache-Control: no-store');
+    $b = rs_booking_find((string)($_GET['t'] ?? ''));
+    if (!$b) return $html;
+    $min = (int)round(((int)$b['end'] - (int)$b['start']) / 60);
+    $ics = rs_url('_reserved/api.php?a=termin_ics&t=' . $b['token']);
+    $past = (int)$b['end'] < time();
+    $st = $past && $b['status'] !== 'abgesagt' ? ['vorbei', 'Termin ist vorbei'] : [$b['status'], ['offen' => 'Wartet auf deine Bestätigung', 'bestaetigt' => 'Bestätigt', 'abgelehnt' => 'Du hast abgesagt', 'abgesagt' => 'Abgesagt'][$b['status']] ?? ''];
+    $o = '<div class="bk-prop" data-t="' . e($b['token']) . '"><span class="bk-status st-' . e($st[0]) . '">' . ($st[0] === 'bestaetigt' ? '<svg><use href="#i-check"/></svg>' : '<i></i>') . e($st[1]) . '</span>'
+       . '<h2>' . e($b['type_name']) . '</h2><p class="bk-hi">Hallo ' . e(explode(' ', $b['name'])[0]) . ', hier ist dein Termin mit Victoria:</p>'
+       . '<ul class="bk-facts"><li><svg><use href="#i-cal"/></svg>' . e(rs_date_de((int)$b['start'], true, false)) . '</li>'
+       . '<li><svg><use href="#i-clock"/></svg>' . date('H:i', (int)$b['start']) . '–' . date('H:i', (int)$b['end']) . ' Uhr <small>(' . $min . ' Min.)</small></li>'
+       . ($b['where'] !== '' ? '<li><svg><use href="#i-pin"/></svg>' . (preg_match('~^https?://~i', $b['where']) ? '<a href="' . e($b['where']) . '" target="_blank" rel="noopener">' . e($b['where']) . '</a>' : e($b['where'])) . '</li>' : '') . '</ul>'
+       . ($b['note'] !== '' ? '<blockquote class="bk-note"><span>Nachricht von Victoria</span>' . nl2br(e($b['note'])) . '</blockquote>' : '');
+    $no = '<div class="bk-no" hidden><label for="bkMsg">Was passt dir besser? <small>(optional – z. B. „Mittwochs ab 15 Uhr“)</small></label><textarea id="bkMsg" rows="3" maxlength="1500"></textarea><button type="button" class="btn btn-dark" data-answer="nein">Absenden</button></div>';
+    if ($past || $b['status'] === 'abgesagt') {
+        $o .= '<p class="bk-info">' . ($b['status'] === 'abgesagt' ? 'Dieser Termin wurde abgesagt. Victoria meldet sich mit einem neuen Vorschlag.' : 'Dieser Termin liegt in der Vergangenheit.') . '</p>';
+    } elseif ($b['status'] === 'bestaetigt') {
+        $o .= '<p class="bk-info ok">Super, der Termin steht! Die Bestätigung mit Kalendereintrag hast du per E-Mail bekommen.</p>'
+            . '<div class="bk-actions"><a class="btn btn-primary" href="' . e($ics) . '" data-track="termin-ics"><svg><use href="#i-cal"/></svg> In meinen Kalender</a><button type="button" class="btn btn-ghost" data-show-no>Kann doch nicht</button></div>' . $no;
+    } elseif ($b['status'] === 'abgelehnt') {
+        $o .= '<p class="bk-info">Danke für deine Rückmeldung' . ($b['answer'] !== '' ? ' („' . e(rs_cut($b['answer'], 140)) . '“)' : '') . ' – Victoria meldet sich mit einem neuen Vorschlag.</p>'
+            . '<div class="bk-actions"><button type="button" class="btn btn-ghost" data-answer="ja">Doch, der Termin passt mir</button></div>';
+    } else {
+        $o .= '<div class="bk-actions"><button type="button" class="btn btn-primary" data-answer="ja"><svg><use href="#i-check"/></svg> Ja, passt mir</button><button type="button" class="btn btn-ghost" data-show-no>Passt leider nicht</button></div>' . $no
+            . '<a class="link-arrow bk-ics" href="' . e($ics) . '" data-track="termin-ics"><svg><use href="#i-cal"/></svg> In meinen Kalender eintragen</a>';
+    }
+    $o .= '<p class="pf-error" id="bkError" role="alert" hidden></p></div>';
+    return rs_block($html, 'bkcard', $o);
 }

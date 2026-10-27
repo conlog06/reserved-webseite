@@ -3,7 +3,7 @@
    reserved.social – Schnittstelle für die Webseite
    POST ?a=anfrage   Anfrage aus dem Formular (JSON)
    POST ?a=t         Statistik-Signal (gesehene Abschnitte, Klicks, Verweildauer)
-   GET  ?a=termine   freie Termine · POST ?a=buchen Termin buchen
+   POST ?a=termin_antwort  Termin bestätigen / passt nicht · GET ?a=termin_ics Kalender-Datei
    ========================================================================== */
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
@@ -37,28 +37,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && in_array($a, ['bestaetigen',
     $s = rs_funnel_unsub($t);
     rs_funnel_page($s ? 'Du bist abgemeldet' : 'Link ungültig', $s ? 'Du bekommst keine E-Mails mehr von uns. Schade, dass du gehst – alles Gute!' : 'Dieser Abmeldelink ist ungültig.', rs_url(''), 'Zur Startseite');
 }
-/* ---------- Terminbuchung (GET): freie Termine, Kalender-Datei, Absage ---------- */
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && in_array($a, ['termine', 'termin_ics', 'termin_absagen'], true)) {
-    if ($a === 'termine') {
-        $B = rs_config()['booking'];
-        if (empty($B['on'])) $out(['ok' => false, 'error' => 'Die Terminbuchung ist gerade nicht verfügbar.'], 404);
-        $types = array_map(fn($t) => ['id' => $t['id'], 'name' => $t['name'], 'min' => (int)$t['min'], 'desc' => (string)($t['desc'] ?? ''), 'where' => (string)($t['where'] ?? '')], rs_booking_types($B));
-        $art = (string)($_GET['art'] ?? ''); if (!rs_booking_type($art, $B)) $art = $types[0]['id'] ?? '';
-        $out(['ok' => true, 'types' => $types, 'art' => $art, 'days' => $art !== '' ? rs_booking_slots($art) : []]);
-    }
-    $t = (string)($_GET['t'] ?? '');
-    $b = rs_booking_find($t);
-    if ($a === 'termin_ics') {
-        if (!$b) rs_funnel_page('Termin nicht gefunden', 'Dieser Link ist ungültig.', rs_url(''), 'Zur Startseite');
-        header('Content-Type: text/calendar; charset=utf-8'); header('Content-Disposition: attachment; filename="termin-reserved-social.ics"'); header('X-Robots-Tag: noindex');
-        echo rs_booking_ics($b, rs_is_admin()); exit;
-    }
-    if (!$b) rs_funnel_page('Termin nicht gefunden', 'Dieser Absage-Link ist ungültig.', rs_url(''), 'Zur Startseite');
-    if ($b['status'] !== 'ok') rs_funnel_page('Termin abgesagt', 'Dieser Termin ist bereits abgesagt. Du kannst dir jederzeit einen neuen aussuchen.', rs_url('termin/?art=' . $b['type']), 'Neuen Termin buchen');
-    if ((int)$b['start'] < time()) rs_funnel_page('Termin vorbei', 'Dieser Termin liegt in der Vergangenheit.', rs_url(''), 'Zur Startseite');
-    if (($_GET['ja'] ?? '') !== '1') rs_funnel_page('Termin absagen?', $b['type_name'] . ' · ' . rs_booking_when($b) . '. Möchtest du diesen Termin wirklich absagen?', rs_url('_reserved/api.php?a=termin_absagen&t=' . $b['token'] . '&ja=1'), 'Ja, Termin absagen');
-    rs_booking_cancel($b['token'], 'kunde');
-    rs_funnel_page('Termin abgesagt', 'Schade – der Termin ist abgesagt. Wenn du magst, such dir einfach einen neuen aus.', rs_url('termin/?art=' . $b['type']), 'Neuen Termin buchen');
+/* ---------- Termine (GET): Kalender-Datei ---------- */
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && $a === 'termin_ics') {
+    $b = rs_booking_find((string)($_GET['t'] ?? ''));
+    if (!$b) rs_funnel_page('Termin nicht gefunden', 'Dieser Link ist ungültig.', rs_url(''), 'Zur Startseite');
+    header('Content-Type: text/calendar; charset=utf-8'); header('Content-Disposition: attachment; filename="termin-reserved-social.ics"'); header('X-Robots-Tag: noindex');
+    echo rs_booking_ics($b, rs_is_admin(), $b['status'] === 'abgesagt'); exit;
 }
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') $out(['ok' => false, 'error' => 'Nur POST erlaubt.'], 405);
 // Nur Anfragen von der eigenen Seite annehmen
@@ -84,13 +68,21 @@ if ($a === 'plan') {
     $out(rs_funnel_mode() === 'mail' ? ['ok' => true] : ['ok' => true, 'next' => rs_url('plan/danke/?d=' . $res['dl'])]);
 }
 
-if ($a === 'buchen') {
+if ($a === 'ugc') {
     if (!empty($in['website'])) $out(['ok' => true]);                                                     // Spam-Falle
-    if (rs_throttled('buchen', 6, 3600)) $out(['ok' => false, 'error' => 'Zu viele Versuche. Bitte später erneut probieren.'], 429);
-    [$ok, $res] = rs_booking_create($in);
+    if (rs_throttled('ugc', 5, 3600)) $out(['ok' => false, 'error' => 'Zu viele Nachrichten. Bitte später erneut probieren.'], 429);
+    [$ok, $res] = rs_ugc_create($in);
     if (!$ok) $out(['ok' => false, 'error' => $res], 400);
-    rs_hit('buchen', 3600);
-    $out(['ok' => true, 'when' => rs_booking_when($res), 'type' => $res['type_name'], 'where' => $res['where'], 'ics' => rs_booking_links($res)['ics']]);
+    rs_hit('ugc', 3600);
+    $out(['ok' => true]);
+}
+
+if ($a === 'termin_antwort') {
+    if (rs_throttled('termin', 20, 3600)) $out(['ok' => false, 'error' => 'Zu viele Versuche. Bitte später erneut probieren.'], 429);
+    rs_hit('termin', 3600);
+    $b = rs_booking_answer((string)($in['t'] ?? ''), ($in['antwort'] ?? '') === 'ja', (string)($in['nachricht'] ?? ''));
+    if (!$b) $out(['ok' => false, 'error' => 'Dieser Termin kann nicht mehr beantwortet werden.'], 400);
+    $out(['ok' => true, 'status' => $b['status']]);
 }
 
 if ($a === 'anfrage') {

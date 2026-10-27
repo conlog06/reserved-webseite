@@ -22,3 +22,44 @@
     v.addEventListener('ended', () => { full = false; fig.classList.remove('playing'); v.controls = false; v.currentTime = 0; });
   });
 })();
+
+/* Anfrage-Formular im E-Mail-Look */
+(() => {
+  'use strict';
+  const form = document.getElementById('ugForm');
+  if (!form) return;
+  const root = document.documentElement, LIVE = root.hasAttribute('data-cms-live'), API = root.dataset.api || '../_reserved/api.php';
+  const err = (m) => { const el = document.getElementById('ugError'); el.textContent = m; el.hidden = !m; };
+  const subj = form.elements.betreff;
+  form.querySelectorAll('.mf-chips button').forEach((b) => b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    form.querySelectorAll('.mf-chips button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+    b.setAttribute('aria-pressed', String(on));
+    if (on && (!subj.value.trim() || /^Anfrage: /.test(subj.value))) subj.value = 'Anfrage: ' + b.dataset.subj;
+    form.elements.nachricht.focus();
+  }));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); err('');
+    const f = form.elements, mail = f.email.value.trim();
+    if (!f.name.value.trim()) { f.name.focus(); return err('Wie heißt du?'); }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { f.email.focus(); return err('Bitte gib eine gültige E-Mail-Adresse an.'); }
+    if (f.nachricht.value.trim().length < 10) { f.nachricht.focus(); return err('Schreib Victoria noch kurz, worum es geht.'); }
+    if (!f.consent.checked) return err('Bitte bestätige noch kurz den Datenschutz-Hinweis.');
+    if (!LIVE) {
+      const to = (document.querySelector('[data-ug-href="mail"]')?.getAttribute('href') || 'mailto:booking.vfranz@web.de').replace(/^mailto:/, '');
+      location.href = `mailto:${to}?subject=${encodeURIComponent(f.betreff.value || 'Anfrage')}&body=${encodeURIComponent(f.nachricht.value + '\n\n' + f.name.value + (f.firma.value ? ' · ' + f.firma.value : ''))}`;
+      return;
+    }
+    const btn = document.getElementById('ugSend'); btn.disabled = true;
+    try {
+      const res = await fetch(API + '?a=ugc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        name: f.name.value.trim(), email: mail, firma: f.firma.value.trim(), betreff: f.betreff.value.trim(), nachricht: f.nachricht.value.trim(), consent: 1, website: f.website.value,
+        src: (() => { try { return sessionStorage.getItem('rs-src') || new URLSearchParams(location.search).get('utm_source') || 'direkt'; } catch (x) { return 'direkt'; } })() }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) throw new Error(j.error || 'Das hat leider nicht geklappt.');
+      form.querySelector('.mf-in').hidden = true;
+      document.getElementById('ugDoneMail').textContent = mail;
+      const d = document.getElementById('ugDone'); d.hidden = false; d.focus();
+    } catch (x) { btn.disabled = false; err(x.message + ' Versuch es bitte noch einmal.'); }
+  });
+})();
