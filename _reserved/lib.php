@@ -97,7 +97,7 @@ function rs_defaults(): array {
         'check' => [
             'on' => true,
             'title' => 'Hey, ich bin Victoria von reserved.social',
-            'text' => 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, welches Paket zu dir passt. Bereit?',
+            'text' => 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, was zu dir passt. Bereit?',
             'cta' => 'Los geht\'s',
             'done_title' => 'Danke dir!',
             'done_text' => 'Ich schaue mir deine Antworten persönlich an und melde mich bei dir.',
@@ -123,8 +123,8 @@ function rs_defaults(): array {
             'quotes_n' => 3,
             'faq' => [
                 ['q' => 'Muss ich etwas vorbereiten?', 'a' => 'Nein. Wir planen jeden Monat Formate, Ideen und aktuelle Trends und stimmen den Dreh vorher kurz mit dir ab.'],
-                ['q' => 'Wie oft kommt ihr zum Drehen vorbei?', 'a' => 'Je nach Paket ein- bis zweimal im Monat – direkt bei dir vor Ort.'],
-                ['q' => 'Postet ihr auch für mich?', 'a' => 'Im Premium-Paket übernehmen wir das Posten auf Instagram & TikTok und das Community Management. In Starter und Standard bekommst du den fertigen Content inklusive Captions & Hashtags.'],
+                ['q' => 'Wie oft kommt ihr zum Drehen vorbei?', 'a' => 'So oft, wie es zu dir passt – das legen wir im Erstgespräch gemeinsam fest. Gedreht wird direkt bei dir vor Ort.'],
+                ['q' => 'Postet ihr auch für mich?', 'a' => 'Wenn du möchtest, ja: Von reiner Content-Erstellung bis zum kompletten Social Media Management mit Posten und Community – du entscheidest, wie viel wir übernehmen.'],
                 ['q' => 'Was ist, wenn mir ein Video nicht gefällt?', 'a' => 'Zu jedem Post gibt es eine Korrekturschleife.'],
                 ['q' => 'Kommt ihr auch außerhalb von Osnabrück?', 'a' => 'Ja. Ab 15 km berechnen wir eine kleine Anfahrtspauschale.'],
                 ['q' => 'Kann ich erst mal testen?', 'a' => 'Ja – mit einem einzelnen Video ohne laufende Betreuung.'],
@@ -143,8 +143,8 @@ function rs_defaults(): array {
             'hero_script' => 'Wir übernehmen.',
             'hero_lead' => 'Wir übernehmen Instagram & TikTok für Betriebe und Personal Brands in Osnabrück und Umgebung – **Monat für Monat**, von der Idee über den Dreh bis zum Community Management. Du kümmerst dich ums Geschäft.',
             'proof' => [
-                ['v' => '1×', 't' => 'Drehtermin im Monat – fest im Kalender'],
-                ['v' => '4–8', 't' => 'Videos im Monat, je nach Paket'],
+                ['v' => '9:16', 't' => 'Content fürs Handy – Reels & TikTok'],
+                ['v' => '1:1', 't' => 'Coaching, wenn du selbst drehen willst'],
                 ['v' => '60', 't' => 'Minuten Umkreis um Osnabrück'],
             ],
             'fw_title' => 'Gemacht für Betriebe', 'fw_script' => 'von hier.',
@@ -158,7 +158,7 @@ function rs_defaults(): array {
             'sv_note' => 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.',
             'vg_title' => 'Wir kommen nicht aus deiner Branche.', 'vg_script' => 'Zum Glück.',
             'vg_lead' => 'Das ist Absicht. Wir fragen wie Laien und erklären dein Angebot so, dass deine Kunden es verstehen. Branchenagenturen produzieren oft für Kollegen.',
-            'pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.',
+            'pk_lead' => 'Keine starren Pakete: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst – zugeschnitten auf dich und dein Unternehmen.',
             'bar_on' => false, 'bar_text' => '', 'bar_link_text' => '', 'bar_link' => '#kontakt',
             'plans' => [
                 ['tier' => 'Einstieg', 'name' => 'Starter', 'price' => ''],
@@ -198,7 +198,8 @@ function rs_defaults(): array {
             'whatsapp' => '0176 22876980',
             'faq' => [
                 ['q' => 'Für wen ist reserved.social gedacht?', 'a' => 'Für lokale Unternehmen in Osnabrück und Umgebung wie Cafés, Restaurants, Hotels, Läden, Salons, Praxen und Handwerksbetriebe. Und für Selbstständige, die eine Personal Brand aufbauen wollen, z. B. Versicherungsberater:innen, Coaches oder Makler:innen.'],
-                ['q' => 'Muss ich selbst posten?', 'a' => 'Im Starter- und Standard-Paket bekommst du fertig geschnittene Inhalte mit Captions und Hashtags und postest selbst. Im Premium-Paket übernehmen wir das Posten und das Community Management komplett.'],
+                ['q' => 'Muss ich selbst posten?', 'a' => 'Das entscheidest du: Du bekommst fertig geschnittene Inhalte mit Captions und Hashtags und postest selbst – oder wir übernehmen das Posten und das Community Management komplett.'],
+                ['q' => 'Kann ich Social Media auch selbst lernen?', 'a' => 'Ja. Im 1:1 Coaching zeigt dir Victoria, wie du Content erstellst und mit CapCut schneidest – mit einer monatlichen Strategie und Hilfe beim Dreh. Der Einstieg ist ein kostenloser Strategie-Plan, den du dir per Instagram-DM holen kannst.'],
                 ['q' => 'Wer kommt ins Bild?', 'a' => 'Wer aus deinem Team Lust hat, ist herzlich willkommen – echte Menschen wirken am besten. Kund:innen kommen nur mit ihrem Einverständnis ins Bild.'],
                 ['q' => 'Wie lange dauert ein Drehtermin?', 'a' => 'Ca. 2–4 Stunden. Am besten drehen wir zu einer ruhigen Zeit. Den Zeitplan bekommst du vorab.'],
                 ['q' => 'Darf ich die Inhalte auch auf meiner Website nutzen?', 'a' => 'Ja, alle Inhalte darfst du auf deinen eigenen Kanälen nutzen: Instagram, TikTok und Website. Für Werbeanzeigen, Print oder die Weitergabe an Dritte sprich uns bitte vorher an.'],
@@ -265,6 +266,12 @@ function rs_config(): array {
     /* Kennzahlen im Hero: alte Standardwerte durch die neuen ersetzen (nur wenn nie geändert) */
     if (($c['site']['proof'][0]['v'] ?? '') === '5×' && ($c['site']['proof'][1]['t'] ?? '') === 'Videos pro Monat im Standard-Paket') $c['site']['proof'] = $d['site']['proof'];
     foreach ((array)($c['site']['proof'] ?? []) as $i => $p) if (($p['t'] ?? '') === ($old = ['Drehtermin im Monat, mindestens. Steht vorher fest im Kalender.', 'Videos im Monat, je nach Paket. Fotos und Storys kommen dazu.', 'Minuten Umkreis um Osnabrück. Wir kommen zu dir, nicht umgekehrt.'][$i] ?? null)) $c['site']['proof'][$i]['t'] = $d['site']['proof'][$i]['t'];
+    /* Keine Pakete/Anzahlen mehr auf der Seite: alte Standardtexte ersetzen */
+    if (($c['site']['proof'][0]['v'] ?? '') === '1×' && ($c['site']['proof'][1]['v'] ?? '') === '4–8') { $c['site']['proof'][0] = $d['site']['proof'][0]; $c['site']['proof'][1] = $d['site']['proof'][1]; }
+    foreach (['pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.'] as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
+    if (($c['check']['text'] ?? '') === 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, welches Paket zu dir passt. Bereit?') $c['check']['text'] = $d['check']['text'];
+    foreach ((array)($c['site']['faq'] ?? []) as $i => $f) if (str_starts_with((string)($f['a'] ?? ''), 'Im Starter- und Standard-Paket')) $c['site']['faq'][$i]['a'] = $d['site']['faq'][1]['a'];
+    foreach ((array)($c['angebot']['faq'] ?? []) as $i => $f) foreach ($d['angebot']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && preg_match('/Paket/u', (string)($f['a'] ?? ''))) $c['angebot']['faq'][$i]['a'] = $df['a'];
     foreach (['hero_kicker' => ['Social-Media-Agentur', 'Social-Media-Agentur für lokale Unternehmen'], 'hero_title' => ['Dein Platz im Feed ist'], 'hero_script' => ['reserviert.'],
               'hero_lead' => ['reserved.social macht lokale Unternehmen und Selbstständige sichtbar – mit Videos, Fotos und Content, der **jeden Monat** kommt. Du kümmerst dich um dein Geschäft, wir um deinen Feed.'],
               'about_lead' => ['Hinter reserved.social steht Victoria. Sie plant, dreht und schneidet – und ist dabei direkt bei dir vor Ort, nicht nur am Telefon.'],

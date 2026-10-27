@@ -1119,3 +1119,54 @@ textarea.fc-in{resize:vertical;min-height:110px;font-size:1.15rem}
   .logo{font-size:1.5rem}
 }
 @media (max-width:370px){.logo{font-size:1.35rem}}
+
+/* ---------- Angebot: Spektrum + zwei Wege (ohne Preise & Anzahlen) ---------- */
+.range{margin-bottom:clamp(28px,4vw,44px)}
+.range-ends{display:flex;justify-content:space-between;gap:16px;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--terra-ink);margin-bottom:14px}
+.range-track{list-style:none;margin:0;padding:22px 0 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;position:relative}
+.range-track::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--hellblau),var(--terra))}
+.range-track li{position:relative;padding-top:6px}
+.range-track li::before{content:"";position:absolute;left:0;top:-27px;width:14px;height:14px;border-radius:50%;background:var(--creme);border:3px solid var(--terra-ink)}
+.range-track b{display:block;font-family:var(--serif);font-size:1.4rem;font-weight:500;line-height:1.15}
+.range-track span{display:block;font-size:.86rem;color:var(--mokka);margin-top:4px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.6vw,22px);margin-top:clamp(36px,5vw,56px)}
+.path{display:flex;flex-direction:column;padding:clamp(24px,3.4vw,42px);border-radius:24px;background:var(--paper);border:1px solid var(--linie)}
+.path-dark{background:var(--kohle);color:var(--creme);border-color:var(--kohle)}
+.path-k{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--terra-ink)}
+.path-dark .path-k{color:var(--terra-hell)}
+.path h3{font-size:clamp(2rem,3.2vw,2.6rem);margin:12px 0 10px}
+.path>p{color:var(--mokka);max-width:40ch}
+.path-dark>p{color:rgba(244,241,234,.75)}
+.path-list{list-style:none;margin:22px 0 28px;padding:0;flex:1}
+.path-list li{padding:12px 0 12px 26px;border-top:1px solid rgba(244,241,234,.14);position:relative}
+.path-list li::before{content:"";position:absolute;left:2px;top:1.15em;width:12px;height:1px;background:var(--terra-hell)}
+.path .btn{align-self:flex-start}
+.path-steps{list-style:none;margin:22px 0 28px;padding:0;flex:1;counter-reset:ps}
+.path-steps li{position:relative;padding:12px 0 12px 44px;border-top:1px solid var(--linie)}
+.path-steps li::before{counter-increment:ps;content:counter(ps);position:absolute;left:0;top:12px;width:30px;height:30px;border-radius:50%;border:1px solid var(--kohle);display:grid;place-items:center;font-size:.85rem;font-weight:600}
+.path-steps li:first-child::before{background:var(--terra-ink);border-color:var(--terra-ink);color:var(--creme)}
+.path-steps b{display:block;font-weight:650}
+.path-steps span{display:block;font-size:.9rem;color:var(--mokka);margin-top:2px}
+.path-btns{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px}
+.pakete .tip{margin-top:clamp(18px,2.4vw,26px)}
+@media (max-width:1020px){.paths{grid-template-columns:1fr}}
+@media (max-width:720px){
+  .range-track{grid-template-columns:1fr;gap:18px;padding:0 0 0 26px}
+  .range-track::before{left:5px;right:auto;top:6px;bottom:6px;width:4px;height:auto;background:linear-gradient(180deg,var(--hellblau),var(--terra))}
+  .range-track li::before{left:-26px;top:6px}
+  .range-ends{flex-direction:column;gap:4px}
+  .range-ends span:last-child{order:2}
+  .path .btn{align-self:stretch}
+}
+.link-arrow{display:inline-flex;align-items:center;gap:8px}
+.link-arrow svg{width:15px;height:15px;flex-shrink:0;transition:transform .35s var(--ease)}
+@media (hover:hover){.link-arrow:hover svg{transform:translateX(3px)}}
+.path-list li.add{color:var(--terra-hell)}
+.range{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"a b" "t t"}
+.range .re{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--terra-ink);margin-bottom:14px}
+.re-a{grid-area:a}.re-b{grid-area:b;justify-self:end}
+.range-track{grid-area:t}
+@media (max-width:720px){
+  .range{grid-template-columns:1fr;grid-template-areas:"a" "t" "b"}
+  .re-b{justify-self:start;margin:16px 0 0}
+}

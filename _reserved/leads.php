@@ -15,7 +15,7 @@ function rs_lead_options(): array {
         'ziele' => ['kunden' => 'Mehr Kund:innen vor Ort', 'anfragen' => 'Mehr Anfragen & Buchungen', 'bekannt' => 'In der Region bekannter werden',
                     'events' => 'Events & Aktionen füllen', 'personal' => 'Personal finden', 'image' => 'Professioneller Auftritt'],
         'stand' => ['none' => 'Gibt es noch nicht', 'rare' => 'Unregelmäßig', 'regular' => 'Regelmäßig – soll besser werden'],
-        'umfang' => ['test' => 'Erst mal reinschnuppern', 'content' => 'Content produzieren – posten tun wir selbst', 'all' => 'Alles – inkl. Posten & Community'],
+        'umfang' => ['test' => 'Erst mal reinschnuppern', 'content' => 'Content produzieren – posten tun wir selbst', 'all' => 'Alles – inkl. Posten & Community', 'coaching' => 'Selbst lernen – Strategie & 1:1 Coaching'],
         'start' => ['asap' => 'So schnell wie möglich', 'month' => 'In den nächsten 4 Wochen', 'later' => 'Später / erst mal informieren'],
         'kontakt' => ['mail' => 'E-Mail', 'phone' => 'Telefon', 'whatsapp' => 'WhatsApp', 'instagram' => 'Instagram-DM'],
         'follower' => ['none' => 'Noch kein Profil', 'u500' => 'Unter 500', 'u2k' => '500 – 2.000', 'u10k' => '2.000 – 10.000', 'o10k' => 'Über 10.000'],
@@ -26,23 +26,21 @@ function rs_lead_status(): array {
     return ['neu' => 'Neu', 'kontakt' => 'Kontaktiert', 'angebot' => 'Angebot gesendet', 'gewonnen' => 'Kunde geworden', 'verloren' => 'Kein Auftrag'];
 }
 
-/** Paket-Empfehlung – dieselbe Logik läuft im Formular (main.js) live mit */
+/** Erste Einschätzung – dieselbe Logik läuft im Formular (main.js) live mit */
 function rs_lead_recommend(array $d): array {
-    $goals = $d['ziele'] ?? [];
-    $u = $d['umfang'] ?? '';
-    if ($u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'];
-    if ($u === 'all') return ['Premium', 'Wir übernehmen alles: Strategie, Content, Posten und Community – du musst dich um nichts kümmern.'];
-    $strategic = array_intersect($goals, ['events', 'anfragen', 'personal']);
-    if (($d['stand'] ?? '') === 'regular' || count($goals) >= 3 || $strategic) {
-        return ['Standard', 'Genug Content für regelmäßige Präsenz inklusive Stories – ideal, um ' . (count($goals) > 1 ? 'mehrere Ziele' : 'dein Ziel') . ' gezielt anzugehen.'];
-    }
-    return ['Starter', 'Ein guter Start: 4 Videos und 4 Fotos im Monat bringen Regelmäßigkeit in deinen Auftritt.'];
+    return match ($d['umfang'] ?? '') {
+        'test' => ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'],
+        'coaching' => ['Strategie & 1:1 Coaching', 'Du lernst, selbst Content zu erstellen und mit CapCut zu schneiden – mit Strategie und Hilfe beim Dreh.'],
+        'content' => ['Content-Erstellung', 'Wir planen und drehen 9:16 Content bei dir vor Ort – posten kannst du selbst.'],
+        'all' => ['Social Media Management', 'Wir übernehmen alles: Strategie, Dreh, Posten und Community.'],
+        default => ['Individuell', 'Im kostenlosen Erstgespräch stellen wir zusammen, was zu dir passt.'],
+    };
 }
 
 /** Priorität 0–100 (wie dringend und wie konkret) */
 function rs_lead_score(array $d): int {
     $s = ['asap' => 30, 'month' => 20, 'later' => 5][$d['start'] ?? ''] ?? 10;
-    $s += ['all' => 25, 'content' => 18, 'test' => 8][$d['umfang'] ?? ''] ?? 10;
+    $s += ['all' => 25, 'content' => 18, 'coaching' => 14, 'test' => 8][$d['umfang'] ?? ''] ?? 10;
     $s += min(16, count($d['ziele'] ?? []) * 4);
     if (($d['telefon'] ?? '') !== '') $s += 10;
     if (($d['firma'] ?? '') !== '') $s += 6;
@@ -136,7 +134,7 @@ function rs_lead_mails(array $lead): void {
         $first = explode(' ', $d['name'])[0];
         $r  = "Hallo $first,\n\n";
         $r .= "danke für deine Anfrage bei reserved.social! Sie ist gut bei uns angekommen. " . $c['site']['response_text'] . "\n\n";
-        $r .= "Unsere erste Einschätzung: Das Paket „{$lead['rec']}“ könnte gut zu dir passen.\n{$lead['why']}\n";
+        $r .= "Unsere erste Einschätzung: {$lead['rec']}.\n{$lead['why']}\nDie Details stellen wir im Erstgespräch gemeinsam zusammen.\n";
         $r .= "Im Gespräch schauen wir gemeinsam, was wirklich zu dir passt.\n\n";
         $r .= "Deine Angaben im Überblick:\n---------------------------\n" . rs_lead_summary($lead);
         $r .= "\nBis bald\nVictoria\nreserved.social – Social Media für lokale Unternehmen\nInstagram: @{$c['site']['instagram']}\n";

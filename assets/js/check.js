@@ -53,14 +53,12 @@
   const label = (n) => $(`input[name="${n}"]:checked + span b`, form)?.textContent || '–';
   const stand = () => ({ never: 'none', rare: 'rare', weekly: 'regular', daily: 'regular' }[radio('posting')] || '');
   // gleiche Empfehlung wie _reserved/leads.php
-  const recommend = () => {
-    const g = checks('ziele'), u = radio('umfang');
-    if (u === 'test') return ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'];
-    if (u === 'all') return ['Premium', 'Wir übernehmen alles: Strategie, Content, Posten und Community – du musst dich um nichts kümmern.'];
-    if (stand() === 'regular' || g.length >= 3 || g.some(x => ['events', 'anfragen', 'personal'].includes(x)))
-      return ['Standard', `Genug Content für regelmäßige Präsenz inklusive Stories – ideal, um ${g.length > 1 ? 'mehrere Ziele' : 'dein Ziel'} gezielt anzugehen.`];
-    return ['Starter', 'Ein guter Start: 4 Videos und 4 Fotos im Monat bringen Regelmäßigkeit in deinen Auftritt.'];
-  };
+  const recommend = () => ({
+    test: ['Einzelnes Video', 'Zum Reinschnuppern ohne laufende Betreuung – du siehst, wie reserved.social arbeitet.'],
+    coaching: ['Strategie & 1:1 Coaching', 'Du lernst, selbst Content zu erstellen und mit CapCut zu schneiden – mit Strategie und Hilfe beim Dreh.'],
+    content: ['Content-Erstellung', 'Wir planen und drehen 9:16 Content bei dir vor Ort – posten kannst du selbst.'],
+    all: ['Social Media Management', 'Wir übernehmen alles: Strategie, Dreh, Posten und Community.']
+  }[radio('umfang')] || ['Individuell', 'Im kostenlosen Erstgespräch stellen wir zusammen, was zu dir passt.']);
 
   /* ---------- Schritte ---------- */
   const progress = () => {

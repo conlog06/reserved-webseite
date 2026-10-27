@@ -612,7 +612,8 @@ head('Admin – reserved.social', true);
   </section>
 
   <section class="card" id="pakete">
-    <h2>Pakete</h2>
+    <h2>Pakete <span class="tag">nicht auf der Webseite</span></h2>
+    <p class="hint">Die Webseite zeigt keine Pakete, Anzahlen oder Preise mehr – das Angebot wird im Erstgespräch zusammengestellt. Diese Tabelle dient nur noch als interne Übersicht.</p>
     <form method="post" class="form"><?= $hidden('content_plans') ?>
       <p class="hint">In die Zellen: <b>✓</b> (oder „ja“) für enthalten, <b>—</b> (oder leer) für nicht enthalten, sonst freier Text wie „bis zu 2“. Die mittlere Spalte ist dunkel hervorgehoben.</p>
       <div class="ptable">
