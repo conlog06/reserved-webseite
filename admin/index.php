@@ -912,7 +912,8 @@ head('Admin – reserved.social', true);
         <label>Angebot – Text<textarea name="fu_offer_text" rows="2" maxlength="400"><?= e($F['offer_text']) ?></textarea></label>
         <label>Angebot – Punkte <small>(eine Zeile pro Punkt)</small><textarea name="fu_offer_bullets" rows="3"><?= e(implode("\n", $F['offer_bullets'])) ?></textarea></label>
         <div class="cols"><label>Preis <small>(leer = kein Preis)</small><input name="fu_price" value="<?= e($F['price']) ?>" maxlength="40" placeholder="z. B. ab 149 € im Monat"></label><label>Text auf dem Termin-Button<input name="fu_booking_label" value="<?= e($F['booking_label']) ?>" maxlength="40"></label></div>
-        <label>Link zum Buchungskalender <small>(Calendly, Cal.com … – leer = Button führt zum Kontaktformular)</small><input name="fu_booking_url" value="<?= e($F['booking_url']) ?>" maxlength="300" placeholder="https://calendly.com/…"></label>
+        <label>Link zum Buchungskalender<input name="fu_booking_url" value="<?= e($F['booking_url']) ?>" maxlength="300" placeholder="https://calendly.com/…"></label>
+        <p class="hint">Wofür? Auf der Danke-Seite (und in der Mail) gibt es den Button „<?= e($F['booking_label']) ?>“. Mit Link landen Interessierte direkt in deinem Online-Kalender (z.&nbsp;B. Calendly oder Cal.com), suchen sich selbst einen freien Termin aus und du bekommst ihn automatisch in deinen Kalender – ohne Hin-und-her-Schreiben. Den Link bekommst du im Kalender-Tool, wenn du einen Termintyp wie „Strategie-Call, 30 Min.“ anlegst. <b>Leer lassen</b> = der Button führt zum Kontaktformular auf der Webseite.</p>
         <label class="check"><input type="checkbox" name="fu_notify" value="1"<?= $F['notify'] ? ' checked' : '' ?>> Mir bei jedem neuen Download eine E-Mail schicken</label>
       </fieldset>
       <button class="btn">Speichern</button>
@@ -930,16 +931,25 @@ head('Admin – reserved.social', true);
       </div>
     </section>
     <section class="card" id="newsletter">
-      <h2>Newsletter-Tool <small>(optional)</small></h2>
-      <p class="hint">Bestätigte Adressen landen automatisch in deinem Newsletter-Tool – dort schreibst du die Mails. Ohne Tool sammelst du die Adressen hier und kannst sie als CSV exportieren.</p>
-      <form method="post" class="form"><?= $hidden('funnel_nl') ?>
-        <div class="cols"><label>Tool<select name="nl_tool"><?php foreach (['none' => 'Keins (nur hier sammeln)', 'brevo' => 'Brevo', 'mailerlite' => 'MailerLite'] as $k => $t): ?><option value="<?= $k ?>"<?= $F['nl_tool'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
-          <label>Listen-ID / Gruppen-ID<input name="nl_list" value="<?= e($F['nl_list']) ?>" maxlength="80" placeholder="z. B. 3"></label></div>
-        <label>API-Schlüssel<input name="nl_key" value="<?= $F['nl_key'] !== '' ? '••••••••••••' : '' ?>" autocomplete="off" spellcheck="false" onfocus="if(this.value.startsWith('••'))this.select()"></label>
-        <?php if ($F['nl_key'] !== ''): ?><label class="check"><input type="checkbox" name="nl_key_del" value="1"> Schlüssel entfernen</label><?php endif; ?>
-        <label class="check"><input type="checkbox" name="nl_sync" value="1"> Beim Speichern alle bestätigten Adressen übertragen</label>
-        <button class="btn btn-ghost btn-small">Speichern</button>
-      </form>
+      <h2>Newsletter-Tool <small>(optional – geht auch später)</small></h2>
+      <p class="hint"><b>Was ist das?</b> Jede Person, die sich den Plan holt, landet unten in der Liste „Einträge“. Wenn du diesen Leuten später regelmäßig E-Mails schicken willst (z.&nbsp;B. Tipps oder Angebote), brauchst du ein Newsletter-Tool wie <b>Brevo</b> oder <b>MailerLite</b> – dort schreibst und verschickst du die Mails. Die Webseite kann neue Adressen dann automatisch dorthin übertragen.</p>
+      <p class="hint"><b>Noch kein Tool?</b> Einfach alles so lassen. Die Adressen werden hier gesammelt und du kannst sie jederzeit als CSV herunterladen.</p>
+      <details class="tech"<?= $F['nl_tool'] !== 'none' ? ' open' : '' ?>><summary>Tool verbinden <small>(einmalig, ca. 10 Minuten)</small></summary>
+        <ol class="steps-mini">
+          <li>Kostenloses Konto bei Brevo oder MailerLite anlegen.</li>
+          <li>Dort eine Liste (Brevo) bzw. Gruppe (MailerLite) anlegen, z.&nbsp;B. „Content-Plan“. Ihre Nummer ist die <b>Listen-ID</b>.</li>
+          <li>Im Tool einen <b>API-Schlüssel</b> erstellen (steht in den Einstellungen bzw. unter „Integrationen“). Das ist wie ein Passwort, mit dem die Webseite Adressen eintragen darf.</li>
+          <li>Hier eintragen und speichern. Ab dann kommt jede neue bestätigte Adresse automatisch ins Tool. Wer sich abmeldet, wird dort auch abgemeldet.</li>
+        </ol>
+        <form method="post" class="form"><?= $hidden('funnel_nl') ?>
+          <div class="cols"><label>Welches Tool?<select name="nl_tool"><?php foreach (['none' => 'Keins – nur hier sammeln', 'brevo' => 'Brevo', 'mailerlite' => 'MailerLite'] as $k => $t): ?><option value="<?= $k ?>"<?= $F['nl_tool'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
+            <label>Listen-ID <small>(Nummer der Liste/Gruppe im Tool)</small><input name="nl_list" value="<?= e($F['nl_list']) ?>" maxlength="80" placeholder="z. B. 3"></label></div>
+          <label>API-Schlüssel <small>(aus dem Tool kopieren)</small><input name="nl_key" value="<?= $F['nl_key'] !== '' ? '••••••••••••' : '' ?>" autocomplete="off" spellcheck="false" onfocus="if(this.value.startsWith('••'))this.select()"></label>
+          <?php if ($F['nl_key'] !== ''): ?><label class="check"><input type="checkbox" name="nl_key_del" value="1"> Schlüssel entfernen</label><?php endif; ?>
+          <label class="check"><input type="checkbox" name="nl_sync" value="1"> <span>Einmalig auch alle <b>bisherigen</b> bestätigten Adressen ins Tool übertragen <small>(sonst nur neue ab jetzt)</small></span></label>
+          <button class="btn btn-ghost btn-small">Verbindung speichern</button>
+        </form>
+      </details>
     </section>
   </div>
 

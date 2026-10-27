@@ -197,14 +197,20 @@ function rs_ig_manual_save(array $posts): void {
 function rs_ig_store_upload(string $tmp, string $name): string {
     $info = @getimagesize($tmp);
     if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) return '';
-    $rel = RS_IG_DIR . '/' . preg_replace('/[^a-z0-9_-]/i', '', $name) . '.jpg';
+    $base = RS_IG_DIR . '/' . preg_replace('/[^a-z0-9_-]/i', '', $name);
+    $rel = $base . '.jpg';
     $abs = rs_root() . '/' . $rel;
     if (!is_dir(dirname($abs))) @mkdir(dirname($abs), 0755, true);
     $data = (string)file_get_contents($tmp);
     if (!function_exists('imagecreatefromstring') || !($im = @imagecreatefromstring($data))) {
-        return $info[2] === IMAGETYPE_JPEG && @copy($tmp, $abs) ? $rel : '';
+        // Ohne Bildbearbeitung (GD) auf dem Server: Datei unverändert übernehmen
+        $orig = $base . '.' . [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'][$info[2]];
+        return @copy($tmp, rs_root() . '/' . $orig) ? $orig : '';
     }
     $w = imagesx($im); $h = imagesy($im);
+    // Transparente PNG/WebP auf hellen Hintergrund setzen (sonst wird es schwarz)
+    $bg = imagecreatetruecolor($w, $h); imagefill($bg, 0, 0, imagecolorallocate($bg, 244, 241, 234));
+    imagecopy($bg, $im, 0, 0, 0, 0, $w, $h); imagedestroy($im); $im = $bg;
     if ($w > 1080) { $nh = (int)round($h * 1080 / $w); $d = imagecreatetruecolor(1080, $nh); imagecopyresampled($d, $im, 0, 0, 0, 0, 1080, $nh, $w, $h); imagedestroy($im); $im = $d; }
     imageinterlace($im, true);
     $ok = imagejpeg($im, $abs, 84);

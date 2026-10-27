@@ -138,6 +138,15 @@
     box.addEventListener('close', () => { root.classList.remove('dlg-open'); $$('video', box).forEach(v => v.pause()); });
   }
   $$('#igGrid .tile').forEach(t => t.addEventListener('click', () => { openPost(+t.dataset.i); track('ig-post'); }));
+  // Reels: beim Drüberfahren stumm abspielen (nur eigene Videos, nichts von Instagram nachladen)
+  if (matchMedia('(hover: hover)').matches && !reduce) $$('#igGrid .tile[data-preview]').forEach(t => {
+    let v = null;
+    t.addEventListener('mouseenter', () => {
+      if (!v) { v = document.createElement('video'); v.className = 'tile-vid'; v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = t.dataset.preview; t.appendChild(v); }
+      v.play().then(() => t.classList.add('playing')).catch(() => {});
+    });
+    t.addEventListener('mouseleave', () => { if (v) { v.pause(); t.classList.remove('playing'); } });
+  });
   // Kacheln im Startbereich öffnen dieselbe Großansicht
   $$('[data-ig-open]').forEach(t => t.addEventListener('click', () => { openPost(+t.dataset.igOpen); track('ig-hero'); }));
 

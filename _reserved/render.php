@@ -210,7 +210,8 @@ function rs_render_ig(?array $ig, array $S): string {
         if ($p['likes'] !== null) $hover .= '<span><svg><use href="#i-heart"/></svg>' . $num($p['likes']) . '</span>';
         if ($p['comments'] !== null) $hover .= '<span><svg><use href="#i-comment"/></svg>' . $num($p['comments']) . '</span>';
         $alt = trim(mb_substr((string)preg_replace('/\s+/', ' ', $p['caption']), 0, 120)) ?: 'Instagram-Beitrag';
-        $o .= '<button type="button" class="tile reveal' . ($i % 3 ? ' d' . ($i % 3) : '') . '" data-i="' . $i . '"><img src="' . e(rs_url($p['img'])) . '"' . rs_ig_srcset($p['img']) . ' sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="' . e($alt) . '" loading="lazy" decoding="async" width="1080" height="1350">'
+        $prev = !empty($p['video_file']) ? ' data-preview="' . e(rs_url($p['video_file'])) . '"' : '';
+        $o .= '<button type="button" class="tile reveal' . ($i % 3 ? ' d' . ($i % 3) : '') . '" data-i="' . $i . '"' . $prev . '><img src="' . e(rs_url($p['img'])) . '"' . rs_ig_srcset($p['img']) . ' sizes="(max-width: 720px) 33vw, (max-width: 1020px) 30vw, 270px" alt="' . e($alt) . '" loading="lazy" decoding="async" width="1080" height="1350">'
             . $ico . ($hover ? '<span class="tile-hover">' . $hover . '</span>' : '') . '</button>';
         $slides = array_map(fn($ch) => ['img' => rs_url($ch['img']), 'video' => $ch['video']], $p['children']);
         $json[] = ['img' => rs_url($p['img']), 'type' => $p['type'], 'video' => $p['video'], 'caption' => $p['caption'], 'permalink' => $p['permalink'],
