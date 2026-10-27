@@ -236,13 +236,38 @@
       if (t.name === 'branche') { $('[data-if="branche=andere"]', form).hidden = t.value !== 'andere'; t.closest('.opts')?.classList.remove('err'); }
       if (['ziele', 'stand', 'umfang', 'start'].includes(t.name)) updateRec();
       if (t.name === 'consent') t.closest('.consent').classList.remove('err');
+      // Ziele: höchstens zwei
+      if (t.name === 'ziele') {
+        const on = checks('ziele');
+        $$('input[name="ziele"]', form).forEach(i => { i.disabled = !i.checked && on.length >= 2; i.closest('.opt').classList.toggle('off', i.disabled); });
+      }
+      // Kanal: Instagram / TikTok oder "Noch kein Profil"
+      if (t.name === 'kanal') {
+        const none = form.querySelector('input[name="kanal"][value="none"]');
+        if (t.value === 'none' && t.checked) $$('input[name="kanal"]', form).forEach(i => { if (i !== t) i.checked = false; });
+        else if (t.checked) none.checked = false;
+        kanalUi();
+      }
     });
+    const kanalUi = () => {
+      const k = checks('kanal'), inp = $('#f-insta'), none = k.includes('none');
+      inp.hidden = none; inp.required = !none;
+      inp.placeholder = k.includes('tiktok') && !k.includes('instagram') ? '@deintiktok' : (k.length > 1 ? '@deinprofil (Instagram / TikTok)' : '@deinunternehmen');
+      inp.classList.remove('err');
+    };
+    kanalUi();
     $('#f-ort').addEventListener('input', (e) => {
       const v = e.target.value.trim().toLowerCase();
       $('#lfFar').hidden = !(v.length > 2 && !v.includes('osnabr') && !/^490\d\d/.test(v));
     });
     $$('[data-next]', form).forEach(b => b.addEventListener('click', () => {
       if (step === 1 && !radio('branche')) { $('[data-required="branche"]', form).classList.add('err'); return; }
+      if (step === 1) {
+        const k = checks('kanal'), inp = $('#f-insta');
+        if (!k.length) { $('[data-kanal]', form).classList.add('err'); return; }
+        if (!k.includes('none') && !inp.value.trim()) { inp.classList.add('err'); inp.focus(); return; }
+        $('[data-kanal]', form).classList.remove('err');
+      }
       goStep(step + 1);
     }));
     $$('[data-back]', form).forEach(b => b.addEventListener('click', () => goStep(step - 1)));
@@ -260,7 +285,7 @@
       if (!consent.checked) return showErr('Bitte bestätige noch kurz den Hinweis zum Datenschutz.');
 
       const data = {
-        name: val('name'), email: val('email'), telefon: val('telefon'), firma: val('firma'), ort: val('ort'), insta: val('insta'),
+        name: val('name'), email: val('email'), telefon: val('telefon'), firma: val('firma'), ort: val('ort'), insta: checks('kanal').includes('none') ? '' : val('insta'), kanal: checks('kanal'),
         nachricht: val('nachricht'), branche: radio('branche'), branche_text: val('branche_text'), stand: radio('stand'),
         umfang: radio('umfang'), start: radio('start'), kontakt: radio('kontakt'), ziele: checks('ziele'), paket: val('paket'),
         consent: 1, website: val('website'), t: started ? Date.now() - started : 0, src: source(), page: val('page') || 'start'
@@ -281,7 +306,7 @@
         const goals = $$('input[name="ziele"]:checked + span', form).map(s => s.textContent.trim()).join(', ') || '–';
         const body = [`Hallo Victoria,`, ``, data.nachricht || 'ich interessiere mich für Social Media mit reserved.social', ``,
           `Name: ${data.name}`, data.firma && `Unternehmen: ${data.firma}`, `Branche: ${data.branche === 'andere' && data.branche_text ? data.branche_text : o('branche')}`,
-          data.ort && `Ort: ${data.ort}`, data.telefon && `Telefon: ${data.telefon}`, data.insta && `Instagram: ${data.insta}`,
+          data.ort && `Ort: ${data.ort}`, data.telefon && `Telefon: ${data.telefon}`, data.insta && `${data.kanal.includes('tiktok') && !data.kanal.includes('instagram') ? 'TikTok' : data.kanal.length > 1 ? 'Instagram/TikTok' : 'Instagram'}: ${data.insta}`, data.kanal.includes('none') && 'Noch kein Social-Media-Profil',
           `Ziele: ${goals}`, `Social Media aktuell: ${o('stand')}`, `Umfang: ${o('umfang')}`, `Start: ${o('start')}`,
           `Am liebsten per: ${o('kontakt')}`, `Empfehlung laut Webseite: ${rec}`].filter(Boolean).join('\n');
         const to = $('[data-cms="email"]')?.textContent.trim() || 'reserved.social@web.de';

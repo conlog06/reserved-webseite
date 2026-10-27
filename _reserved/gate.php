@@ -20,8 +20,9 @@ $base = rs_base();
 if ($base !== '' && strpos($uri, $base) === 0) $uri = substr($uri, strlen($base));
 $isLp = (bool)preg_match('~^/angebot(/|/index\.html)?$~', $uri);
 $isCheck = (bool)preg_match('~^/start(/|/index\.html)?$~', $uri);
-$page = $isLp ? 'angebot/index.html' : ($isCheck ? 'start/index.html' : 'index.html');
-$here = rs_url($isLp ? 'angebot/' : ($isCheck ? 'start/' : ''));
+$isAbout = (bool)preg_match('~^/ueber-mich(/|/index\.html)?$~', $uri);
+$page = $isLp ? 'angebot/index.html' : ($isCheck ? 'start/index.html' : ($isAbout ? 'ueber-mich/index.html' : 'index.html'));
+$here = rs_url($isLp ? 'angebot/' : ($isCheck ? 'start/' : ($isAbout ? 'ueber-mich/' : '')));
 
 /* ---------- Automatischer Launch ---------- */
 $mode = rs_effective_mode($c);
@@ -104,7 +105,7 @@ if ($isCheck && empty($c['check']['on']) && !$admin) { header('Location: ' . rs_
 
 /* ---------- Echte Seite ---------- */
 $tpl = (string)file_get_contents(rs_root() . '/' . $page);
-$html = $isLp ? rs_render_angebot($tpl, $c) : ($isCheck ? rs_render_check($tpl, $c) : rs_render_page($tpl, $c, $admin));
+$html = $isLp ? rs_render_angebot($tpl, $c) : ($isCheck ? rs_render_check($tpl, $c) : ($isAbout ? rs_render_about($tpl, $c) : rs_render_page($tpl, $c, $admin)));
 if ($admin || $bypass) {
     header('Cache-Control: no-store');
     if ($mode !== 'live') header('X-Robots-Tag: noindex');

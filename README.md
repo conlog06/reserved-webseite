@@ -31,6 +31,8 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - **Vor-Launch:** Countdown-Seite mit laufender Bildwand, E-Mail-Benachrichtigung, Zugangslinks für Vorschau (z. B. für Victoria), automatischer Start zum Zeitpunkt inkl. Benachrichtigungs-Mail an alle Eingetragenen (danach werden die Adressen gelöscht).
 - **Landingpage `/angebot/`:** fokussierte Werbeseite (ohne Menü) mit Aktion inkl. Countdown, Vorteilen, Ergebnissen, Instagram, Paketkarten, Stimmen, FAQ und Formular. Texte, Aktion, FAQ und Abschnitte im Admin; fertige Links mit Herkunft (Instagram-Bio, Story, Flyer …) für die Statistik.
 - **Fit-Check `/start/` – „Zusammenarbeit starten“:** persönliche Begrüßung, eine Frage pro Bildschirm (Unternehmen, Instagram, Branche, Ziele, Follower, Posten, Umfang, Start, Budget-Spanne, Nachricht, Kontakt), Antippen oder Buchstabentaste, automatisch weiter, Fortschrittsbalken, Paket-Empfehlung am Ende. Ideal als Link in der Instagram-Bio. Im Admin: Texte, Profilfoto, Abbruch-Trichter je Frage, Links mit Herkunft.
+- **Über mich `/ueber-mich/`:** Victorias Weg (UGC → Westerberg Chaya → Gründerin) als Zeitstrahl, Stationen und Jahreszahlen im Admin unter „Inhalte“.
+- **Reel-Statistiken:** echte Zahlen (Aufrufe, Likes, Geteilt) zu Reels für bekannte Kund:innen – der Abschnitt erscheint erst, wenn im Admin Einträge stehen.
 - **Wartung:** Hinweisseite (HTTP 503).
 
 ## Einrichtung (einmalig)

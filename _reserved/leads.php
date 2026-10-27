@@ -70,8 +70,10 @@ function rs_lead_create(array $in): array {
         'start' => $pick('start'), 'kontakt' => $pick('kontakt') ?: 'mail', 'paket' => $str('paket', 40),
         'follower' => $pick('follower'), 'posting' => $pick('posting'),
         'budget' => in_array((string)($in['budget'] ?? ''), (array)(rs_config()['check']['budget'] ?? []), true) ? (string)$in['budget'] : '',
-        'ziele' => array_values(array_intersect(array_map('strval', (array)($in['ziele'] ?? [])), array_keys($o['ziele']))),
+        'ziele' => array_slice(array_values(array_intersect(array_map('strval', (array)($in['ziele'] ?? [])), array_keys($o['ziele']))), 0, 2),
+        'kanal' => array_values(array_intersect(['instagram', 'tiktok', 'none'], array_map('strval', (array)($in['kanal'] ?? [])))),
     ];
+    if (in_array('none', $d['kanal'], true)) { $d['kanal'] = ['none']; $d['insta'] = ''; }
     $d['name'] = str_replace("\n", ' ', $d['name']);
     if ($d['name'] === '') return [false, 'Bitte gib deinen Namen an.'];
     if (!filter_var($d['email'], FILTER_VALIDATE_EMAIL)) return [false, 'Bitte gib eine gültige E-Mail-Adresse an.'];
@@ -104,7 +106,8 @@ function rs_lead_summary(array $lead): string {
     $t .= 'Ort:             ' . ($d['ort'] ?: '–') . "\n";
     $t .= "E-Mail:          {$d['email']}\n";
     $t .= 'Telefon:         ' . ($d['telefon'] ?: '–') . "\n";
-    $t .= 'Instagram:       ' . ($d['insta'] ? '@' . $d['insta'] : '–') . "\n";
+    $kan = array_map(fn($k) => ['instagram' => 'Instagram', 'tiktok' => 'TikTok', 'none' => 'Noch kein Profil'][$k], $d['kanal'] ?? []);
+    $t .= 'Social Media:    ' . ($kan ? implode(' + ', $kan) : 'Instagram') . ($d['insta'] ? ' – @' . $d['insta'] : '') . "\n";
     $t .= 'Lieber per:      ' . $lbl('kontakt') . "\n\n";
     $t .= 'Ziele:           ' . ($d['ziele'] ? implode(', ', array_map(fn($z) => $o['ziele'][$z], $d['ziele'])) : '–') . "\n";
     $t .= 'Social Media:    ' . $lbl('stand') . "\n";

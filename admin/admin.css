@@ -303,3 +303,9 @@ h2.big{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:
   .img-slot img{width:96px}
   .subnav{top:calc(58px + var(--safe-t));overflow-x:auto;flex-wrap:nowrap}
 }
+.case-ed .cols{gap:8px}
+.case-thumb{width:44px;height:66px;object-fit:cover;border-radius:6px}
+details.tech{margin-top:18px;border-top:1px solid var(--line, #DCD5C8);padding-top:12px}
+details.tech summary{cursor:pointer;font-weight:600;font-size:.9rem;color:#6D665E}
+details.tech summary small{font-weight:400}
+details.tech .form{margin-top:12px}

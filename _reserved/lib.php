@@ -158,7 +158,7 @@ function rs_defaults(): array {
             'sv_note' => 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.',
             'vg_title' => 'Wir kommen nicht aus deiner Branche.', 'vg_script' => 'Zum Glück.',
             'vg_lead' => 'Das ist Absicht. Wir fragen wie Laien und erklären dein Angebot so, dass deine Kunden es verstehen. Branchenagenturen produzieren oft für Kollegen.',
-            'pk_lead' => 'Keine starren Pakete: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst – zugeschnitten auf dich und dein Unternehmen.',
+            'pk_lead' => 'Keine starren Pakete, keine Preisliste: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst. Die Preise richten sich individuell nach deinen Wünschen.',
             'bar_on' => false, 'bar_text' => '', 'bar_link_text' => '', 'bar_link' => '#kontakt',
             'plans' => [
                 ['tier' => 'Einstieg', 'name' => 'Starter', 'price' => ''],
@@ -183,8 +183,7 @@ function rs_defaults(): array {
             'plans_note' => 'Preise individuell – wir melden uns innerhalb kurzer Zeit.',
             'extras' => [
                 ['t' => 'Einzelnes Video', 'd' => 'Ohne laufende Betreuung – ideal zum Reinschnuppern.', 'p' => ''],
-                ['t' => 'Gründerin im Bild', 'd' => 'Video mit persönlicher Empfehlung & Voiceover.', 'p' => ''],
-                ['t' => 'Content-Plan Starter', 'd' => '4-Wochen-Redaktionsplan zum Selberdrehen.', 'p' => ''],
+                ['t' => 'Fotografie', 'd' => 'Fotos von Produkten, Räumen und Team – nur wenn du sie brauchst.', 'p' => ''],
                 ['t' => 'Anfahrt', 'd' => 'Außerhalb von Osnabrück (ab 15 km).', 'p' => ''],
             ],
             'results' => [
@@ -195,15 +194,29 @@ function rs_defaults(): array {
             'quotes' => rs_default_quotes(),
             'about_lead' => 'Hi, ich bin Victoria. Seit Jahren drehe ich Content für Unternehmen: als UGC-Creatorin für Marken, ein Jahr lang bei Beiersdorf und für Hotels und Restaurants im Ausland.',
             'about_text' => 'Vor einem Jahr habe ich mit **Westerberg Chaya** meine eigene Personal Brand gestartet und in kurzer Zeit über 10.000 Menschen auf Instagram und TikTok erreicht. Dabei habe ich mit vielen Osnabrücker Unternehmen zusammengearbeitet und gemerkt: Die meisten haben tolle Geschichten, aber niemanden, der sie erzählt. Nach meinem Masterabschluss habe ich deshalb reserved.social gegründet.',
-            'whatsapp' => '0176 22876980',
+            'whatsapp' => '',
+            'about_stats' => [
+                ['v' => '10k+', 't' => 'Follower auf Instagram & TikTok – in nur einem Jahr'],
+                ['v' => 'UGC', 't' => 'Content für Marken, Hotels & Restaurants – auch international'],
+                ['v' => 'OS', 't' => 'Lokal verwurzelt, persönlich vor Ort'],
+            ],
+            'cases' => [],
+            'vi_title' => 'Von UGC über Westerberg Chaya', 'vi_script' => 'zur Gründerin.',
+            'vi_intro' => 'Hi, ich bin Victoria. Ich drehe seit Jahren Content – erst für Marken, dann für meine eigene Personal Brand und heute für Unternehmen aus Osnabrück. Hier erzähle ich dir, wie es dazu kam.',
+            'vita' => [
+                ['k' => 'Der Anfang', 't' => 'UGC-Creatorin', 'd' => 'Content für Marken: als UGC-Creatorin, ein Jahr lang bei Beiersdorf und für Hotels und Restaurants im Ausland.'],
+                ['k' => 'Personal Brand', 't' => 'Westerberg Chaya', 'd' => 'Meine eigene Marke: In kurzer Zeit über 10.000 Menschen auf Instagram und TikTok erreicht – und dabei mit vielen Osnabrücker Unternehmen zusammengearbeitet.'],
+                ['k' => 'Der Wendepunkt', 't' => 'Masterabschluss', 'd' => 'Die meisten Unternehmen haben tolle Geschichten, aber niemanden, der sie erzählt. Nach dem Master war klar, was ich machen will.'],
+                ['k' => 'Heute', 't' => 'Gründerin von reserved.social', 'd' => 'Social Media für lokale Betriebe und für Selbstständige, die mit ihrem Gesicht für ihr Business stehen wollen – gedreht, geschnitten und betreut von mir.'],
+            ],
             'faq' => [
                 ['q' => 'Für wen ist reserved.social gedacht?', 'a' => 'Für lokale Unternehmen in Osnabrück und Umgebung wie Cafés, Restaurants, Hotels, Läden, Salons, Praxen und Handwerksbetriebe. Und für Selbstständige, die eine Personal Brand aufbauen wollen, z. B. Versicherungsberater:innen, Coaches oder Makler:innen.'],
                 ['q' => 'Muss ich selbst posten?', 'a' => 'Das entscheidest du: Du bekommst fertig geschnittene Inhalte mit Captions und Hashtags und postest selbst – oder wir übernehmen das Posten und das Community Management komplett.'],
-                ['q' => 'Kann ich Social Media auch selbst lernen?', 'a' => 'Ja. Im 1:1 Coaching zeigt dir Victoria, wie du Content erstellst und mit CapCut schneidest – mit einer monatlichen Strategie und Hilfe beim Dreh. Der Einstieg ist ein kostenloser Strategie-Plan, den du dir per Instagram-DM holen kannst.'],
+                ['q' => 'Kann ich Social Media auch selbst lernen?', 'a' => 'Ja. Im 1:1 Coaching zeigt dir Victoria, wie du Content erstellst und mit CapCut schneidest – mit einer monatlichen Strategie und Hilfe beim Dreh. Der Einstieg ist der kostenlose Content-Plan Starter, den du dir per Instagram-DM holen kannst.'],
                 ['q' => 'Wer kommt ins Bild?', 'a' => 'Wer aus deinem Team Lust hat, ist herzlich willkommen – echte Menschen wirken am besten. Kund:innen kommen nur mit ihrem Einverständnis ins Bild.'],
                 ['q' => 'Wie lange dauert ein Drehtermin?', 'a' => 'Ca. 2–4 Stunden. Am besten drehen wir zu einer ruhigen Zeit. Den Zeitplan bekommst du vorab.'],
                 ['q' => 'Darf ich die Inhalte auch auf meiner Website nutzen?', 'a' => 'Ja, alle Inhalte darfst du auf deinen eigenen Kanälen nutzen: Instagram, TikTok und Website. Für Werbeanzeigen, Print oder die Weitergabe an Dritte sprich uns bitte vorher an.'],
-                ['q' => 'Was kostet die Zusammenarbeit?', 'a' => 'Das hängt davon ab, was du brauchst. Im kostenlosen Erstgespräch schauen wir uns deine Ziele an und machen dir ein individuelles Angebot. Innerhalb von Osnabrück ist die Anfahrt immer inklusive.'],
+                ['q' => 'Was kostet die Zusammenarbeit?', 'a' => 'Die Preise sind individuell – je nachdem, was du dir wünschst. Im kostenlosen Erstgespräch schauen wir uns deine Ziele an und machen dir ein passendes Angebot. Innerhalb von Osnabrück ist die Anfahrt immer inklusive.'],
             ],
             'img_about' => '',
             'img_avatar' => '',
@@ -269,6 +282,9 @@ function rs_config(): array {
     /* Keine Pakete/Anzahlen mehr auf der Seite: alte Standardtexte ersetzen */
     if (($c['site']['proof'][0]['v'] ?? '') === '1×' && ($c['site']['proof'][1]['v'] ?? '') === '4–8') { $c['site']['proof'][0] = $d['site']['proof'][0]; $c['site']['proof'][1] = $d['site']['proof'][1]; }
     foreach (['pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.'] as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
+    if (($c['site']['pk_lead'] ?? '') === 'Keine starren Pakete: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst – zugeschnitten auf dich und dein Unternehmen.') $c['site']['pk_lead'] = $d['site']['pk_lead'];
+    foreach ((array)($c['site']['faq'] ?? []) as $i => $f) foreach ($d['site']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && (str_contains((string)$f['a'], 'Strategie-Plan, den du') || str_starts_with((string)$f['a'], 'Das hängt davon ab, was du brauchst.'))) $c['site']['faq'][$i]['a'] = $df['a'];
+    if (($c['site']['whatsapp'] ?? '') === '0176 22876980' && empty($c['site']['wa_set'])) $c['site']['whatsapp'] = '';
     if (($c['check']['text'] ?? '') === 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, welches Paket zu dir passt. Bereit?') $c['check']['text'] = $d['check']['text'];
     foreach ((array)($c['site']['faq'] ?? []) as $i => $f) if (str_starts_with((string)($f['a'] ?? ''), 'Im Starter- und Standard-Paket')) $c['site']['faq'][$i]['a'] = $d['site']['faq'][1]['a'];
     foreach ((array)($c['angebot']['faq'] ?? []) as $i => $f) foreach ($d['angebot']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && preg_match('/Paket/u', (string)($f['a'] ?? ''))) $c['angebot']['faq'][$i]['a'] = $df['a'];

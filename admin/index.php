@@ -126,13 +126,16 @@ if ($post) {
         /* ----- Inhalte ----- */
         case 'content_hero':
             foreach (['hero_kicker' => 90, 'hero_title' => 120, 'hero_script' => 60, 'hero_lead' => 400,
-                      'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300, 'fw_not' => 240,
+                      'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300,
                       'rh_title' => 80, 'rh_script' => 40, 'rh_lead' => 600, 'rh_fig' => 12, 'rh_fig_text' => 240,
-                      'sv_lead' => 300, 'sv_note' => 300, 'pk_lead' => 300,
+                      'sv_lead' => 300, 'sv_note' => 300, 'pk_lead' => 300, 'vi_title' => 80, 'vi_script' => 40, 'vi_intro' => 600,
                       'response_text' => 160, 'about_lead' => 400, 'about_text' => 1200, 'bar_text' => 180, 'bar_link_text' => 40] as $k => $max) $S[$k] = $str($k, $max);
             $S['bar_on'] = !empty($_POST['bar_on']);
             $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt';
             $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
+            $S['about_stats'] = array_map(fn($x) => ['v' => rs_cut((string)($x['v'] ?? ''), 12), 't' => rs_cut((string)($x['t'] ?? ''), 80)], array_slice($list('about_stats'), 0, 3));
+            $S['vita'] = [];
+            foreach ($list('vita') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['vita'][] = ['k' => rs_cut((string)($x['k'] ?? ''), 30), 't' => rs_cut((string)$x['t'], 80), 'd' => rs_cut((string)($x['d'] ?? ''), 500)];
             $S['faq'] = [];
             foreach ($list('hfaq') as $f) if (trim((string)($f['q'] ?? '')) !== '') $S['faq'][] = ['q' => rs_cut((string)$f['q'], 160), 'a' => rs_cut((string)($f['a'] ?? ''), 1200)];
             rs_save_config($c); flash('Texte gespeichert – sofort auf der Webseite sichtbar.'); back('#hero');
@@ -157,6 +160,30 @@ if ($post) {
                                   'note' => rs_cut((string)($q['note'] ?? ''), 200), 'blue' => !empty($q['blue']), 'on' => !empty($q['on'])];
             }
             rs_save_config($c); flash('Feedback gespeichert.'); back('#feedback');
+        case 'content_cases':
+            $files = $_FILES['case_img'] ?? null; $keep = []; $S['cases'] = [];
+            foreach ((array)($_POST['cases'] ?? []) as $k => $x) {
+                if (!is_array($x) || trim((string)($x['firma'] ?? '')) === '') continue;
+                $img = (string)($x['img'] ?? '');
+                if (!preg_match('~^assets/img/case-[a-f0-9]+\.(jpg|png|webp)$~', strtok($img, '?') ?: '')) $img = '';
+                if ($files && ($files['error'][$k] ?? 4) === UPLOAD_ERR_OK && is_uploaded_file($files['tmp_name'][$k])) {
+                    $info = @getimagesize($files['tmp_name'][$k]);
+                    $ext = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'][$info[2] ?? 0] ?? null;
+                    if ($ext && $files['size'][$k] <= 10 * 1024 * 1024) {
+                        $rel = 'assets/img/case-' . bin2hex(random_bytes(5)) . '.' . $ext;
+                        if (@move_uploaded_file($files['tmp_name'][$k], rs_root() . '/' . $rel)) { @chmod(rs_root() . '/' . $rel, 0644); $img = $rel; }
+                    }
+                }
+                $num = fn($v) => rs_cut(trim((string)$v), 16);
+                $link = trim((string)($x['link'] ?? ''));
+                $S['cases'][] = ['firma' => rs_cut((string)$x['firma'], 60), 'branche' => rs_cut((string)($x['branche'] ?? ''), 40), 'text' => rs_cut((string)($x['text'] ?? ''), 200),
+                    'views' => $num($x['views'] ?? ''), 'likes' => $num($x['likes'] ?? ''), 'shares' => $num($x['shares'] ?? ''),
+                    'link' => preg_match('~^https://~i', $link) ? rs_cut($link, 300) : '', 'img' => $img];
+                if ($img !== '') $keep[] = strtok($img, '?');
+                if (count($S['cases']) >= 6) break;
+            }
+            foreach (glob(rs_root() . '/assets/img/case-*') ?: [] as $f) if (!in_array('assets/img/' . basename($f), $keep, true)) @unlink($f);
+            rs_save_config($c); flash('Reel-Statistiken gespeichert.'); back('#reels');
         case 'image':
         case 'image_delete':
             $slot = ($_POST['slot'] ?? '') === 'avatar' ? 'avatar' : 'about';
@@ -284,7 +311,6 @@ if ($post) {
             $from = trim((string)($_POST['mail_from'] ?? ''));
             $S['mail_from'] = $from === '' || filter_var($from, FILTER_VALIDATE_EMAIL) ? $from : $S['mail_from'];
             $S['instagram'] = ltrim(rs_cut((string)($_POST['instagram'] ?? ''), 60), '@') ?: $S['instagram'];
-            $S['whatsapp'] = rs_cut((string)($_POST['whatsapp'] ?? ''), 30);
             foreach (['imp_name' => 80, 'imp_business' => 120, 'imp_address' => 300, 'imp_ustid' => 30, 'datenschutz' => 20000] as $k => $max) $S[$k] = $str($k, $max);
             rs_save_config($c); flash('Einstellungen gespeichert.'); back();
         case 'stats':
@@ -445,7 +471,10 @@ head('Admin – reserved.social', true);
         <a class="btn" href="<?= e($mailto) ?>">✉️ Per E-Mail antworten</a>
         <?php if ($d['telefon']): ?><a class="btn btn-ghost" href="tel:<?= e(preg_replace('/[^\d+]/', '', $d['telefon'])) ?>">📞 Anrufen</a>
         <a class="btn btn-ghost" href="https://wa.me/<?= e(lead_wa($d['telefon'])) ?>?text=<?= rawurlencode("Hallo $first, hier ist Victoria von reserved.social – danke für deine Anfrage!") ?>" target="_blank" rel="noopener">💬 WhatsApp</a><?php endif; ?>
-        <?php if ($d['insta']): ?><a class="btn btn-ghost" href="https://www.instagram.com/<?= e(rawurlencode($d['insta'])) ?>/" target="_blank" rel="noopener">📷 @<?= e($d['insta']) ?></a><?php endif; ?>
+        <?php if ($d['insta']): $tt = in_array('tiktok', $d['kanal'] ?? [], true); $ig = in_array('instagram', $d['kanal'] ?? ['instagram'], true) || empty($d['kanal']); ?>
+          <?php if ($ig): ?><a class="btn btn-ghost" href="https://www.instagram.com/<?= e(rawurlencode($d['insta'])) ?>/" target="_blank" rel="noopener">📷 @<?= e($d['insta']) ?></a><?php endif; ?>
+          <?php if ($tt): ?><a class="btn btn-ghost" href="https://www.tiktok.com/@<?= e(rawurlencode($d['insta'])) ?>" target="_blank" rel="noopener">♪ TikTok @<?= e($d['insta']) ?></a><?php endif; ?>
+        <?php endif; ?>
       </div>
       <div class="rec-box"><span>Empfehlung der Webseite</span><b><?= e($one['rec']) ?></b><small><?= e($one['why']) ?></small></div>
       <dl class="facts">
@@ -566,7 +595,7 @@ head('Admin – reserved.social', true);
 
 <?php /* ======================= INHALTE ======================= */ elseif ($tab === 'inhalte'): ?>
   <div class="page-head"><div><h1>Inhalte</h1><p class="sub">Änderungen sind nach dem Speichern sofort auf der Webseite sichtbar. <b>**fett**</b> schreibt Text fett.</p></div></div>
-  <nav class="subnav"><a href="#hero">Texte</a><a href="#pakete">Pakete</a><a href="#feedback">Feedback</a><a href="#ueber">Bild</a></nav>
+  <nav class="subnav"><a href="#hero">Texte</a><a href="#reels">Reel-Statistiken</a><a href="#feedback">Feedback</a><a href="#ueber">Bild</a><a href="#pakete">Pakete (intern)</a></nav>
 
   <section class="card" id="hero">
     <h2>Texte &amp; Hinweise</h2>
@@ -587,11 +616,19 @@ head('Admin – reserved.social', true);
           }
           echo '</fieldset>';
       };
-      $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]], [['fw_not', '„Nicht gemeint“', 240, 2]]]);
+      $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]]]);
       $sec('Fester Rhythmus', [[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]);
       $sec('Leistungen', [[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]);
       $sec('Pakete', [[['pk_lead', 'Text neben der Überschrift', 300, 2]]]);
       ?>
+      <fieldset><legend>Seite „Über mich“ <a class="more" href="<?= e(rs_url('ueber-mich/')) ?>" target="_blank" rel="noopener">ansehen ↗</a></legend>
+        <div class="cols"><label>Überschrift<input name="vi_title" value="<?= e($S['vi_title']) ?>" maxlength="80"></label><label>Schreibschrift<input name="vi_script" value="<?= e($S['vi_script']) ?>" maxlength="40"></label></div>
+        <label>Einleitung<textarea name="vi_intro" rows="3" maxlength="600"><?= e($S['vi_intro']) ?></textarea></label>
+        <p class="hint">Mein Weg – Stationen von oben nach unten. Ins kleine Feld kann auch eine Jahreszahl (z. B. „2023“).</p>
+        <div id="vitaList" class="qlist"><?php foreach ((array)$S['vita'] as $i => $x): ?><div class="qed"><div class="cols"><input name="vita[<?= $i ?>][k]" value="<?= e($x['k'] ?? '') ?>" placeholder="z. B. 2023 oder „Heute“" maxlength="30"><input name="vita[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Station" maxlength="80"></div><textarea name="vita[<?= $i ?>][d]" rows="2" maxlength="500" placeholder="Was war da?"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
+        <template id="tpl-vita"><div class="qed"><div class="cols"><input name="vita[__][k]" placeholder="z. B. 2023 oder „Heute“" maxlength="30"><input name="vita[__][t]" placeholder="Station" maxlength="80"></div><textarea name="vita[__][d]" rows="2" maxlength="500" placeholder="Was war da?"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-vita" data-to="vitaList">+ Station</button>
+      </fieldset>
       <fieldset><legend>Häufige Fragen <small>(leer = Abschnitt ausgeblendet)</small></legend>
         <div id="hFaq" class="qlist"><?php foreach ((array)($S['faq'] ?? []) as $i => $f): ?><div class="qed"><input name="hfaq[<?= $i ?>][q]" value="<?= e($f['q']) ?>" placeholder="Frage" maxlength="160"><textarea name="hfaq[<?= $i ?>][a]" rows="2" maxlength="1200" placeholder="Antwort"><?= e($f['a']) ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
         <template id="tpl-hfaq"><div class="qed"><input name="hfaq[__][q]" placeholder="Frage" maxlength="160"><textarea name="hfaq[__][a]" rows="2" maxlength="1200" placeholder="Antwort"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
@@ -605,6 +642,8 @@ head('Admin – reserved.social', true);
       <fieldset><legend>Über uns &amp; Kontakt</legend>
         <label>Über uns – erster Absatz<textarea name="about_lead" rows="2" maxlength="400"><?= e($S['about_lead']) ?></textarea></label>
         <label>Über uns – zweiter Absatz<textarea name="about_text" rows="4" maxlength="1200"><?= e($S['about_text']) ?></textarea></label>
+        <p class="hint">Jahresangaben (z. B. „ein Jahr lang bei Beiersdorf“, „Vor einem Jahr …“) hier einfach anpassen, wenn sich etwas ändert.</p>
+        <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $x = $S['about_stats'][$i] ?? ['v' => '', 't' => '']; ?><div class="mini-f"><label>Kennzahl <?= $i + 1 ?><input name="about_stats[<?= $i ?>][v]" value="<?= e($x['v']) ?>" maxlength="12"></label><label>Beschreibung<input name="about_stats[<?= $i ?>][t]" value="<?= e($x['t']) ?>" maxlength="80"></label></div><?php endforeach; ?></div>
         <label>Antwortzeit (Kontakt &amp; Bestätigungs-Mail)<input name="response_text" value="<?= e($S['response_text']) ?>" maxlength="160"></label>
       </fieldset>
       <button class="btn">Texte speichern</button>
@@ -629,6 +668,25 @@ head('Admin – reserved.social', true);
         <button type="button" class="btn btn-ghost btn-small" data-add="tpl-extra" data-to="extras">+ Zusatzleistung</button>
       </fieldset>
       <button class="btn">Pakete speichern</button>
+    </form>
+  </section>
+
+  <section class="card" id="reels">
+    <h2>Reel-Statistiken</h2>
+    <p class="hint">Echte Zahlen von Reels für bekannte Kund:innen (aus Instagram-Insights). Der Abschnitt erscheint auf der Webseite erst, wenn hier mindestens ein Eintrag steht. Bis zu 6 Einträge.</p>
+    <?php $caseRow = function (string $k, array $x) { ob_start(); ?>
+      <div class="qed case-ed">
+        <div class="cols"><input name="cases[<?= $k ?>][firma]" value="<?= e($x['firma'] ?? '') ?>" placeholder="Firma, z. B. Le Feu" maxlength="60"><input name="cases[<?= $k ?>][branche]" value="<?= e($x['branche'] ?? '') ?>" placeholder="Branche, z. B. Restaurant" maxlength="40"></div>
+        <input name="cases[<?= $k ?>][text]" value="<?= e($x['text'] ?? '') ?>" placeholder="Kurz: Ziel oder Ergebnis (optional)" maxlength="200">
+        <div class="cols c3"><input name="cases[<?= $k ?>][views]" value="<?= e($x['views'] ?? '') ?>" placeholder="Aufrufe, z. B. 48.000" maxlength="16"><input name="cases[<?= $k ?>][likes]" value="<?= e($x['likes'] ?? '') ?>" placeholder="Likes" maxlength="16"><input name="cases[<?= $k ?>][shares]" value="<?= e($x['shares'] ?? '') ?>" placeholder="Geteilt" maxlength="16"></div>
+        <input name="cases[<?= $k ?>][link]" value="<?= e($x['link'] ?? '') ?>" placeholder="Link zum Reel (https://www.instagram.com/reel/…)" maxlength="300">
+        <div class="qed-row"><?php if (!empty($x['img'])): ?><img class="case-thumb" src="<?= e(rs_url($x['img'])) ?>" alt=""><?php endif; ?><input type="hidden" name="cases[<?= $k ?>][img]" value="<?= e($x['img'] ?? '') ?>"><label class="btn btn-ghost btn-small file-btn">Vorschaubild (Hochformat)<input type="file" name="case_img[<?= $k ?>]" accept="image/jpeg,image/png,image/webp"></label><button type="button" class="x" data-remove>Löschen</button></div>
+      </div>
+    <?php return ob_get_clean(); }; ?>
+    <form method="post" class="form" enctype="multipart/form-data"><?= $hidden('content_cases') ?>
+      <div id="casesList" class="qlist"><?php foreach ((array)($S['cases'] ?? []) as $i => $x) echo $caseRow((string)$i, $x); ?></div>
+      <template id="tpl-case"><?= $caseRow('__', []) ?></template>
+      <div class="btnrow"><button type="button" class="btn btn-ghost btn-small" data-add="tpl-case" data-to="casesList">+ Reel</button><button class="btn">Speichern</button></div>
     </form>
   </section>
 
@@ -670,25 +728,21 @@ head('Admin – reserved.social', true);
       <?php if ($ig['last_error']): ?><p class="flash error"><?= e($ig['last_error']) ?></p><?php endif; ?>
       <?php if ($connected): ?><p class="hint">Zuletzt aktualisiert: <?= $ig['last_sync'] ? e(rs_ago((int)$ig['last_sync'])) : 'noch nie' ?> · aktualisiert sich alle 30 Minuten selbst<?= $daysLeft !== null ? ' · Schlüssel gültig noch ca. ' . max(0, $daysLeft) . ' Tage (wird automatisch verlängert)' : '' ?></p><?php endif; ?>
       <form method="post" class="form"><?= $hidden('ig_save') ?>
-        <label>Zugangsschlüssel (Access Token)<input name="token" value="<?= $connected ? str_repeat('•', 12) : '' ?>" placeholder="IGAA…" autocomplete="off" spellcheck="false" onfocus="if(this.value.startsWith('•'))this.select()"></label>
         <div class="cols"><label>Anzahl Beiträge auf der Seite<select name="count"><?php foreach ([6, 9, 12, 15] as $k): ?><option<?= (int)$ig['count'] === $k ? ' selected' : '' ?>><?= $k ?></option><?php endforeach; ?></select></label>
           <label class="check self-end"><input type="checkbox" name="on" value="1"<?= $ig['on'] ? ' checked' : '' ?>> Live-Feed auf der Webseite zeigen</label></div>
-        <div class="btnrow"><button class="btn">Speichern &amp; laden</button></div>
+        <input type="hidden" name="token" value="<?= $connected ? str_repeat('•', 12) : '' ?>">
+        <div class="btnrow"><button class="btn">Speichern</button></div>
       </form>
+      <details class="tech"><summary>Technische Einrichtung <small>(einmalig, macht LoggX)</small></summary>
+        <form method="post" class="form"><?= $hidden('ig_save') ?>
+          <label>Zugangsschlüssel (Access Token)<input name="token" value="<?= $connected ? str_repeat('•', 12) : '' ?>" placeholder="IGAA…" autocomplete="off" spellcheck="false" onfocus="if(this.value.startsWith('•'))this.select()"></label>
+          <input type="hidden" name="count" value="<?= (int)$ig['count'] ?>"><?php if ($ig['on']): ?><input type="hidden" name="on" value="1"><?php endif; ?>
+          <div class="btnrow"><button class="btn btn-ghost btn-small">Schlüssel speichern &amp; laden</button></div>
+        </form>
+      </details>
       <?php if ($connected): ?><div class="btnrow mt">
         <form method="post"><?= $hidden('ig_sync') ?><button class="btn btn-ghost btn-small">Jetzt aktualisieren</button></form>
         <form method="post" onsubmit="return confirm('Instagram-Verbindung trennen?')"><?= $hidden('ig_disconnect') ?><button class="btn btn-small btn-danger">Trennen</button></form></div><?php endif; ?>
-    </section>
-    <section class="card">
-      <h2>So bekommst du den Zugangsschlüssel</h2>
-      <ol class="howto">
-        <li>Instagram-Konto in der App auf <b>Professionelles Konto</b> umstellen (Creator oder Business) – falls noch nicht geschehen.</li>
-        <li>Auf <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a> mit Facebook anmelden → <b>App erstellen</b> → Anwendungsfall „Nachrichten und Inhalte auf Instagram verwalten“.</li>
-        <li>Im App-Dashboard: <b>Instagram → API-Einrichtung mit Instagram-Login</b> öffnen.</li>
-        <li>Bei „Zugangsschlüssel generieren“ auf <b>Konto hinzufügen</b> klicken und mit <b>@<?= e($S['instagram']) ?></b> anmelden.</li>
-        <li>Auf <b>Token generieren</b> klicken, den langen Schlüssel kopieren und links einfügen.</li>
-      </ol>
-      <p class="hint">Der Schlüssel ist 60 Tage gültig und wird von der Webseite automatisch verlängert. Die App muss dafür nicht veröffentlicht werden. Bilder werden auf deinen Server kopiert – Besucher laden nichts von Instagram.</p>
     </section>
   </div>
   <?php if (!empty($igData['posts'])): ?><section class="card"><h2>Aktuell auf der Webseite</h2><div class="topposts"><?php foreach (array_slice($igData['posts'], 0, (int)$ig['count']) as $p): ?><a href="<?= e($p['permalink']) ?>" target="_blank" rel="noopener"><img src="<?= e(rs_url($p['img'])) ?>" alt=""><span><?= $p['likes'] !== null ? '♥ ' . (int)$p['likes'] . ' · 💬 ' . (int)$p['comments'] : e(date('d.m.Y', $p['ts'])) ?></span></a><?php endforeach; ?></div></section><?php endif; ?>
@@ -852,7 +906,6 @@ head('Admin – reserved.social', true);
         <div class="cols">
           <label>E-Mail <small>(Empfänger der Anfragen)</small><input type="email" name="email" value="<?= e($S['email']) ?>" required></label>
           <label>Instagram-Name<input name="instagram" value="<?= e($S['instagram']) ?>" maxlength="60"></label>
-          <label>WhatsApp-Nummer <small>(leer = nicht anzeigen)</small><input name="whatsapp" value="<?= e($S['whatsapp'] ?? '') ?>" maxlength="30" placeholder="0176 …"></label>
           <label class="span2">Absender-Adresse für E-Mails <small>(eine Adresse deiner Domain, z. B. noreply@deine-domain.de – sonst landen Mails eher im Spam)</small><input type="email" name="mail_from" value="<?= e($S['mail_from']) ?>"></label>
         </div>
       </fieldset>

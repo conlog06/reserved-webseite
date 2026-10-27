@@ -72,6 +72,14 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') $proof .= '<div><strong>' . e($p['v']) . '</strong><span>' . e($p['t']) . '</span></div>';
     if ($proof !== '') $html = rs_block($html, 'proof', $proof);
 
+    /* Reel-Statistiken (nur mit echten Einträgen) */
+    $html = rs_block($html, 'cases', rs_render_cases((array)($S['cases'] ?? [])));
+
+    /* Über mich: Kennzahlen */
+    $st = '';
+    foreach ((array)($S['about_stats'] ?? []) as $x) if (trim($x['v'] ?? '') !== '') $st .= '<div><b>' . e($x['v']) . '</b><span>' . e($x['t']) . '</span></div>';
+    if ($st !== '') $html = rs_block($html, 'aboutstats', $st);
+
     /* Häufige Fragen */
     $faq = '';
     foreach ((array)($S['faq'] ?? []) as $f) if (trim($f['q'] ?? '') !== '') $faq .= '<details><summary>' . e($f['q']) . '</summary><p>' . rs_fmt((string)$f['a']) . '</p></details>';
@@ -223,6 +231,23 @@ function rs_render_heroposts(array $ig): string {
     return $o;
 }
 
+function rs_render_cases(array $cases): string {
+    $cases = array_values(array_filter($cases, fn($x) => trim($x['firma'] ?? '') !== ''));
+    if (!$cases) return '';
+    $o = '<section class="section cases" id="reels" data-sec="reels"><div class="container"><div class="section-head"><div><span class="eyebrow reveal">Reels</span>'
+       . '<h2 class="reveal d1">Ergebnisse in <span class="script">Zahlen.</span></h2></div><p class="lead reveal d2">Echte Zahlen aus Reels, die wir für Unternehmen aus der Region gedreht haben.</p></div><div class="case-grid">';
+    foreach ($cases as $i => $x) {
+        $kpi = '';
+        foreach (['views' => 'Aufrufe', 'likes' => 'Likes', 'shares' => 'Geteilt'] as $k => $l) if (trim($x[$k] ?? '') !== '') $kpi .= '<div><strong>' . e($x[$k]) . '</strong><span>' . $l . '</span></div>';
+        $media = !empty($x['img']) ? '<img src="' . e(rs_url($x['img'])) . '" alt="" loading="lazy" decoding="async">' : '<span class="case-ph">' . e(mb_substr($x['firma'], 0, 1)) . '</span>';
+        $tag = !empty($x['link']) ? 'a href="' . e($x['link']) . '" target="_blank" rel="noopener" data-track="reel-case"' : 'div';
+        $o .= '<article class="case reveal' . ($i % 3 ? ' d' . ($i % 3) : '') . '"><' . $tag . ' class="case-media">' . $media . (trim($x['branche'] ?? '') !== '' ? '<span class="case-tag">' . e($x['branche']) . '</span>' : '')
+            . (!empty($x['link']) ? '<span class="case-play" aria-hidden="true"></span>' : '') . '</' . explode(' ', $tag)[0] . '>'
+            . '<h3>' . e($x['firma']) . '</h3>' . (trim($x['text'] ?? '') !== '' ? '<p>' . e($x['text']) . '</p>' : '') . ($kpi ? '<div class="case-kpis">' . $kpi . '</div>' : '') . '</article>';
+    }
+    return $o . '</div></div></section>';
+}
+
 function rs_render_impressum(array $S): string {
     $addr = nl2br(e(trim($S['imp_address'])), false);
     $o = '<h5>Name</h5><p>' . e($S['imp_name']) . ($S['imp_business'] !== '' ? '<br>' . e($S['imp_business']) : '') . '</p>';
@@ -336,6 +361,18 @@ function rs_render_angebot(string $html, array $c): string {
     return $html;
 }
 
+
+/* ==========================================================================
+   Über mich /ueber-mich/
+   ========================================================================== */
+function rs_render_about(string $html, array $c): string {
+    $html = rs_render_page($html, $c);
+    $v = '';
+    $items = array_values(array_filter((array)($c['site']['vita'] ?? []), fn($x) => trim($x['t'] ?? '') !== ''));
+    foreach ($items as $i => $x) $v .= '<li class="reveal' . ($i === count($items) - 1 ? ' now' : '') . '"><span class="vita-k">' . e($x['k'] ?? '') . '</span><div><h3>' . e($x['t']) . '</h3><p>' . rs_fmt((string)($x['d'] ?? '')) . '</p></div></li>';
+    if ($v !== '') $html = rs_block($html, 'vita', $v);
+    return $html;
+}
 
 /* ==========================================================================
    Fit-Check /start/

@@ -117,7 +117,7 @@
   }
 
   /* ---------- Hero-Einstieg ---------- */
-  var hero = $('.hero, .lp-hero');
+  var hero = $('.hero, .lp-hero, .vi-hero');
   // nur was beim Laden sichtbar ist, gehört zum Einstieg – der Rest blendet beim Scrollen ein
   var heroReveals = hero ? $$('.reveal', hero).filter(function (el) { return el.getBoundingClientRect().top < innerHeight; }) : [];
   var intro = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.1 });

@@ -86,8 +86,15 @@
     focusFirst(to);
     scrollTo(0, 0);
   };
+  const kanal = () => checks('kanal');
   const next = () => {
     if (cur === LAST) return submit();
+    if (steps[cur].dataset.step === '2') {
+      const k = kanal(), inp = form.elements.insta, msg = $('.fc-error-inline', steps[cur]);
+      const bad = !k.length || (!k.includes('none') && !inp.value.trim());
+      msg.hidden = !bad;
+      if (bad) { if (!k.includes('none')) inp.focus(); return; }
+    }
     if (cur === 3 && radio('branche') === 'andere' && !val('branche_text')) { $('.fc-other input').focus(); return; }
     show(cur + 1, 1);
   };
@@ -100,6 +107,17 @@
   // Antworten: bei Einzelauswahl automatisch weiter
   form.addEventListener('change', (e) => {
     const t = e.target;
+    if (t.name === 'ziele') {
+      const on = checks('ziele');
+      $$('input[name="ziele"]', form).forEach(i => { i.disabled = !i.checked && on.length >= 2; i.closest('.fc-opt').classList.toggle('off', i.disabled); });
+    }
+    if (t.name === 'kanal') {
+      if (t.value === 'none' && t.checked) $$('input[name="kanal"]', form).forEach(i => { if (i !== t) i.checked = false; });
+      else if (t.checked) form.querySelector('input[name="kanal"][value="none"]').checked = false;
+      const k = kanal(); $('.fc-handle').hidden = k.includes('none');
+      form.elements.insta.placeholder = k.includes('tiktok') && !k.includes('instagram') ? '@deintiktok' : '@deinprofil';
+      $('.fc-error-inline').hidden = true;
+    }
     if (t.name === 'branche') {
       const other = $('.fc-other'); other.hidden = t.value !== 'andere';
       if (t.value === 'andere') { $('input', other).focus(); return; }
@@ -137,7 +155,7 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('email'))) { mail.focus(); return err('Bitte gib eine gültige E-Mail-Adresse an.'); }
     if (!form.elements.consent.checked) return err('Bitte bestätige noch kurz den Hinweis zum Datenschutz.');
     const data = {
-      name: val('name'), email: val('email'), telefon: val('telefon'), firma: val('firma'), ort: val('ort'), insta: val('insta').replace(/^neu$/i, ''),
+      name: val('name'), email: val('email'), telefon: val('telefon'), firma: val('firma'), ort: val('ort'), insta: kanal().includes('none') ? '' : val('insta'), kanal: kanal(),
       nachricht: val('nachricht'), branche: radio('branche'), branche_text: val('branche_text'), ziele: checks('ziele'),
       follower: radio('follower'), posting: radio('posting'), budget: radio('budget'), stand: stand(), umfang: radio('umfang'), start: radio('start'),
       kontakt: radio('kontakt') || 'mail', consent: 1, website: val('website'), t: Date.now() - started, src, page: 'check'
@@ -146,7 +164,7 @@
     const btn = $('.fc-next', steps[cur]);
     if (!LIVE) {
       const body = ['Hallo Victoria,', '', data.nachricht || 'ich habe den Fit-Check auf der Webseite gemacht.', '',
-        `Name: ${data.name}`, data.firma && `Unternehmen: ${data.firma}`, data.ort && `Ort: ${data.ort}`, data.insta && `Instagram: ${data.insta}`,
+        `Name: ${data.name}`, data.firma && `Unternehmen: ${data.firma}`, data.ort && `Ort: ${data.ort}`, data.insta && `Profil (${kanal().filter(x => x !== 'none').join('/')}): ${data.insta}`, kanal().includes('none') && 'Noch kein Social-Media-Profil',
         `Branche: ${data.branche === 'andere' && data.branche_text ? data.branche_text : label('branche')}`,
         `Ziele: ${$$('input[name="ziele"]:checked + span b', form).map(b => b.textContent).join(', ') || '–'}`,
         `Follower: ${label('follower')}`, `Postet aktuell: ${label('posting')}`, radio('budget') && `Budget: ${radio('budget')}`, `Umfang: ${label('umfang')}`, `Start: ${label('start')}`,

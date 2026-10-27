@@ -10,5 +10,6 @@ if ($path === '/_reserved/api.php') { $_SERVER['SCRIPT_NAME'] = '/_reserved/api.
 if (preg_match('#^/_reserved/#', $path)) { http_response_code(403); echo 'Gesperrt'; return true; }
 if ($path === '/angebot') { header('Location: /angebot/'); return true; }
 if ($path === '/start') { header('Location: /start/'); return true; }
-if ($path === '/' || $path === '/index.html' || $path === '/angebot/' || $path === '/angebot/index.html' || $path === '/start/' || $path === '/start/index.html') { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
+if ($path === '/ueber-mich') { header('Location: /ueber-mich/'); return true; }
+if ($path === '/' || $path === '/index.html' || $path === '/angebot/' || $path === '/angebot/index.html' || $path === '/start/' || $path === '/start/index.html' || $path === '/ueber-mich/' || $path === '/ueber-mich/index.html') { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
 return false;

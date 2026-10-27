@@ -14,12 +14,12 @@ declare(strict_types=1);
 const RS_STATS_KEEP_MONTHS = 14;
 
 function rs_stats_pages(): array {
-    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', 'start/index.html' => 'Fit-Check /start', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
+    return ['index.html' => 'Startseite', 'angebot/index.html' => 'Landingpage /angebot', 'start/index.html' => 'Fit-Check /start', 'ueber-mich/index.html' => 'Über mich /ueber-mich', '(launch)' => 'Vor-Launch-Seite', '(wartung)' => 'Wartungsseite', 'andere' => 'Andere'];
 }
 /** Abschnitte der Seite in Reihenfolge (für den "Wie weit wird gescrollt"-Trichter) */
 function rs_stats_sections(): array {
     return ['hero' => 'Start', 'warum' => 'Das Problem', 'fuer-wen' => 'Für wen', 'leistungen' => 'Leistungen', 'rhythmus' => 'Rhythmus', 'ablauf' => 'Ablauf',
-            'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über mich', 'faq' => 'Häufige Fragen', 'kontakt' => 'Kontakt'];
+            'pakete' => 'Pakete', 'feed' => 'Instagram', 'feedback' => 'Feedback', 'ueber' => 'Über mich', 'faq' => 'Häufige Fragen', 'kontakt' => 'Kontakt', 'reels' => 'Reel-Statistiken'];
 }
 /** Klickziele mit lesbarem Namen */
 function rs_stats_clicks(): array {
@@ -27,7 +27,7 @@ function rs_stats_clicks(): array {
     foreach (rs_config()['site']['plans'] as $i => $p) $plans['plan-' . ($i + 1)] = 'Paket „' . $p['name'] . '“ angefragt';
     $check = [];
     foreach (rs_check_steps() as $i => $t) $check['check-' . ($i + 1)] = 'Fit-Check ' . ($i + 1) . ': ' . $t;
-    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'whatsapp' => 'WhatsApp geöffnet', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
+    return $plans + $check + ['cta-hero' => 'Hero: Erstgespräch', 'cta-nav' => 'Menü: Erstgespräch', 'whatsapp' => 'WhatsApp geöffnet', 'about-page' => 'Link zu „Über mich“', 'freebie' => 'Content-Plan Starter angefragt (DM)', 'offer-dfy' => 'Angebot: Wir machen das für dich', 'offer-coaching' => 'Angebot: Coaching anfragen', 'reel-case' => 'Reel-Statistik geöffnet', 'cta-sticky' => 'Handy-Leiste: Anfrage', 'dm-sticky' => 'Handy-Leiste: DM',
             'mail' => 'E-Mail-Adresse geklickt', 'dm' => 'Instagram-DM geklickt', 'ig-follow' => 'Instagram: Folgen', 'ig-post' => 'Instagram-Post geöffnet',
             'ig-open' => 'Post auf Instagram geöffnet', 'check-cta' => 'Fit-Check-Link geklickt', 'form-start' => 'Anfrage begonnen', 'form-step2' => 'Anfrage: Schritt 2', 'form-step3' => 'Anfrage: Schritt 3'];
 }
