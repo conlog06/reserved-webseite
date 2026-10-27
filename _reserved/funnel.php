@@ -5,7 +5,7 @@
    2. Bestätigungsmail (Double-Opt-in, Pflicht in Deutschland)
    3. /plan/danke/    Download + Angebot „Strategie jeden Monat mit Victoria“
                       + Termin buchen / kostenloses Erstgespräch
-   4. Adressen im Admin (Export) und optional automatisch im Newsletter-Tool
+   4. Adressen im Admin (Liste + CSV-Export)
    ========================================================================== */
 declare(strict_types=1);
 
@@ -92,7 +92,7 @@ function rs_funnel_signup(array $in): array {
     return [true, $sub];
 }
 
-/** Bestätigen: Eintrag freischalten, Download-Mail schicken, ans Newsletter-Tool übergeben. */
+/** Bestätigen: Eintrag freischalten und Download-Mail schicken. */
 function rs_funnel_confirm(string $token): ?array {
     $first = false;
     $s = rs_funnel_update($token, function (&$s) use (&$first) { if (!$s['confirmed']) { $s['confirmed'] = time(); $first = true; } $s['unsub'] = 0; });
@@ -102,12 +102,10 @@ function rs_funnel_confirm(string $token): ?array {
         $fn = explode(' ', $s['name'])[0];
         $text = (rs_funnel_mode($F) === 'mail' ? "Hallo $fn,\n\nhier ist dein {$F['title']}:\n\n{$L['pdf']}\n\n" : "Hallo $fn,\n\ndanke für deine Bestätigung – ab jetzt bekommst du ab und zu Social-Media-Tipps von mir. Den {$F['title']} findest du weiterhin hier:\n\n{$L['pdf']}\n\n")
               . ($F['offer_title'] !== '' ? $F['offer_title'] . "\n" . rs_plain($F['offer_text']) . "\n\n" : '')
-              . ($F['booking_url'] !== '' ? "Termin direkt buchen: {$F['booking_url']}\n\n" : "Kostenloses Erstgespräch anfragen: " . rs_abs_url('#kontakt') . "\n\n")
+              . (!empty(rs_config()['booking']['on']) ? "{$F['booking_label']}: " . rs_abs_url('termin/?art=strategie') . "\nKostenloses Erstgespräch: " . rs_abs_url('termin/?art=erstgespraech') . "\n\n" : "Kostenloses Erstgespräch anfragen: " . rs_abs_url('#kontakt') . "\n\n")
               . "Viel Spaß beim Umsetzen!\nVictoria\nreserved.social\n\n—\nKeine Mails mehr von uns? Hier abmelden: {$L['unsub']}\n";
         rs_mail($s['email'], rs_funnel_mode($F) === 'mail' ? 'Dein ' . $F['title'] . ' ist da' : 'Danke für deine Bestätigung', $text);
         if (!empty($F['notify']) && rs_funnel_mode($F) === 'mail') rs_mail($c['site']['email'], 'Neuer Download: ' . $s['name'], "{$s['name']} <{$s['email']}> hat den {$F['title']} heruntergeladen (über {$s['src']}).\n\nAlle Einträge: " . rs_abs_url('admin/?tab=funnel') . "\n");
-        $nl = rs_nl_push($s);
-        rs_funnel_update($token, function (&$x) use ($nl) { $x['nl'] = $nl; });
     }
     return $s;
 }
@@ -115,50 +113,7 @@ function rs_plain(string $s): string { return trim((string)preg_replace('/\*\*(.
 
 function rs_funnel_unsub(string $token): ?array {
     $s = rs_funnel_update($token, function (&$s) { $s['unsub'] = time(); });
-    if ($s) rs_nl_remove($s);
     return $s;
-}
-
-/* ---------- Newsletter-Tools (optional) ---------- */
-function rs_nl_request(string $method, string $url, array $headers, ?array $body = null): array {
-    $json = $body !== null ? json_encode($body, JSON_UNESCAPED_UNICODE) : null;
-    if (function_exists('curl_init')) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_CUSTOMREQUEST => $method, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 12,
-            CURLOPT_HTTPHEADER => array_merge($headers, ['Content-Type: application/json', 'Accept: application/json'])] + ($json !== null ? [CURLOPT_POSTFIELDS => $json] : []));
-        $res = (string)curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
-        return [$code, $res];
-    }
-    $ctx = stream_context_create(['http' => ['method' => $method, 'timeout' => 12, 'ignore_errors' => true,
-        'header' => implode("\r\n", array_merge($headers, ['Content-Type: application/json', 'Accept: application/json'])), 'content' => $json ?? '']]);
-    $res = (string)@file_get_contents($url, false, $ctx);
-    $code = isset($http_response_header[0]) && preg_match('~\s(\d{3})\s~', $http_response_header[0], $m) ? (int)$m[1] : 0;
-    return [$code, $res];
-}
-/** Gibt eine kurze Statusangabe zurück, z. B. "Brevo ✓" oder "Brevo: Fehler 401". */
-function rs_nl_push(array $s): string {
-    $F = rs_config()['funnel']; $tool = $F['nl_tool'] ?? 'none'; $key = trim((string)($F['nl_key'] ?? '')); $list = trim((string)($F['nl_list'] ?? ''));
-    if ($tool === 'none' || $key === '') return '';
-    $first = explode(' ', $s['name'])[0];
-    if ($tool === 'brevo') {
-        $body = ['email' => $s['email'], 'attributes' => ['FIRSTNAME' => $first], 'updateEnabled' => true];
-        if (ctype_digit($list)) $body['listIds'] = [(int)$list];
-        [$code] = rs_nl_request('POST', 'https://api.brevo.com/v3/contacts', ['api-key: ' . $key], $body);
-        return $code >= 200 && $code < 300 ? 'Brevo ✓' : 'Brevo: Fehler ' . $code;
-    }
-    if ($tool === 'mailerlite') {
-        $body = ['email' => $s['email'], 'fields' => ['name' => $first]];
-        if ($list !== '') $body['groups'] = [$list];
-        [$code] = rs_nl_request('POST', 'https://connect.mailerlite.com/api/subscribers', ['Authorization: Bearer ' . $key], $body);
-        return $code >= 200 && $code < 300 ? 'MailerLite ✓' : 'MailerLite: Fehler ' . $code;
-    }
-    return '';
-}
-function rs_nl_remove(array $s): void {
-    $F = rs_config()['funnel']; $tool = $F['nl_tool'] ?? 'none'; $key = trim((string)($F['nl_key'] ?? ''));
-    if ($tool === 'none' || $key === '') return;
-    if ($tool === 'brevo') rs_nl_request('PUT', 'https://api.brevo.com/v3/contacts/' . rawurlencode($s['email']), ['api-key: ' . $key], ['emailBlacklisted' => true]);
-    if ($tool === 'mailerlite') rs_nl_request('PUT', 'https://connect.mailerlite.com/api/subscribers/' . rawurlencode($s['email']), ['Authorization: Bearer ' . $key], ['status' => 'unsubscribed']);
 }
 
 /** Klick zählen (für Zahlen im Admin), unabhängig vom Browser-Signal */

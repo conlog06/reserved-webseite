@@ -255,10 +255,23 @@ function rs_defaults(): array {
             'offer_text' => 'Victoria plant deine Strategie jeden Monat mit dir: Ziele, Ideen und Auswertung – und hilft dir beim Dreh und Schneiden.',
             'offer_bullets' => ['Monatlicher Strategie-Call mit Victoria', 'Feedback zu deinen Reels', 'Hilfe beim Dreh und Schneiden mit CapCut'],
             'price' => '',
-            'booking_url' => '',
             'booking_label' => 'Strategie-Call buchen',
             'notify' => false,
-            'nl_tool' => 'none', 'nl_key' => '', 'nl_list' => '',
+        ],
+        /* Eigene Terminbuchung /termin/ (keine Kosten, kein externer Dienst) */
+        'booking' => [
+            'on' => true,
+            'title' => 'Such dir einen', 'script' => 'Termin aus.',
+            'lead' => 'Wähle, worum es gehen soll, und such dir einen freien Termin aus. Du bekommst sofort eine Bestätigung per E-Mail – mit Kalendereintrag.',
+            'types' => [
+                ['id' => 'erstgespraech', 'name' => 'Kostenloses Erstgespräch', 'min' => 45, 'desc' => 'Wir lernen uns kennen und schauen gemeinsam, was zu dir und deinem Unternehmen passt.', 'where' => 'Telefon oder Video-Call'],
+                ['id' => 'strategie', 'name' => 'Strategie-Call', 'min' => 45, 'desc' => 'Wir planen deine Social-Media-Strategie: Ziele, Ideen und deinen Rhythmus für den nächsten Monat.', 'where' => 'Video-Call'],
+            ],
+            'hours' => ['1' => '09:00-12:00, 14:00-17:00', '2' => '09:00-12:00, 14:00-17:00', '3' => '09:00-12:00, 14:00-17:00', '4' => '09:00-12:00, 14:00-17:00', '5' => '09:00-12:00', '6' => '', '7' => ''],
+            'step' => 30, 'buffer' => 15, 'notice' => 24, 'days' => 28, 'max_per_day' => 0,
+            'blocked' => '',
+            'confirm_text' => 'Ich melde mich kurz vorher mit dem Link zum Video-Call bzw. rufe dich an.',
+            'notify' => true,
         ],
         /* UGC-Seite /ugc/ (Victorias Creator Kit). Listen: eine Zeile pro Eintrag, Teile mit „|“ getrennt. */
         'ugc' => [
@@ -531,3 +544,4 @@ require_once __DIR__ . '/instagram.php';
 require_once __DIR__ . '/leads.php';
 require_once __DIR__ . '/render.php';
 require_once __DIR__ . '/funnel.php';
+require_once __DIR__ . '/booking.php';

@@ -204,13 +204,7 @@
       });
     });
   
-    /* ---------- ScrollReveal (React Bits) – Text füllt sich Wort für Wort ---------- */
-    if (Split) $$('.about .lead + .lead, .why-head .lead').forEach(function (el) {
-      near(el, function () {
-        var words = new Split(el, { type: 'words', wordsClass: 'sr-word', aria: 'none' }).words;
-        gsap.fromTo(words, { opacity: 0.15 }, { opacity: 1, stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true } });
-      });
-    });
+    /* Fließtexte: kein Wort-für-Wort-Füllen mehr – sie blenden mit .reveal sanft ein und sind sofort lesbar */
   
     /* ---------- RotatingText (React Bits) ---------- */
     var rot = $('#rotator');

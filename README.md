@@ -38,10 +38,14 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 
 **Funnel „Content-Plan Starter“ (Admin → Funnel)**
 - `/plan/`: kostenloser PDF-Download gegen Name + E-Mail (Einwilligung, Spam-Schutz, Herkunft per `utm_source`).
-- Zustellung im Admin wählbar: **direkt auf der Webseite**, **beides** (sofort + Link per Mail, Newsletter nur nach Bestätigung) oder **nur per Mail** (Double-Opt-in).
+- Zustellung im Admin wählbar: **direkt auf der Webseite**, **beides** (sofort + Link per Mail, Tipps per Mail nur nach Bestätigung) oder **nur per Mail** (Double-Opt-in).
 - Double-Opt-in: Bestätigungsmail → nach dem Klick `/plan/danke/` mit Download, Angebot „Strategie jeden Monat mit Victoria – ab … €“, Termin-Button (Calendly/Cal.com-Link) und kostenlosem Erstgespräch. Zusätzlich Mail mit Download-Link und Abmeldelink.
-- Admin: alle Texte, Preis, Buchungslink, eigenes PDF hochladen (sonst Platzhalter), Einträge mit Status + CSV-Export, Zahlen (eingetragen, bestätigt, geladen, Termin geklickt), Links zum Teilen.
-- Optional: bestätigte Adressen automatisch an **Brevo** oder **MailerLite** übergeben (API-Schlüssel + Liste im Admin), Abmeldung wird mit übertragen.
+- Admin: alle Texte, Preis, eigenes PDF hochladen (sonst Platzhalter), Einträge mit Status + CSV-Export, Zahlen (eingetragen, bestätigt, geladen, Termin geklickt), Links zum Teilen.
+
+**Terminbuchung `/termin/` (Admin → Termine)** – eigenes System, kein Calendly, keine Kosten
+- Terminarten (z. B. kostenloses Erstgespräch, Strategie-Call) mit Dauer, Ort und Kurztext; Wochenplan mit Zeitfenstern, Pause zwischen Terminen, Vorlauf, Buchungszeitraum, gesperrte Tage (Urlaub).
+- Besucher wählen Art → Tag → Uhrzeit → Daten; gebuchte Zeiten verschwinden sofort. Bestätigungsmail mit Kalenderdatei (.ics) und Absage-Link, Mail an Victoria.
+- Admin: kommende Termine nach Tagen, Kalendereintrag, Absagen (Person bekommt eine Mail), Links zum Teilen. Die Buttons auf der Danke-Seite des Funnels und im Kontaktbereich führen hierher.
 
 ## Einrichtung (einmalig)
 1. Alle Dateien per FTP/SFTP in das Web-Verzeichnis hochladen – **inklusive der versteckten `.htaccess`-Dateien**. PHP auf 8.1 oder neuer stellen.

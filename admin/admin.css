@@ -338,3 +338,17 @@ details.tech .form{margin-top:12px}
 @media (max-width:720px){.igm-list{grid-template-columns:1fr}.igm{grid-template-columns:72px 1fr}.igm-pic img{width:72px}}
 .steps-mini{margin:10px 0 16px;padding-left:20px;display:grid;gap:6px;font-size:.88rem;color:var(--mokka,#6B4A3A)}
 #newsletter .hint b{color:inherit;font-weight:650}
+.bk-list{display:grid;gap:8px}
+.bk-dayh{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:#6D665E;margin:14px 0 2px}
+.bk-dayh:first-child{margin-top:0}
+.bk-row{display:grid;grid-template-columns:80px 1fr auto;gap:14px;align-items:start;padding:14px;border:1px solid var(--linie,#DCD5C8);border-radius:14px;background:#fff}
+.bk-time-a b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.bk-time-a small{color:#6D665E;font-size:.78rem}
+.bk-who small{display:block;margin-top:3px;color:#6D665E}
+.bk-who p{margin-top:8px;font-size:.88rem;padding:8px 10px;border-radius:10px;background:#F4F1EA}
+.bk-week{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 14px}
+.bk-week label{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px}
+.bk-week span{font-weight:600;font-size:.88rem}
+@media (max-width:720px){.bk-row{grid-template-columns:62px 1fr}.bk-row .btnrow{grid-column:1/-1}}
+@media (min-width:721px) and (max-width:1600px){.top{gap:12px}.tabs{gap:2px}.tabs a{padding:8px 10px;font-size:.84rem;gap:6px}.tabs a svg{width:16px;height:16px}}
+@media (min-width:721px) and (max-width:1380px){.tabs a svg{display:none}.top-r .ghost{padding-inline:10px}}
