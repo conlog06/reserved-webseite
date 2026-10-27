@@ -248,6 +248,9 @@ function rs_defaults(): array {
             'consent' => 'Ja, schick mir den Content-Plan Starter und gelegentlich Social-Media-Tipps von reserved.social per E-Mail. Abmelden geht jederzeit mit einem Klick.',
             'danke_title' => 'Dein Plan ist da!',
             'danke_text' => 'Viel Spaß beim Umsetzen. Den Download-Link hast du außerdem per E-Mail bekommen.',
+            'danke_text_direct' => 'Viel Spaß beim Umsetzen! Speicher dir die PDF am besten gleich ab.',
+            /* Zustellung: mail = erst E-Mail bestätigen (Double-Opt-in) · page = sofort auf der Webseite · both = sofort + Link per Mail */
+            'delivery' => 'both',
             'offer_title' => 'Lieber nicht allein planen?',
             'offer_text' => 'Victoria plant deine Strategie jeden Monat mit dir: Ziele, Ideen und Auswertung – und hilft dir beim Dreh und Schneiden.',
             'offer_bullets' => ['Monatlicher Strategie-Call mit Victoria', 'Feedback zu deinen Reels', 'Hilfe beim Dreh und Schneiden mit CapCut'],
@@ -264,7 +267,7 @@ function rs_defaults(): array {
             'tags' => 'Model · UGC Creator · Local Creator',
             'intro' => 'Die arrogante Rothaarige. Ich zeige (nicht nur) die schönsten Spots in und um Osnabrück. Für Marken produziere ich UGC auf Deutsch und Englisch, der verkauft.',
             'email' => 'booking.vfranz@web.de',
-            'ig' => 'victoria.frz', 'tt' => 'victoriafrz', 'portfolio' => 'https://linktr.ee/victoria.frz',
+            'ig' => 'victoria.frz', 'tt' => 'victoriafrz', 'portfolio' => 'https://www.canva.com/design/DAGyA1-shxs/D5WzFz58AkQSW6XabrofLw/view',
             'reach_title' => 'Viel mehr Aufrufe', 'reach_script' => 'als Follower.',
             'stats' => "4,3 Mio. | Aufrufe auf Instagram in 30 Tagen\n7,1 Mio. | Aufrufe auf Instagram in 60 Tagen\n94 % | der Aufrufe von Nicht-Followern, also neue Menschen\n10k+ | Aufrufe pro Reel, bei jedem Reel",
             'stats_src' => 'Quelle: Instagram- und TikTok-Insights, August bis Oktober 2026.',
@@ -293,6 +296,9 @@ function rs_defaults(): array {
             'count' => 9,
             'last_sync' => 0,
             'last_error' => '',
+            /* Quelle: manual = Beiträge selbst im Admin hochladen · api = automatisch mit Zugangsschlüssel */
+            'source' => 'manual',
+            'm_name' => 'reserved.social | Social Media Agentur', 'm_followers' => '', 'm_posts' => '',
         ],
         'leads' => [
             'autoreply' => true,

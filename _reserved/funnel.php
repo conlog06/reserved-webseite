@@ -10,6 +10,14 @@
 declare(strict_types=1);
 
 function rs_funnel_subs(): array { return rs_read('funnel', []); }
+/** Zustellung des PDFs: mail | page | both */
+function rs_funnel_mode(?array $F = null): string { $m = (string)(($F ?? rs_config()['funnel'])['delivery'] ?? 'mail'); return in_array($m, ['mail', 'page', 'both'], true) ? $m : 'mail'; }
+/** Eintrag über den Download-Schlüssel (nur für sofortigen Download, kein Abmelden) */
+function rs_funnel_find_dl(string $dl): ?array {
+    if (!preg_match('/^[a-f0-9]{32}$/', $dl)) return null;
+    foreach (rs_funnel_subs() as $s) if (!empty($s['dl']) && hash_equals($s['dl'], $dl)) return $s;
+    return null;
+}
 function rs_funnel_save(array $subs): void { rs_write('funnel', array_values($subs)); }
 
 /** Wo liegt das PDF? Eigenes aus dem Admin, sonst der Platzhalter. */
@@ -51,24 +59,35 @@ function rs_funnel_signup(array $in): array {
     if (empty($in['consent'])) return [false, 'Bitte bestätige noch die Einwilligung.'];
     $src = rs_cut((string)preg_replace('/[^\w.\-: \/]/u', '', (string)($in['src'] ?? '')), 60) ?: 'direkt';
 
+    $mode = rs_funnel_mode($F);
     $sub = rs_locked('funnel', function () use ($name, $email, $src) {
-        $subs = rs_funnel_subs();
+        $subs = rs_funnel_subs(); $dl = bin2hex(random_bytes(16));
         foreach ($subs as &$s) if (strcasecmp($s['email'], $email) === 0) {
-            $s['name'] = $name; $s['asked'] = time(); $s['unsub'] = 0; $hit = $s; unset($s); rs_funnel_save($subs); return $hit;
+            $s['name'] = $name; $s['asked'] = time(); $s['unsub'] = 0; $s['dl'] = $dl; $hit = $s; unset($s); rs_funnel_save($subs); return $hit;
         }
         unset($s);
-        $new = ['id' => bin2hex(random_bytes(6)), 'token' => bin2hex(random_bytes(16)), 'name' => $name, 'email' => $email, 'src' => $src,
+        $new = ['id' => bin2hex(random_bytes(6)), 'token' => bin2hex(random_bytes(16)), 'dl' => $dl, 'name' => $name, 'email' => $email, 'src' => $src,
                 'ts' => time(), 'asked' => time(), 'confirmed' => 0, 'downloads' => 0, 'unsub' => 0, 'nl' => ''];
         $subs[] = $new; rs_funnel_save($subs);
         return $new;
     });
     $L = rs_funnel_links($sub);
     $first = explode(' ', $sub['name'])[0];
-    $text = "Hallo $first,\n\nschön, dass du dir den {$F['title']} holen möchtest!\n\n"
-          . "Bitte bestätige kurz deine E-Mail-Adresse – danach kannst du den Plan sofort herunterladen:\n\n{$L['confirm']}\n\n"
-          . "Du hast dich nicht eingetragen? Dann ignoriere diese Mail einfach – es passiert nichts weiter.\n\n"
-          . "Liebe Grüße\nVictoria\nreserved.social – Social Media für lokale Unternehmen\n";
-    rs_mail($sub['email'], 'Bitte bestätigen: dein ' . $F['title'], $text);
+    if ($mode === 'mail') {
+        $text = "Hallo $first,\n\nschön, dass du dir den {$F['title']} holen möchtest!\n\n"
+              . "Bitte bestätige kurz deine E-Mail-Adresse – danach kannst du den Plan sofort herunterladen:\n\n{$L['confirm']}\n\n"
+              . "Du hast dich nicht eingetragen? Dann ignoriere diese Mail einfach – es passiert nichts weiter.\n\n"
+              . "Liebe Grüße\nVictoria\nreserved.social – Social Media für lokale Unternehmen\n";
+        rs_mail($sub['email'], 'Bitte bestätigen: dein ' . $F['title'], $text);
+    } elseif ($mode === 'both' && !$sub['confirmed']) {
+        $text = "Hallo $first,\n\nhier ist dein {$F['title']} – falls du ihn auf der Webseite noch nicht gespeichert hast:\n\n" . rs_abs_url('_reserved/api.php?a=plan&d=' . $sub['dl']) . "\n\n"
+              . "Möchtest du ab und zu Social-Media-Tipps von mir bekommen? Dann bestätige bitte kurz hier:\n\n{$L['confirm']}\n\n"
+              . "Ohne Bestätigung bekommst du keine weiteren Mails von uns.\n\nLiebe Grüße\nVictoria\nreserved.social – Social Media für lokale Unternehmen\n";
+        rs_mail($sub['email'], 'Dein ' . $F['title'], $text);
+    } elseif ($mode === 'both') {
+        rs_mail($sub['email'], 'Dein ' . $F['title'], "Hallo $first,\n\nhier ist noch einmal dein {$F['title']}:\n\n" . rs_abs_url('_reserved/api.php?a=plan&d=' . $sub['dl']) . "\n\nLiebe Grüße\nVictoria\nreserved.social\n\n—\nKeine Mails mehr von uns? Hier abmelden: {$L['unsub']}\n");
+    }
+    if ($mode !== 'mail' && !empty($F['notify'])) rs_mail(rs_config()['site']['email'], 'Neuer Download: ' . $sub['name'], "{$sub['name']} <{$sub['email']}> hat den {$F['title']} heruntergeladen (über {$sub['src']}).\n\nAlle Einträge: " . rs_abs_url('admin/?tab=funnel') . "\n");
     rs_stats_click('plan-signup');
     return [true, $sub];
 }
@@ -81,12 +100,12 @@ function rs_funnel_confirm(string $token): ?array {
     if ($first) {
         $c = rs_config(); $F = $c['funnel']; $L = rs_funnel_links($s);
         $fn = explode(' ', $s['name'])[0];
-        $text = "Hallo $fn,\n\nhier ist dein {$F['title']}:\n\n{$L['pdf']}\n\n"
+        $text = (rs_funnel_mode($F) === 'mail' ? "Hallo $fn,\n\nhier ist dein {$F['title']}:\n\n{$L['pdf']}\n\n" : "Hallo $fn,\n\ndanke für deine Bestätigung – ab jetzt bekommst du ab und zu Social-Media-Tipps von mir. Den {$F['title']} findest du weiterhin hier:\n\n{$L['pdf']}\n\n")
               . ($F['offer_title'] !== '' ? $F['offer_title'] . "\n" . rs_plain($F['offer_text']) . "\n\n" : '')
               . ($F['booking_url'] !== '' ? "Termin direkt buchen: {$F['booking_url']}\n\n" : "Kostenloses Erstgespräch anfragen: " . rs_abs_url('#kontakt') . "\n\n")
               . "Viel Spaß beim Umsetzen!\nVictoria\nreserved.social\n\n—\nKeine Mails mehr von uns? Hier abmelden: {$L['unsub']}\n";
-        rs_mail($s['email'], 'Dein ' . $F['title'] . ' ist da', $text);
-        if (!empty($F['notify'])) rs_mail($c['site']['email'], 'Neuer Download: ' . $s['name'], "{$s['name']} <{$s['email']}> hat den {$F['title']} heruntergeladen (über {$s['src']}).\n\nAlle Einträge: " . rs_abs_url('admin/?tab=funnel') . "\n");
+        rs_mail($s['email'], rs_funnel_mode($F) === 'mail' ? 'Dein ' . $F['title'] . ' ist da' : 'Danke für deine Bestätigung', $text);
+        if (!empty($F['notify']) && rs_funnel_mode($F) === 'mail') rs_mail($c['site']['email'], 'Neuer Download: ' . $s['name'], "{$s['name']} <{$s['email']}> hat den {$F['title']} heruntergeladen (über {$s['src']}).\n\nAlle Einträge: " . rs_abs_url('admin/?tab=funnel') . "\n");
         $nl = rs_nl_push($s);
         rs_funnel_update($token, function (&$x) use ($nl) { $x['nl'] = $nl; });
     }

@@ -38,6 +38,10 @@
   <symbol id="i-reel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 5 3-5 3z" fill="currentColor"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
   <!-- Leistungen -->
+  <symbol id="j-talk" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H22l-9 7v-7.5A6 6 0 0 1 8 28z"/><path d="M50 24h2a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6v7l-9-7H32a6 6 0 0 1-6-6v-2"/><path d="M18 21h.01M26 21h.01M34 21h.01" stroke-width="3"/></symbol>
+  <symbol id="j-idea" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M32 8a17 17 0 0 0-10 30.7c1.7 1.3 2.6 3.2 2.6 5.3v2h14.8v-2c0-2.1.9-4 2.6-5.3A17 17 0 0 0 32 8z"/><path d="M25 52h14M27 57h10M32 46V33l-5-5M32 33l5-5"/></symbol>
+  <symbol id="j-cut" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="12" width="48" height="34" rx="5"/><path d="m27 22 12 7-12 7z"/><path d="M8 53h48M20 49v8M38 49v8"/></symbol>
+  <symbol id="j-loop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></symbol>
   <symbol id="s-strategie" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="34" r="22"/><circle cx="30" cy="34" r="14"/><circle cx="30" cy="34" r="6"/><path d="M30 34 52 12M46 12h6v6"/></symbol>
   <symbol id="s-produktion" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="18" width="38" height="30" rx="5"/><path d="m44 28 14-8v24l-14-8"/><circle cx="16" cy="12" r="5"/><circle cx="32" cy="12" r="5"/><circle cx="16" cy="27" r="1.6" fill="currentColor"/></symbol>
   <symbol id="s-betreuung" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="12" width="48" height="44" rx="5"/><path d="M8 24h48M20 6v12M44 6v12"/><path d="m22 40 7 7 14-14"/></symbol>
@@ -97,7 +101,7 @@
           <a href="#pakete" class="link-arrow">Angebot ansehen</a>
         </div>
         <a class="founder reveal d3" href="ueber-mich/" data-track="about-hero">
-          <span class="founder-pic"><img src="assets/img/post-dm-540.webp" data-cms-img="about" alt="" width="864" height="1080" loading="lazy" decoding="async"></span>
+          <span class="founder-pic"><img src="assets/img/victoria-creator.webp" data-cms-img="about" alt="" width="432" height="649" loading="lazy" decoding="async"></span>
           <span><b data-cms="me_title">Hi, ich bin Victoria – Gründerin von reserved.social.</b><small><span data-cms="me_sub">Von UGC über Westerberg Chaya zur eigenen Agentur.</span> <u>Mehr über mich</u> →</small></span>
         </a>
         <div class="hero-proof reveal d3">
@@ -137,6 +141,11 @@
             <p class="ig-caption"><b data-cms-ig="handle">reserved.social</b> Neue Beiträge aus unserem Feed – direkt von Instagram.</p>
           </div>
         </div>
+
+        <a class="hero-me" href="ueber-mich/" data-track="about-hero-photo" aria-label="Victoria, Gründerin von reserved.social – mehr über mich">
+          <span class="hero-me-pic"><img src="assets/img/victoria-creator.webp" data-cms-img="about" alt="" width="432" height="649" decoding="async"></span>
+          <span class="hero-me-tag"><b>Victoria</b><small>Gründerin · dreht selbst</small></span>
+        </a>
 
         <div class="float-card float-like float-week" aria-label="Fester Rhythmus: Beiträge am Montag, Mittwoch und Freitag">
           <span class="wk-k">Diese Woche</span>
@@ -254,11 +263,14 @@
           <div class="rh-stat"><strong data-cms="rh_fig">36 %</strong><p data-cms="rh_fig_text">der Firmen ohne Social Media nennen den Personalaufwand als Grund – häufiger als jeden anderen. Quelle: Bitkom, 2017.</p></div>
         </div>
         <figure class="chart" id="rhChart">
-          <figcaption class="chart-head"><span>Ein Jahr im Feed</span><span class="chart-legend"><span><i class="dot on"></i>gepostet</span><span><i class="dot plan"></i>geplant</span></span></figcaption>
+          <figcaption class="chart-head"><span>Ein Jahr im Feed <em class="chart-hint">· <span class="hint-d">Fahr mit der Maus über die Wochen</span><span class="hint-m">Tipp auf eine Woche</span></em></span><span class="chart-legend"><span><i class="dot on"></i>gepostet</span><span><i class="dot plan"></i>geplant</span></span></figcaption>
           <div class="chart-plot">
-            <div class="chart-row"><p class="chart-name">Ohne festen Rhythmus <span class="quiet">· seit 7 Wochen kein Beitrag</span></p><div class="track track-off"><i class="dot"></i><i class="dot ink"></i><i class="dot ink"></i><i class="dot ink"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot ink"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot ink"></i><i class="dot ink"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot ink"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><span class="zzz" aria-hidden="true"><i>z</i><i>z</i><i>z</i></span></div></div>
-            <div class="chart-row"><p class="chart-name">Mit reserved.social</p><div class="track track-on"><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on now"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i></div></div>
+            <div class="chart-row"><p class="chart-name"><span>Ohne festen Rhythmus <span class="quiet">· seit 7 Wochen kein Beitrag</span></span><span class="chart-cnt" id="rhCntOff"></span></p><div class="track track-off"><i class="dot"></i><i class="dot ink"></i><i class="dot ink"></i><i class="dot ink"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot ink"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot ink"></i><i class="dot ink"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot ink"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><i class="dot zz"></i><span class="zzz" aria-hidden="true"><i>z</i><i>z</i><i>z</i></span></div></div>
+            <div class="chart-row"><p class="chart-name"><span>Mit reserved.social</span><span class="chart-cnt on" id="rhCntOn"></span></p><div class="track track-on"><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on"></i><i class="dot on now"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i><i class="dot plan"></i></div></div>
             <i class="chart-now" aria-hidden="true"></i>
+            <i class="chart-cursor" id="rhCursor" aria-hidden="true"></i>
+            <div class="chart-tip" id="rhTip" aria-hidden="true"></div>
+            <input type="range" class="chart-range" id="rhRange" min="0" max="51" value="26" step="1" aria-label="Woche im Diagramm auswählen (Pfeiltasten)">
           </div>
           <div class="chart-months" id="rhMonths" aria-hidden="true"><span><b>Mai</b><i>M</i></span><span><b>Jun</b><i>J</i></span><span><b>Jul</b><i>J</i></span><span><b>Aug</b><i>A</i></span><span><b>Sep</b><i>S</i></span><span><b>Okt</b><i>O</i></span><span><b>Nov</b><i>N</i></span><span><b>Dez</b><i>D</i></span><span><b>Jan ’27</b><i>J</i></span><span><b>Feb</b><i>F</i></span><span><b>Mär</b><i>M</i></span><span><b>Apr</b><i>A</i></span></div>
           <div class="chart-axis"><span>vor 26 Wochen</span><span class="now">Diese Woche · KW <b id="rhKw">44</b></span><span>in 26 Wochen</span></div>
@@ -282,12 +294,13 @@
         </div>
         <p class="lead reveal d2">Unkompliziert und persönlich – du weißt immer, was als Nächstes passiert.</p>
       </div>
-      <ol class="month">
-        <li class="reveal"><span class="m-n">01</span><div><h3>Kennenlernen</h3><p>Im kostenlosen Erstgespräch schauen wir uns deinen Auftritt an und stellen zusammen, was du brauchst.</p></div></li>
-        <li class="reveal"><span class="m-n">02</span><div><h3>Ideen &amp; Abstimmung</h3><p>Wir überlegen, was gedreht wird, und stimmen alles kurz mit dir ab.</p></div></li>
-        <li class="reveal"><span class="m-n">03</span><div><h3>Dreh bei dir vor Ort</h3><p>Entspannt und ohne viel Vorbereitung – Videos im 9:16-Format, auf Wunsch auch Fotos.</p></div></li>
-        <li class="reveal"><span class="m-n">04</span><div><h3>Schnitt &amp; Lieferung</h3><p>Du bekommst fertige Videos mit Musik und Captions. Eine Korrekturschleife ist inklusive – danach geht es im festen Rhythmus weiter.</p></div></li>
+      <ol class="journey" id="journey">
+        <li class="reveal"><span class="j-dot" aria-hidden="true"></span><div class="j-card"><div class="j-head"><span class="j-n">01</span><svg class="j-ic" aria-hidden="true"><use href="#j-talk"/></svg></div><h3>Kennenlernen</h3><p>Im kostenlosen Erstgespräch schauen wir uns deinen Auftritt an und stellen zusammen, was du brauchst.</p><span class="j-tag">Kostenlos</span></div></li>
+        <li class="reveal d1"><span class="j-dot" aria-hidden="true"></span><div class="j-card"><div class="j-head"><span class="j-n">02</span><svg class="j-ic" aria-hidden="true"><use href="#j-idea"/></svg></div><h3>Ideen &amp; Abstimmung</h3><p>Wir überlegen, was gedreht wird, und stimmen alles kurz mit dir ab.</p><span class="j-tag">Mit dir abgestimmt</span></div></li>
+        <li class="reveal d2"><span class="j-dot" aria-hidden="true"></span><div class="j-card"><div class="j-head"><span class="j-n">03</span><svg class="j-ic" aria-hidden="true"><use href="#s-produktion"/></svg></div><h3>Dreh bei dir vor Ort</h3><p>Entspannt und ohne viel Vorbereitung – Videos im 9:16-Format, auf Wunsch auch Fotos.</p><span class="j-tag">9:16 · vor Ort</span></div></li>
+        <li class="reveal d3"><span class="j-dot" aria-hidden="true"></span><div class="j-card"><div class="j-head"><span class="j-n">04</span><svg class="j-ic" aria-hidden="true"><use href="#j-cut"/></svg></div><h3>Schnitt &amp; Lieferung</h3><p>Du bekommst fertige Videos mit Musik und Captions. Eine Korrekturschleife ist inklusive – danach geht es im festen Rhythmus weiter.</p><span class="j-tag">Korrekturschleife inklusive</span></div></li>
       </ol>
+      <p class="j-loop reveal"><svg aria-hidden="true"><use href="#j-loop"/></svg><span>Danach wiederholen sich <b>Ideen, Dreh und Lieferung</b> – Monat für Monat, im festen Rhythmus.</span></p>
     </div>
   </section>
 
@@ -454,7 +467,7 @@
   <section class="section about" id="ueber" data-sec="ueber">
     <div class="container about-grid">
       <div class="about-img reveal">
-        <div class="about-frame"><img src="assets/img/post-dm-540.webp" srcset="assets/img/post-dm-540.webp 540w, assets/img/post-dm.webp 864w" sizes="(max-width: 1020px) 90vw, 440px" data-cms-img="about" alt="Victoria von reserved.social am Laptop" loading="lazy" decoding="async" width="864" height="1080"></div>
+        <div class="about-frame"><img src="assets/img/victoria-creator.webp" data-cms-img="about" alt="Victoria von reserved.social am Laptop" loading="lazy" decoding="async" width="432" height="649"></div>
         <span class="stamp">reserved.social by @victoria.frz</span>
       </div>
       <div>

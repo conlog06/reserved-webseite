@@ -19,7 +19,7 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - **Anfragen:** Postfach mit Priorität (heiß/warm/kalt), Paket-Empfehlung, Status (Neu → Kontaktiert → Angebot → Kunde/kein Auftrag), Notizen, Ein-Klick-Antwort per E-Mail/Anruf/WhatsApp/Instagram, CSV-Export, automatische Löschfrist.
 - **Statistik:** Herkunft (inkl. Instagram-App ohne Referrer), Kampagnen (`utm_campaign`), Scroll-Tiefe pro Abschnitt, Formular-Trichter, Klicks (welches Paket angefragt), Geräte/Systeme/Browser, Uhrzeiten, Wochentage, Instagram-Follower-Verlauf, Interaktionsrate, beliebteste Beiträge.
 - **Inhalte:** Hero-Texte, Kennzahlen, Ankündigungsleiste, Paket-Tabelle (Zeilen, Namen, Preise), Zusatzleistungen, Ergebnis-Karten, Kundenstimmen (Filter-Buttons entstehen automatisch), Über-uns-Text und -Bild.
-- **Instagram:** Zugangsschlüssel eintragen (Anleitung im Admin), Anzahl Beiträge, Jetzt aktualisieren.
+- **Instagram:** Beiträge selbst hochladen (Bild, Karussell oder Reel-Video, Text, Link, Datum, Likes) – oder automatisch per Zugangsschlüssel. Anzahl Beiträge, Follower-Zahl.
 - **Einstellungen:** Online/Wartung, E-Mail-Empfänger & Absender, Test-Mail, Impressum, Datenschutzerklärung (Vorlage oder eigener Text), Statistik an/aus, Passwort.
 
 **Animationen & Scrollen**
@@ -38,6 +38,7 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 
 **Funnel „Content-Plan Starter“ (Admin → Funnel)**
 - `/plan/`: kostenloser PDF-Download gegen Name + E-Mail (Einwilligung, Spam-Schutz, Herkunft per `utm_source`).
+- Zustellung im Admin wählbar: **direkt auf der Webseite**, **beides** (sofort + Link per Mail, Newsletter nur nach Bestätigung) oder **nur per Mail** (Double-Opt-in).
 - Double-Opt-in: Bestätigungsmail → nach dem Klick `/plan/danke/` mit Download, Angebot „Strategie jeden Monat mit Victoria – ab … €“, Termin-Button (Calendly/Cal.com-Link) und kostenlosem Erstgespräch. Zusätzlich Mail mit Download-Link und Abmeldelink.
 - Admin: alle Texte, Preis, Buchungslink, eigenes PDF hochladen (sonst Platzhalter), Einträge mit Status + CSV-Export, Zahlen (eingetragen, bestätigt, geladen, Termin geklickt), Links zum Teilen.
 - Optional: bestätigte Adressen automatisch an **Brevo** oder **MailerLite** übergeben (API-Schlüssel + Liste im Admin), Abmeldung wird mit übertragen.

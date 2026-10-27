@@ -158,6 +158,7 @@ function rs_ig_sync(bool $force = false): array {
 
             // Nicht mehr benötigte Bilder löschen
             foreach (glob(rs_root() . '/' . RS_IG_DIR . '/*.jpg') ?: [] as $f) {
+                if (str_starts_with(basename($f), 'm-')) continue;   // selbst hochgeladene Beiträge bleiben
                 $base = RS_IG_DIR . '/' . preg_replace('/-540\.jpg$/', '.jpg', basename($f));
                 if (!in_array($base, $keep, true)) @unlink($f);
             }
@@ -186,10 +187,59 @@ function rs_ig_maybe_sync(): void {
     try { rs_ig_sync(); } catch (Throwable $e) {}
 }
 
+/* ---------- Beiträge selbst hochladen (ohne Zugangsschlüssel) ---------- */
+function rs_ig_manual(): array { return rs_read('ig-manual', []); }
+function rs_ig_manual_save(array $posts): void {
+    usort($posts, fn($a, $b) => ($b['ts'] ?? 0) <=> ($a['ts'] ?? 0));
+    rs_write('ig-manual', array_values($posts));
+}
+/** Hochgeladenes Bild verkleinern (1080 px + 540-px-Variante) und als JPG ablegen */
+function rs_ig_store_upload(string $tmp, string $name): string {
+    $info = @getimagesize($tmp);
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) return '';
+    $rel = RS_IG_DIR . '/' . preg_replace('/[^a-z0-9_-]/i', '', $name) . '.jpg';
+    $abs = rs_root() . '/' . $rel;
+    if (!is_dir(dirname($abs))) @mkdir(dirname($abs), 0755, true);
+    $data = (string)file_get_contents($tmp);
+    if (!function_exists('imagecreatefromstring') || !($im = @imagecreatefromstring($data))) {
+        return $info[2] === IMAGETYPE_JPEG && @copy($tmp, $abs) ? $rel : '';
+    }
+    $w = imagesx($im); $h = imagesy($im);
+    if ($w > 1080) { $nh = (int)round($h * 1080 / $w); $d = imagecreatetruecolor(1080, $nh); imagecopyresampled($d, $im, 0, 0, 0, 0, 1080, $nh, $w, $h); imagedestroy($im); $im = $d; }
+    imageinterlace($im, true);
+    $ok = imagejpeg($im, $abs, 84);
+    if (imagesx($im) > 540) {
+        $sh = (int)round(imagesy($im) * 540 / imagesx($im)); $sm = imagecreatetruecolor(540, $sh);
+        imagecopyresampled($sm, $im, 0, 0, 0, 0, 540, $sh, imagesx($im), imagesy($im)); imageinterlace($sm, true);
+        imagejpeg($sm, substr($abs, 0, -4) . '-540.jpg', 80); imagedestroy($sm);
+    }
+    imagedestroy($im);
+    @chmod($abs, 0644);
+    return $ok ? $rel : '';
+}
+function rs_ig_manual_files(array $p): array {
+    $f = [$p['img'] ?? '', $p['video_file'] ?? ''];
+    foreach ((array)($p['children'] ?? []) as $ch) $f[] = $ch['img'] ?? '';
+    $out = [];
+    foreach (array_filter($f) as $x) { $out[] = $x; if (str_ends_with($x, '.jpg')) $out[] = substr($x, 0, -4) . '-540.jpg'; }
+    return $out;
+}
+
 /** Daten für die Webseite: echte Beiträge oder null (dann bleibt der statische Feed stehen) */
 function rs_ig_data(): ?array {
     $c = rs_config();
-    if (!$c['ig']['on'] || $c['ig']['token'] === '') return null;
+    if (!$c['ig']['on']) return null;
+    if (($c['ig']['source'] ?? 'manual') === 'manual' || $c['ig']['token'] === '') {
+        $posts = rs_ig_manual();
+        if (!$posts) return null;
+        foreach ($posts as &$p) $p['video'] = !empty($p['video_file']) ? rs_url($p['video_file']) : '';
+        unset($p);
+        $num = fn($v) => ($v = preg_replace('/\D/', '', (string)$v)) !== '' ? (int)$v : null;
+        $I = $c['ig'];
+        return ['profile' => ['username' => $c['site']['instagram'] ?: 'reserved.social', 'name' => (string)$I['m_name'], 'pic' => '', 'followers' => $num($I['m_followers']), 'follows' => null,
+                              'media' => $num($I['m_posts']) ?? count($posts)],
+                'posts' => array_slice($posts, 0, max(3, min(30, (int)$I['count']))), 'synced' => (int)max(array_map(fn($p) => (int)($p['added'] ?? 0), $posts)), 'manual' => true];
+    }
     $d = rs_read('instagram', []);
     if (empty($d['posts'])) return null;
     $d['posts'] = array_slice($d['posts'], 0, max(3, min(30, (int)$c['ig']['count'])));

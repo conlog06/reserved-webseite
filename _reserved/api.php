@@ -23,9 +23,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && in_array($a, ['bestaetigen',
         header('Location: ' . rs_url('plan/danke/?t=' . $s['token']), true, 303); exit;
     }
     if ($a === 'plan') {
-        $s = rs_funnel_find($t);
-        if (!$s || !$s['confirmed']) rs_funnel_page('Download nicht möglich', 'Bitte bestätige zuerst deine E-Mail-Adresse – den Link findest du in unserer Mail.', rs_url('plan/'), 'Zurück');
-        rs_funnel_update($t, function (&$x) { $x['downloads']++; });
+        $d = (string)($_GET['d'] ?? '');
+        $s = $d !== '' ? (rs_funnel_mode() !== 'mail' ? rs_funnel_find_dl($d) : null) : rs_funnel_find($t);
+        if (!$s || ($d === '' && !$s['confirmed'])) rs_funnel_page('Download nicht möglich', 'Bitte bestätige zuerst deine E-Mail-Adresse – den Link findest du in unserer Mail.', rs_url('plan/'), 'Zurück');
+        rs_funnel_update($s['token'], function (&$x) { $x['downloads']++; });
         rs_stats_click('plan-download');
         $f = rs_funnel_pdf();
         header('Content-Type: application/pdf'); header('Content-Disposition: attachment; filename="' . rs_slug(rs_config()['funnel']['title']) . '.pdf"');
@@ -56,7 +57,7 @@ if ($a === 'plan') {
     [$ok, $res] = rs_funnel_signup($in);
     if (!$ok) $out(['ok' => false, 'error' => $res], 400);
     rs_hit('plan', 3600);
-    $out(['ok' => true]);
+    $out(rs_funnel_mode() === 'mail' ? ['ok' => true] : ['ok' => true, 'next' => rs_url('plan/danke/?d=' . $res['dl'])]);
 }
 
 if ($a === 'anfrage') {

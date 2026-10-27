@@ -259,9 +259,9 @@
 
     /* ---------- Rhythmus: ein Jahr im Feed – Punkte erscheinen Woche für Woche ---------- */
     if ($('#rhChart')) {
-      var tl = gsap.timeline({ scrollTrigger: { trigger: '#rhChart', start: 'top 78%', once: true } });
-      tl.from('.track-off .dot', { scale: 0, duration: 0.35, stagger: 0.018, ease: 'back.out(3)' }, 0)
-        .from('.track-on .dot', { scale: 0, duration: 0.35, stagger: 0.018, ease: 'back.out(3)' }, 0.25)
+      var tl = gsap.timeline({ scrollTrigger: { trigger: '#rhChart', start: 'top 78%', once: true }, onComplete: function () { $('#rhChart').classList.add('ready'); } });
+      tl.from('.track-off .dot', { scale: 0, duration: 0.35, stagger: 0.018, ease: 'back.out(3)', clearProps: 'transform,scale' }, 0)
+        .from('.track-on .dot', { scale: 0, duration: 0.35, stagger: 0.018, ease: 'back.out(3)', clearProps: 'transform,scale' }, 0.25)
         .from('.zzz', { autoAlpha: 0, y: 10, duration: 0.6 }, 1.1)
         .from('.chart-now', { scaleY: 0, transformOrigin: '50% 0%', duration: 0.6, ease: 'power2.out' }, 0.9);
     }
@@ -273,6 +273,13 @@
     });
   
     /* ---------- Ablauf: Linie folgt dem Scrollen ---------- */
+    $$('.journey').forEach(function (j) {
+      var items = $$('li', j);
+      ST.create({ trigger: j, start: 'top 72%', end: 'bottom 60%', scrub: true, onUpdate: function (s) {
+        j.style.setProperty('--p', s.progress.toFixed(3));
+        items.forEach(function (li, i) { li.classList.toggle('done', s.progress >= i / (items.length - 1) - 0.02); });
+      } });
+    });
     $$('.steps').forEach(function (steps) {
       ST.create({ trigger: steps, start: 'top 75%', end: 'bottom 55%', scrub: true, onUpdate: function (s) { steps.style.setProperty('--p', s.progress.toFixed(3)); } });
     });

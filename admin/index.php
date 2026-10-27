@@ -297,14 +297,63 @@ if ($post) {
                 flash($r['ok'] ? 'Instagram verbunden – ' . $r['count'] . ' Beiträge geladen.' : 'Gespeichert, aber Instagram meldet: ' . $r['error'], $r['ok'] ? 'ok' : 'error');
             } else flash('Gespeichert.');
             back();
+        case 'ig_source':
+            $c['ig']['source'] = ($_POST['source'] ?? '') === 'api' ? 'api' : 'manual';
+            $c['ig']['on'] = !empty($_POST['on']);
+            $c['ig']['count'] = in_array((int)($_POST['count'] ?? 9), [6, 9, 12, 15], true) ? (int)$_POST['count'] : 9;
+            $c['ig']['m_name'] = $str('m_name', 80);
+            foreach (['m_followers', 'm_posts'] as $k) $c['ig'][$k] = (string)preg_replace('/[^\d.]/', '', $str($k, 12));
+            rs_save_config($c); flash('Gespeichert.'); back('#beitraege');
+        case 'ig_post_add':
+            $imgs = $_FILES['imgs'] ?? null; $id = bin2hex(random_bytes(5)); $stored = [];
+            if ($imgs && is_array($imgs['name'] ?? null)) {
+                foreach (array_slice(array_keys($imgs['name']), 0, 10) as $k) {
+                    if (($imgs['error'][$k] ?? 4) !== UPLOAD_ERR_OK || !is_uploaded_file($imgs['tmp_name'][$k]) || $imgs['size'][$k] > 15 * 1024 * 1024) continue;
+                    $r = rs_ig_store_upload($imgs['tmp_name'][$k], 'm-' . $id . '-' . count($stored));
+                    if ($r !== '') $stored[] = $r;
+                }
+            }
+            if (!$stored) { flash('Bitte mindestens ein Bild wählen (JPG, PNG oder WebP – bei Reels das Titelbild).', 'error'); back('#beitraege'); }
+            $video = ''; $v = $_FILES['video'] ?? null;
+            if ($v && ($v['error'] ?? 4) === UPLOAD_ERR_OK && is_uploaded_file($v['tmp_name'])) {
+                $head = (string)file_get_contents($v['tmp_name'], false, null, 0, 16);
+                if (substr($head, 4, 4) === 'ftyp') { $rel = RS_IG_DIR . '/m-' . $id . '.mp4'; if (@move_uploaded_file($v['tmp_name'], rs_root() . '/' . $rel)) { @chmod(rs_root() . '/' . $rel, 0644); $video = $rel; } }
+                else flash('Das Video muss eine MP4-Datei sein – der Beitrag wurde ohne Video gespeichert.', 'error');
+            } elseif ($v && in_array($v['error'] ?? 0, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) flash('Das Video ist zu groß für den Server – der Beitrag wurde ohne Video gespeichert.', 'error');
+            $link = trim($str('permalink', 300)); $date = rs_ts(trim($str('date', 20)) . 'T12:00') ?: time();
+            $num = fn($k) => ($x = preg_replace('/\D/', '', $str($k, 12))) !== '' ? (int)$x : null;
+            $post = ['id' => 'm-' . $id, 'type' => $video ? 'VIDEO' : (count($stored) > 1 ? 'CAROUSEL_ALBUM' : 'IMAGE'), 'reel' => (bool)$video,
+                     'caption' => $str('caption', 2200), 'permalink' => preg_match('~^https://(www\.)?instagram\.com/~i', $link) ? $link : '',
+                     'ts' => $date, 'likes' => $num('likes'), 'comments' => $num('comments'), 'img' => $stored[0], 'video_file' => $video,
+                     'children' => count($stored) > 1 && !$video ? array_map(fn($x) => ['type' => 'IMAGE', 'img' => $x, 'video' => ''], $stored) : [], 'added' => time()];
+            rs_locked('ig-manual', function () use ($post) { $l = rs_ig_manual(); $l[] = $post; rs_ig_manual_save($l); });
+            if (empty($_SESSION['rs_flash'])) flash('Beitrag hinzugefügt – er ist jetzt auf der Webseite.');
+            back('#beitraege');
+        case 'ig_post_save':
+        case 'ig_post_delete':
+            $id = (string)($_POST['id'] ?? '');
+            rs_locked('ig-manual', function () use ($action, $id, $str) {
+                $l = rs_ig_manual();
+                foreach ($l as $k => &$p) {
+                    if ($p['id'] !== $id) continue;
+                    if ($action === 'ig_post_delete') { foreach (rs_ig_manual_files($p) as $f) if (str_starts_with($f, RS_IG_DIR . '/m-')) @unlink(rs_root() . '/' . $f); unset($l[$k]); continue; }
+                    $link = trim($str('permalink', 300)); $num = fn($x) => ($x = preg_replace('/\D/', '', $str($x, 12))) !== '' ? (int)$x : null;
+                    $p['caption'] = $str('caption', 2200); $p['permalink'] = preg_match('~^https://(www\.)?instagram\.com/~i', $link) ? $link : '';
+                    $p['likes'] = $num('likes'); $p['comments'] = $num('comments');
+                    if ($t = rs_ts(trim($str('date', 20)) . 'T12:00')) $p['ts'] = $t;
+                }
+                unset($p);
+                rs_ig_manual_save($l);
+            });
+            flash($action === 'ig_post_delete' ? 'Beitrag gelöscht.' : 'Beitrag gespeichert.'); back('#beitraege');
         case 'ig_sync':
             $r = rs_ig_sync(true);
             flash($r['ok'] ? 'Aktualisiert – ' . $r['count'] . ' Beiträge.' : 'Fehler: ' . $r['error'], $r['ok'] ? 'ok' : 'error'); back();
         case 'ig_disconnect':
             $c['ig']['token'] = ''; $c['ig']['token_expires'] = 0; $c['ig']['last_error'] = '';
             rs_save_config($c); @unlink(RS_DATA . '/instagram.php');
-            foreach (glob(rs_root() . '/' . RS_IG_DIR . '/*.jpg') ?: [] as $f) @unlink($f);
-            flash('Instagram getrennt – die Webseite zeigt wieder die festen Beispielbilder.'); back();
+            foreach (glob(rs_root() . '/' . RS_IG_DIR . '/*.jpg') ?: [] as $f) if (!str_starts_with(basename($f), 'm-')) @unlink($f);
+            flash('Instagram getrennt – die Webseite zeigt wieder deine selbst hochgeladenen Beiträge bzw. die Beispielbilder.'); back();
 
         /* ----- Einstellungen ----- */
         case 'settings':
@@ -362,7 +411,8 @@ if ($post) {
         case 'funnel':
             $F = &$c['funnel'];
             $F['on'] = !empty($_POST['fu_on']); $F['notify'] = !empty($_POST['fu_notify']);
-            foreach (['title' => 60, 'kicker' => 40, 'headline' => 80, 'script' => 40, 'lead' => 400, 'button' => 40, 'consent' => 300, 'danke_title' => 80, 'danke_text' => 300,
+            $F['delivery'] = in_array($_POST['fu_delivery'] ?? '', ['mail', 'page', 'both'], true) ? $_POST['fu_delivery'] : rs_funnel_mode($F);
+            foreach (['title' => 60, 'kicker' => 40, 'headline' => 80, 'script' => 40, 'lead' => 400, 'button' => 40, 'consent' => 300, 'danke_title' => 80, 'danke_text' => 300, 'danke_text_direct' => 300,
                       'offer_title' => 90, 'offer_text' => 400, 'price' => 40, 'booking_label' => 40] as $k => $max) { $v = $str('fu_' . $k, $max); if ($v !== '' || in_array($k, ['price'], true)) $F[$k] = $v; }
             $u = trim($str('fu_booking_url', 300)); $F['booking_url'] = preg_match('~^https://~i', $u) ? $u : '';
             foreach (['bullets', 'offer_bullets'] as $k) $F[$k] = array_slice(array_values(array_filter(array_map(fn($b) => rs_cut($b, 120), explode("\n", $str('fu_' . $k, 1000))), fn($b) => $b !== '')), 0, 6);
@@ -841,6 +891,12 @@ head('Admin – reserved.social', true);
     <h2>Texte &amp; Angebot</h2>
     <form method="post" class="form"><?= $hidden('funnel') ?>
       <label class="check"><input type="checkbox" name="fu_on" value="1"<?= $F['on'] ? ' checked' : '' ?>> Download-Seite ist online</label>
+      <fieldset><legend>Wie kommt das PDF zu den Leuten?</legend>
+        <div class="modes m3">
+          <?php foreach (['page' => ['Direkt auf der Webseite', 'Download sofort nach dem Eintragen. Keine Mail. Für Newsletter-Mails fehlt dann die Bestätigung.'], 'both' => ['Beides (empfohlen)', 'Download sofort + Link per Mail. Wer in der Mail bestätigt, kommt in den Newsletter.'], 'mail' => ['Nur per E-Mail', 'Erst Mail bestätigen, dann Download. Höchste Qualität der Adressen, aber mehr Absprünge.']] as $k => [$t, $d]): ?>
+          <label class="mode"><input type="radio" name="fu_delivery" value="<?= $k ?>"<?= rs_funnel_mode($F) === $k ? ' checked' : '' ?>><span><b><?= $t ?></b><small><?= $d ?></small></span></label><?php endforeach; ?>
+        </div>
+      </fieldset>
       <fieldset><legend>Download-Seite <small>/plan/</small></legend>
         <div class="cols"><label>Name des PDFs<input name="fu_title" value="<?= e($F['title']) ?>" maxlength="60"></label><label>Zeile oben<input name="fu_kicker" value="<?= e($F['kicker']) ?>" maxlength="40"></label></div>
         <div class="cols"><label>Überschrift<input name="fu_headline" value="<?= e($F['headline']) ?>" maxlength="80"></label><label>Schreibschrift<input name="fu_script" value="<?= e($F['script']) ?>" maxlength="40"></label></div>
@@ -850,7 +906,8 @@ head('Admin – reserved.social', true);
         <label>Einwilligungstext <small>(neben dem Häkchen)</small><textarea name="fu_consent" rows="2" maxlength="300"><?= e($F['consent']) ?></textarea></label>
       </fieldset>
       <fieldset><legend>Danke-Seite mit Angebot <small>/plan/danke/</small></legend>
-        <div class="cols"><label>Überschrift<input name="fu_danke_title" value="<?= e($F['danke_title']) ?>" maxlength="80"></label><label>Text<input name="fu_danke_text" value="<?= e($F['danke_text']) ?>" maxlength="300"></label></div>
+        <div class="cols"><label>Überschrift<input name="fu_danke_title" value="<?= e($F['danke_title']) ?>" maxlength="80"></label><label>Text <small>(wenn auch eine Mail kommt)</small><input name="fu_danke_text" value="<?= e($F['danke_text']) ?>" maxlength="300"></label></div>
+        <label>Text bei „Direkt auf der Webseite“<input name="fu_danke_text_direct" value="<?= e($F['danke_text_direct']) ?>" maxlength="300"></label>
         <label>Angebot – Überschrift<input name="fu_offer_title" value="<?= e($F['offer_title']) ?>" maxlength="90"></label>
         <label>Angebot – Text<textarea name="fu_offer_text" rows="2" maxlength="400"><?= e($F['offer_text']) ?></textarea></label>
         <label>Angebot – Punkte <small>(eine Zeile pro Punkt)</small><textarea name="fu_offer_bullets" rows="3"><?= e(implode("\n", $F['offer_bullets'])) ?></textarea></label>
@@ -901,21 +958,53 @@ head('Admin – reserved.social', true);
   $ig = $c['ig']; $connected = $ig['token'] !== ''; $P = $igData['profile'] ?? null;
   $daysLeft = $ig['token_expires'] ? (int)floor(($ig['token_expires'] - time()) / 86400) : null;
 ?>
-  <div class="page-head"><div><h1>Instagram</h1><p class="sub">Die Webseite zeigt automatisch deine neuesten Beiträge – mit Followern, Likes und Kommentaren.</p></div></div>
+  <div class="page-head"><div><h1>Instagram</h1><p class="sub">Was im Instagram-Bereich und im Handy oben auf der Webseite erscheint.</p></div></div>
+  <?php $manual = ($ig['source'] ?? 'manual') === 'manual' || !$connected; $mposts = rs_ig_manual(); ?>
+  <section class="card" id="beitraege">
+    <h2>Beiträge auf der Webseite</h2>
+    <form method="post" class="form"><?= $hidden('ig_source') ?>
+      <div class="modes">
+        <label class="mode"><input type="radio" name="source" value="manual"<?= ($ig['source'] ?? 'manual') === 'manual' ? ' checked' : '' ?>><span><b>Selbst hochladen</b><small>Du lädst Beiträge hier hoch – Bild(er), Reel-Video, Text, Link. Ohne technische Einrichtung.</small></span></label>
+        <label class="mode"><input type="radio" name="source" value="api"<?= ($ig['source'] ?? 'manual') === 'api' ? ' checked' : '' ?>><span><b>Automatisch von Instagram</b><small>Holt die neuesten Beiträge selbst. Braucht einen Zugangsschlüssel (einmalig, macht LoggX).</small></span></label>
+      </div>
+      <div class="cols c3"><label>Anzahl Beiträge auf der Seite<select name="count"><?php foreach ([6, 9, 12, 15] as $k): ?><option<?= (int)$ig['count'] === $k ? ' selected' : '' ?>><?= $k ?></option><?php endforeach; ?></select></label>
+        <label>Follower <small>(nur bei „Selbst hochladen“, leer = ausblenden)</small><input name="m_followers" value="<?= e($ig['m_followers']) ?>" inputmode="numeric" placeholder="z. B. 1250"></label>
+        <label>Beiträge gesamt <small>(leer = Anzahl hier)</small><input name="m_posts" value="<?= e($ig['m_posts']) ?>" inputmode="numeric"></label></div>
+      <div class="cols"><label>Name im Profil<input name="m_name" value="<?= e($ig['m_name']) ?>" maxlength="80"></label>
+        <label class="check self-end"><input type="checkbox" name="on" value="1"<?= $ig['on'] ? ' checked' : '' ?>> Beiträge auf der Webseite zeigen</label></div>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+    <?php if (!$manual): ?><p class="hint mt">Gerade aktiv: <b>automatisch von Instagram</b>. Selbst hochgeladene Beiträge bleiben gespeichert und erscheinen, sobald du auf „Selbst hochladen“ umstellst.</p><?php endif; ?>
+    <h3 class="mt">Neuer Beitrag</h3>
+    <form method="post" class="form igm-new" enctype="multipart/form-data"><?= $hidden('ig_post_add') ?>
+      <div class="cols"><label>Bild(er) <small>(1 Bild = Beitrag, mehrere = Karussell, bei Reels das Titelbild · Hochformat 4:5)</small><input type="file" name="imgs[]" accept="image/jpeg,image/png,image/webp" multiple required></label>
+        <label>Reel-Video <small>(optional, MP4)</small><input type="file" name="video" accept="video/mp4"></label></div>
+      <label>Text <small>(Caption – #Hashtags und @Namen werden hervorgehoben)</small><textarea name="caption" rows="3" maxlength="2200"></textarea></label>
+      <div class="cols c3"><label>Link zum Beitrag auf Instagram <small>(optional)</small><input name="permalink" placeholder="https://www.instagram.com/p/…" maxlength="300"></label>
+        <label>Datum<input type="date" name="date" value="<?= e(date('Y-m-d')) ?>"></label>
+        <div class="cols"><label>Likes<input name="likes" inputmode="numeric" placeholder="leer = aus"></label><label>Kommentare<input name="comments" inputmode="numeric" placeholder="leer = aus"></label></div></div>
+      <button class="btn">Beitrag hinzufügen</button>
+    </form>
+    <?php if ($mposts): ?><h3 class="mt">Hochgeladen <small>(<?= count($mposts) ?> · neueste zuerst, nach Datum sortiert)</small></h3>
+    <div class="igm-list"><?php foreach ($mposts as $p): ?>
+      <div class="igm"><div class="igm-pic"><img src="<?= e(rs_url($p['img'])) ?>" alt=""><?php if ($p['type'] !== 'IMAGE'): ?><span class="tag"><?= $p['type'] === 'VIDEO' ? 'Reel' : count($p['children']) . ' Bilder' ?></span><?php endif; ?></div>
+        <form method="post" class="form"><?= $hidden('ig_post_save') ?><input type="hidden" name="id" value="<?= e($p['id']) ?>">
+          <textarea name="caption" rows="3" maxlength="2200" placeholder="Text"><?= e($p['caption']) ?></textarea>
+          <input name="permalink" value="<?= e($p['permalink']) ?>" placeholder="Link zu Instagram (optional)" maxlength="300">
+          <div class="cols c3"><input type="date" name="date" value="<?= e(date('Y-m-d', (int)$p['ts'])) ?>"><input name="likes" value="<?= $p['likes'] ?? '' ?>" inputmode="numeric" placeholder="Likes"><input name="comments" value="<?= $p['comments'] ?? '' ?>" inputmode="numeric" placeholder="Kommentare"></div>
+          <div class="btnrow"><button class="btn btn-small">Speichern</button></div>
+        </form>
+        <form method="post" onsubmit="return confirm('Beitrag löschen?')"><?= $hidden('ig_post_delete') ?><input type="hidden" name="id" value="<?= e($p['id']) ?>"><button class="btn btn-small btn-danger">Löschen</button></form>
+      </div><?php endforeach; ?></div><?php endif; ?>
+  </section>
   <div class="grid g-1-1">
     <section class="card">
-      <h2>Verbindung</h2>
+      <h2>Automatisch von Instagram <small class="muted-s">(Verbindung)</small></h2>
       <?php if ($connected && $P): ?>
         <div class="ig-conn"><?php if ($P['pic']): ?><img src="<?= e(rs_url($P['pic'])) ?>" alt=""><?php endif; ?><div><b>@<?= e($P['username']) ?></b><small><?= $P['followers'] !== null ? $n($P['followers']) . ' Follower · ' : '' ?><?= (int)$P['media'] ?> Beiträge</small></div><span class="tag on">verbunden</span></div>
       <?php elseif ($connected): ?><p class="flash warn">Schlüssel eingetragen, aber noch keine Daten geladen.</p><?php endif; ?>
       <?php if ($ig['last_error']): ?><p class="flash error"><?= e($ig['last_error']) ?></p><?php endif; ?>
       <?php if ($connected): ?><p class="hint">Zuletzt aktualisiert: <?= $ig['last_sync'] ? e(rs_ago((int)$ig['last_sync'])) : 'noch nie' ?> · aktualisiert sich alle 30 Minuten selbst<?= $daysLeft !== null ? ' · Schlüssel gültig noch ca. ' . max(0, $daysLeft) . ' Tage (wird automatisch verlängert)' : '' ?></p><?php endif; ?>
-      <form method="post" class="form"><?= $hidden('ig_save') ?>
-        <div class="cols"><label>Anzahl Beiträge auf der Seite<select name="count"><?php foreach ([6, 9, 12, 15] as $k): ?><option<?= (int)$ig['count'] === $k ? ' selected' : '' ?>><?= $k ?></option><?php endforeach; ?></select></label>
-          <label class="check self-end"><input type="checkbox" name="on" value="1"<?= $ig['on'] ? ' checked' : '' ?>> Live-Feed auf der Webseite zeigen</label></div>
-        <input type="hidden" name="token" value="<?= $connected ? str_repeat('•', 12) : '' ?>">
-        <div class="btnrow"><button class="btn">Speichern</button></div>
-      </form>
       <details class="tech"><summary>Technische Einrichtung <small>(einmalig, macht LoggX)</small></summary>
         <form method="post" class="form"><?= $hidden('ig_save') ?>
           <label>Zugangsschlüssel (Access Token)<input name="token" value="<?= $connected ? str_repeat('•', 12) : '' ?>" placeholder="IGAA…" autocomplete="off" spellcheck="false" onfocus="if(this.value.startsWith('•'))this.select()"></label>
@@ -928,7 +1017,7 @@ head('Admin – reserved.social', true);
         <form method="post" onsubmit="return confirm('Instagram-Verbindung trennen?')"><?= $hidden('ig_disconnect') ?><button class="btn btn-small btn-danger">Trennen</button></form></div><?php endif; ?>
     </section>
   </div>
-  <?php if (!empty($igData['posts'])): ?><section class="card"><h2>Aktuell auf der Webseite</h2><div class="topposts"><?php foreach (array_slice($igData['posts'], 0, (int)$ig['count']) as $p): ?><a href="<?= e($p['permalink']) ?>" target="_blank" rel="noopener"><img src="<?= e(rs_url($p['img'])) ?>" alt=""><span><?= $p['likes'] !== null ? '♥ ' . (int)$p['likes'] . ' · 💬 ' . (int)$p['comments'] : e(date('d.m.Y', $p['ts'])) ?></span></a><?php endforeach; ?></div></section><?php endif; ?>
+  <?php $live = rs_ig_data(); if (!empty($live['posts'])): ?><section class="card"><h2>Aktuell auf der Webseite</h2><div class="topposts"><?php foreach ($live['posts'] as $p): ?><a href="<?= e($p['permalink']) ?>" target="_blank" rel="noopener"><img src="<?= e(rs_url($p['img'])) ?>" alt=""><span><?= $p['likes'] !== null ? '♥ ' . (int)$p['likes'] . ' · 💬 ' . (int)$p['comments'] : e(date('d.m.Y', $p['ts'])) ?></span></a><?php endforeach; ?></div></section><?php endif; ?>
 
 <?php /* ======================= SEITEN ======================= */ elseif ($tab === 'seiten'):
   $eff = rs_effective_mode($c); $launchTs = rs_ts($c['launch_at']); $codes = array_reverse(rs_codes()); $signups = array_reverse(rs_signups());
@@ -1099,7 +1188,7 @@ head('Admin – reserved.social', true);
         <div class="cols"><label>Name<input name="title" value="<?= e($U['title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="script" value="<?= e($U['script']) ?>" maxlength="60"></label></div>
         <label>Zeile darunter<input name="tags" value="<?= e($U['tags']) ?>" maxlength="90"></label>
         <label>Text<textarea name="intro" rows="3" maxlength="500"><?= e($U['intro']) ?></textarea></label>
-        <div class="cols"><label>E-Mail für Anfragen<input type="email" name="email" value="<?= e($U['email']) ?>" maxlength="120"></label><label>Model-Portfolio <small>(Link, z. B. Linktree – leer = ausblenden)</small><input name="portfolio" value="<?= e($U['portfolio']) ?>" maxlength="300" placeholder="https://linktr.ee/…"></label>
+        <div class="cols"><label>E-Mail für Anfragen<input type="email" name="email" value="<?= e($U['email']) ?>" maxlength="120"></label><label>Model-Portfolio <small>(Link, z. B. Canva oder Linktree – leer = ausblenden)</small><input name="portfolio" value="<?= e($U['portfolio']) ?>" maxlength="300" placeholder="https://…"></label>
           <label>Instagram-Name<input name="ig" value="<?= e($U['ig']) ?>" maxlength="60"></label><label>TikTok-Name<input name="tt" value="<?= e($U['tt']) ?>" maxlength="60"></label></div>
       </fieldset>
       <fieldset><legend>Reichweite</legend>

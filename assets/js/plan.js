@@ -28,6 +28,7 @@
         body: JSON.stringify({ name: name.value.trim(), email: mail.value.trim(), consent: 1, website: form.elements.website.value, src }) });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) throw new Error(j.error || 'Das hat leider nicht geklappt.');
+      if (j.next) { location.href = j.next; return; }
       $('#pfMail').textContent = mail.value.trim();
       $('.pf-in', form).hidden = true;
       const d = $('#pfDone'); d.hidden = false; d.focus();

@@ -158,6 +158,54 @@
     }).join('');
   }
 
+  /* ---------- Rhythmus: Wochen anfahren / antippen ---------- */
+  const chart = $('#rhChart');
+  if (chart) {
+    const plot = $('.chart-plot', chart), off = $$('.track-off .dot', chart), on = $$('.track-on .dot', chart);
+    const tip = $('#rhTip'), cur = $('#rhCursor'), range = $('#rhRange'), N = on.length, NOW = on.findIndex(d => d.classList.contains('now'));
+    const MS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    const monday = new Date(); monday.setHours(12, 0, 0, 0); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const st = (i) => {
+      const o = off[i].classList.contains('ink') ? ['ink', 'Beitrag online'] : off[i].classList.contains('zz') ? ['off', i > NOW ? 'nichts geplant' : 'Funkstille'] : ['off', 'kein Beitrag'];
+      const n = on[i].classList.contains('plan') ? ['plan', 'Beitrag geplant'] : ['on', 'Beitrag online'];
+      return [o, n];
+    };
+    const counts = (i) => {
+      const upto = Math.min(i, NOW), w = upto + 1;
+      const a = off.slice(0, upto + 1).filter(d => d.classList.contains('ink')).length;
+      const b = on.slice(0, upto + 1).filter(d => d.classList.contains('on')).length;
+      const plan = i > NOW ? on.slice(NOW + 1, i + 1).filter(d => d.classList.contains('plan')).length : 0;
+      $('#rhCntOff').innerHTML = `<b>${a}</b> von ${w} Wochen mit Beitrag` + (i > NOW ? ' <small>+ 0 geplant</small>' : '');
+      $('#rhCntOn').innerHTML = `<b>${b}</b> von ${w} Wochen mit Beitrag` + (plan ? ` <small>+ ${plan} geplant</small>` : '');
+    };
+    let last = -1;
+    const show = (i, act = true) => {
+      i = Math.max(0, Math.min(N - 1, i));
+      chart.classList.toggle('act', act);
+      if (i === last) return; last = i;
+      [...off, ...on].forEach(d => d.classList.remove('hl'));
+      off[i].classList.add('hl'); on[i].classList.add('hl');
+      const pr = plot.getBoundingClientRect(), dr = on[i].getBoundingClientRect();
+      const x = dr.left + dr.width / 2 - pr.left;
+      cur.style.left = x + 'px';
+      const d0 = new Date(monday.getTime() + (i - NOW) * 7 * 864e5), d1 = new Date(d0.getTime() + 6 * 864e5);
+      const [o, n] = st(i);
+      tip.innerHTML = `<b>${i === NOW ? 'Diese Woche' : 'KW ' + kw(d0)}</b><span class="tip-d">${d0.getDate()}. ${d0.getMonth() !== d1.getMonth() ? MS[d0.getMonth()] + ' ' : ''}– ${d1.getDate()}. ${MS[d1.getMonth()]}</span>`
+        + `<span class="tip-r"><i class="dot ${o[0]}"></i>Ohne Rhythmus: ${o[1]}</span><span class="tip-r"><i class="dot ${n[0]}"></i>Mit reserved.social: ${n[1]}</span>`;
+      const tw = tip.offsetWidth || 230, lx = Math.max(tw / 2, Math.min(pr.width - tw / 2, x));
+      tip.style.left = lx + 'px'; tip.style.setProperty('--ax', (x - lx + tw / 2) + 'px');
+      range.value = i; counts(i);
+    };
+    const idx = (e) => { const r = $('.track-on', chart).getBoundingClientRect(); return Math.floor((e.clientX - r.left) / r.width * N); };
+    plot.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || e.buttons) show(idx(e)); });
+    plot.addEventListener('pointerdown', (e) => { show(idx(e)); track('rh-chart'); });
+    plot.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { chart.classList.remove('act'); [...off, ...on].forEach(d => d.classList.remove('hl')); last = -1; counts(NOW); } });
+    range.addEventListener('input', () => show(+range.value));
+    range.addEventListener('focus', () => show(+range.value));
+    range.addEventListener('blur', () => chart.classList.remove('act'));
+    counts(NOW);
+  }
+
   /* ---------- Vergleich: Initialen der Kundenstimme ---------- */
   const caseName = $('.case [data-cms="case_name"]'), caseAv = $('.case-av');
   if (caseName && caseAv) caseAv.textContent = caseName.textContent.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
