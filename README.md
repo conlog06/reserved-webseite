@@ -47,7 +47,7 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - Die Person bekommt eine anpassbare E-Mail (Vorlage mit Platzhaltern) mit Kalender-Datei (.ics) im Anhang und einem Link zu `/termin/?t=…`: „Ja, passt mir“ oder „Passt leider nicht“ mit Nachricht.
 - Victoria bekommt eine Mail bei jeder Antwort; im Admin: Status, Erinnern, Verschieben (neuer Vorschlag), Absagen (Kalendereintrag wird entfernt).
 
-**UGC-Anfragen:** Formular im E-Mail-Look auf `/ugc/` (An/Von/Marke/Betreff/Nachricht, Schnellauswahl der Leistungen) → Mail an die Booking-Adresse, Eingangsbestätigung an die Marke, Liste im Admin unter „Seiten → UGC-Seite“.
+**UGC-Anfragen:** Formular im E-Mail-Look auf `/ugc/` (An/Von/Marke/Betreff/Nachricht, Schnellauswahl der Leistungen) → Mail an die Booking-Adresse, Eingangsbestätigung an die Marke, Liste im Admin unter „UGC“.
 
 ## Einrichtung (einmalig)
 1. Alle Dateien per FTP/SFTP in das Web-Verzeichnis hochladen – **inklusive der versteckten `.htaccess`-Dateien**. PHP auf 8.1 oder neuer stellen.

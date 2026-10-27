@@ -14,7 +14,7 @@ header('Referrer-Policy: same-origin');
 rs_session();
 $c = rs_config();
 $self = (string)strtok($_SERVER['REQUEST_URI'] ?? '', '?');
-$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'seiten' => 'Seiten', 'funnel' => 'Funnel', 'termine' => 'Termine', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
+$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'seiten' => 'Seiten', 'funnel' => 'Funnel', 'termine' => 'Termine', 'ugc' => 'UGC', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
 $tab = isset($tabs[$_GET['tab'] ?? '']) ? $_GET['tab'] : 'start';
 
 function flash(string $t, string $type = 'ok'): void { $_SESSION['rs_flash'] = [$t, $type]; }
@@ -191,7 +191,7 @@ if ($post) {
         case 'image_delete':
             $slot = in_array($_POST['slot'] ?? '', ['avatar', 'ugc'], true) ? $_POST['slot'] : 'about';
             $anchor = ['avatar' => '#fitcheck', 'ugc' => '#ugc', 'about' => '#ueber'][$slot];
-            if ($slot !== 'about') $GLOBALS['tab'] = 'seiten';
+            if ($slot !== 'about') $GLOBALS['tab'] = $slot === 'ugc' ? 'ugc' : 'seiten';
             $key = 'img_' . $slot;
             $old = (string)($S[$key] ?? '');
             $f = $old !== '' ? rs_root() . '/' . strtok($old, '?') : '';
@@ -505,6 +505,7 @@ $csrf = rs_csrf();
 $S = $c['site'];
 $leads = array_reverse(rs_leads());
 $newLeads = count(array_filter($leads, fn($x) => $x['status'] === 'neu'));
+$newUgc = count(array_filter(rs_ugc_msgs(), fn($m) => empty($m['seen'])));
 $range = in_array((int)($_GET['tage'] ?? 30), [7, 30, 90, 365], true) ? (int)($_GET['tage'] ?? 30) : 30;
 $st = in_array($tab, ['start', 'statistik'], true) ? rs_stats_summary($range) : null;
 $hidden = fn(string $action) => '<input type="hidden" name="csrf" value="' . e($csrf) . '"><input type="hidden" name="action" value="' . e($action) . '"><input type="hidden" name="tab" value="' . e($GLOBALS['tab']) . '">';
@@ -565,7 +566,7 @@ head('Admin – reserved.social', true);
 <header class="top">
   <a class="brand" href="?tab=start">reserved<span>.social</span> <small>Admin</small></a>
   <nav class="tabs" aria-label="Bereiche">
-    <?php foreach ($tabs as $k => $t): ?><a href="?tab=<?= $k ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= icon($k) ?><span><?= $t ?></span><?= $k === 'anfragen' && $newLeads ? '<i class="badge-n">' . $newLeads . '</i>' : '' ?></a><?php endforeach; ?>
+    <?php foreach ($tabs as $k => $t): ?><a href="?tab=<?= $k ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= icon($k) ?><span><?= $t ?></span><?= $k === 'anfragen' && $newLeads ? '<i class="badge-n">' . $newLeads . '</i>' : ($k === 'ugc' && $newUgc ? '<i class="badge-n">' . $newUgc . '</i>' : '') ?></a><?php endforeach; ?>
   </nav>
   <div class="top-r"><a href="<?= e(rs_url('')) ?>" target="_blank" rel="noopener" class="ghost">Seite ansehen ↗</a><a href="?logout" class="ghost">Abmelden</a></div>
 </header>
@@ -966,6 +967,84 @@ head('Admin – reserved.social', true);
       <?php endforeach; ?></tbody></table></div><?php endif; ?>
   </section>
 
+<?php /* ======================= UGC ======================= */ elseif ($tab === 'ugc'):
+  $st30 = rs_stats_summary(30); $U = $c['ugc'];
+?>
+  <div class="page-head"><div><h1>UGC-Seite</h1><p class="sub">Victorias Creator Kit unter <b>/ugc/</b>: Anfragen von Marken, Texte, Zahlen, Foto und Videos.</p></div>
+    <a class="btn btn-ghost btn-small" href="<?= e(rs_url('ugc/')) ?>" target="_blank" rel="noopener">Seite ansehen ↗</a></div>
+  <nav class="subnav"><a href="#anfragen-ugc">Anfragen</a><a href="#ugc">Inhalte</a></nav>
+  <section class="card" id="anfragen-ugc">
+    <?php $um = array_reverse(rs_ugc_msgs()); ?>
+    <h2>Anfragen von Marken <small class="muted-s">(<?= count($um) ?>)</small></h2>
+    <p class="hint">Kommen über das Formular auf der UGC-Seite – und zusätzlich per Mail an <b><?= e($U['email']) ?></b>. Antworten geht direkt per Mail.</p>
+    <?php if (!$um): ?><p class="empty">Noch keine Anfragen über das Formular auf der UGC-Seite.</p>
+    <?php else: ?><div class="ugm-list"><?php foreach (array_slice($um, 0, 30) as $m): ?>
+      <details class="ugm<?= empty($m['seen']) ? ' new' : '' ?>"<?= empty($m['seen']) ? ' open' : '' ?>><summary><?= empty($m['seen']) ? '<span class="tag warn">neu</span>' : '' ?><span class="ugm-d"><?= e(date('d.m.', (int)$m['ts'])) ?></span><b><?= e($m['firma'] ?: $m['name']) ?></b><span class="ugm-s"><?= e($m['betreff'] ?: rs_cut($m['text'], 60)) ?></span></summary>
+        <p class="ugm-from"><?= e($m['name']) ?> · <a href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>"><?= e($m['email']) ?></a> · über <?= e($m['src']) ?></p>
+        <p class="msg"><?= nl2br(e($m['text'])) ?></p>
+        <div class="btnrow"><a class="btn btn-small" href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>">Antworten</a>
+          <form method="post" onsubmit="return confirm('Anfrage löschen?')"><?= $hidden('ugc_msg_delete') ?><input type="hidden" name="id" value="<?= e($m['id']) ?>"><button class="btn btn-small btn-danger">Löschen</button></form></div>
+      </details><?php endforeach; ?></div><?php endif; ?>
+  </section>
+  <section class="card" id="ugc">
+    <?php $U = $c['ugc']; $ugUrl = rs_abs_url('ugc/'); $ugVisits = (int)($st30['p']['ugc/index.html'] ?? 0); $ugMails = (int)($st30['c']['ugc-mail'] ?? 0);
+      $maxUp = (function () { $f = function ($v) { $v = trim((string)$v); $n = (float)$v; return match (strtolower(substr($v, -1))) { 'g' => $n * 1024, 'm' => $n, 'k' => $n / 1024, default => $n / 1048576 }; }; return (int)min($f(ini_get('upload_max_filesize')), $f(ini_get('post_max_size'))); })(); ?>
+    <div class="card-h"><h2>Inhalte der Seite</h2></div>
+    <p class="hint">Victorias Seite als Creatorin (Westerberg-Chaya): Reichweite, Zielgruppe, Leistungen, Marken. Verlinkt auf „Über mich“ und im Fuß der Startseite. Letzte 30 Tage: <b><?= $n($ugVisits) ?></b> Besuche · <b><?= $n($ugMails) ?></b> Klicks auf „Anfrage per Mail“.</p>
+    <div class="utm"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'tiktok' => 'TikTok-Bio', 'mail' => 'E-Mail an Marken'] as $k => $t): $u = $ugUrl . ($k ? '?utm_source=' . $k : ''); ?>
+      <div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
+    <h3 class="mt">Foto oben</h3>
+    <div class="img-slot"><img src="<?= e(rs_url($S['img_ugc'] ?? '' ?: 'assets/img/victoria-creator.webp')) ?>" alt="">
+      <div><p class="hint">Hochformat, JPG/PNG/WebP. Ohne eigenes Bild erscheint das Foto aus dem Creator Kit.</p>
+        <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><input type="hidden" name="slot" value="ugc"><label class="btn btn-ghost btn-small file-btn">Neues Bild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
+        <?php if ($S['img_ugc'] ?? ''): ?><form method="post"><?= $hidden('image_delete') ?><input type="hidden" name="slot" value="ugc"><button class="btn btn-small btn-danger">Zurücksetzen</button></form><?php endif; ?></div></div>
+    <form method="post" class="form mt"><?= $hidden('ugc') ?>
+      <label class="check"><input type="checkbox" name="ug_on" value="1"<?= !empty($U['on']) ? ' checked' : '' ?>> UGC-Seite ist online <small>(aus = Links darauf verschwinden)</small></label>
+      <fieldset><legend>Oben</legend>
+        <div class="cols"><label>Name<input name="title" value="<?= e($U['title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="script" value="<?= e($U['script']) ?>" maxlength="60"></label></div>
+        <label>Zeile darunter<input name="tags" value="<?= e($U['tags']) ?>" maxlength="90"></label>
+        <label>Text<textarea name="intro" rows="3" maxlength="500"><?= e($U['intro']) ?></textarea></label>
+        <div class="cols"><label>E-Mail für Anfragen<input type="email" name="email" value="<?= e($U['email']) ?>" maxlength="120"></label><label>Model-Portfolio <small>(Link, z. B. Canva oder Linktree – leer = ausblenden)</small><input name="portfolio" value="<?= e($U['portfolio']) ?>" maxlength="300" placeholder="https://…"></label>
+          <label>Instagram-Name<input name="ig" value="<?= e($U['ig']) ?>" maxlength="60"></label><label>TikTok-Name<input name="tt" value="<?= e($U['tt']) ?>" maxlength="60"></label></div>
+      </fieldset>
+      <fieldset><legend>Reichweite</legend>
+        <div class="cols"><label>Überschrift<input name="reach_title" value="<?= e($U['reach_title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="reach_script" value="<?= e($U['reach_script']) ?>" maxlength="40"></label></div>
+        <label>Zahlen <small>(eine pro Zeile: Zahl | Text – am besten 4)</small><textarea name="stats" rows="4" maxlength="1000"><?= e($U['stats']) ?></textarea></label>
+        <label>Quelle / Zeitraum<input name="stats_src" value="<?= e($U['stats_src']) ?>" maxlength="160"></label>
+      </fieldset>
+      <fieldset><legend>Zielgruppe</legend>
+        <p class="hint">Aus den Insights abschreiben. Alter: eine Zeile pro Gruppe, z. B. „25–34 | 44,1 %“ – die Balken passen sich an.</p>
+        <div class="cols">
+          <div><label>Instagram – Kopfzeile<input name="ig_head" value="<?= e($U['ig_head']) ?>" maxlength="120"></label><label>Alter<textarea name="ig_ages" rows="4" maxlength="400"><?= e($U['ig_ages']) ?></textarea></label><label>Weitere Werte <small>(Name | Wert)</small><textarea name="ig_facts" rows="3" maxlength="400"><?= e($U['ig_facts']) ?></textarea></label></div>
+          <div><label>TikTok – Kopfzeile<input name="tt_head" value="<?= e($U['tt_head']) ?>" maxlength="120"></label><label>Alter<textarea name="tt_ages" rows="4" maxlength="400"><?= e($U['tt_ages']) ?></textarea></label><label>Weitere Werte <small>(Name | Wert)</small><textarea name="tt_facts" rows="3" maxlength="400"><?= e($U['tt_facts']) ?></textarea></label></div>
+        </div>
+      </fieldset>
+      <fieldset><legend>Leistungen, Ablauf, Marken</legend>
+        <label>Leistungen <small>(eine pro Zeile: Name | Für wen | Punkt; Punkt; Punkt)</small><textarea name="services" rows="7" maxlength="2000"><?= e($U['services']) ?></textarea></label>
+        <div class="cols"><label>Preis-Hinweis rechts <small>(leer = ausblenden)</small><input name="price_label" value="<?= e($U['price_label']) ?>" maxlength="30"></label></div>
+        <label>Hinweis darunter<textarea name="note" rows="3" maxlength="600"><?= e($U['note']) ?></textarea></label>
+        <label>Ablauf <small>(eine Zeile pro Schritt: Titel | Text)</small><textarea name="steps" rows="4" maxlength="1200"><?= e($U['steps']) ?></textarea></label>
+        <label>Marken <small>(eine Zeile pro Spalte: Überschrift | Marke, Marke, Marke)</small><textarea name="brands" rows="5" maxlength="2000"><?= e($U['brands']) ?></textarea></label>
+      </fieldset>
+      <button class="btn">UGC-Seite speichern</button>
+    </form>
+    <h3 class="mt">Beispielvideos <small>(<?= count((array)$U['videos']) ?> von 8 – der Abschnitt erscheint erst mit dem ersten Video)</small></h3>
+    <?php if ($U['videos']): ?><div class="ugv-list"><?php foreach ((array)$U['videos'] as $i => $v): ?>
+      <div class="ugv"><video src="<?= e(rs_url($v['file'])) ?>"<?= !empty($v['poster']) ? ' poster="' . e(rs_url($v['poster'])) . '"' : '' ?> preload="metadata" muted playsinline controls></video>
+        <span><?= e($v['title'] ?: 'Ohne Titel') ?></span>
+        <div class="btnrow"><?php if ($i > 0): ?><form method="post"><?= $hidden('ugc_video_move') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-ghost btn-small" aria-label="Nach vorne">←</button></form><?php endif; ?>
+          <form method="post" onsubmit="return confirm('Video löschen?')"><?= $hidden('ugc_video_delete') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-small btn-danger">Löschen</button></form></div></div>
+    <?php endforeach; ?></div><?php endif; ?>
+    <?php if (count((array)$U['videos']) < 8): ?>
+    <form method="post" class="form mt" enctype="multipart/form-data"><?= $hidden('ugc_video') ?>
+      <div class="cols"><label>Video <small>(MP4, Hochformat 9:16, max. <?= $maxUp ?> MB)</small><input type="file" name="video" accept="video/mp4,video/webm" required></label>
+        <label>Vorschaubild <small>(optional, JPG/PNG/WebP)</small><input type="file" name="poster" accept="image/jpeg,image/png,image/webp"></label>
+        <label>Titel <small>(optional, z. B. Marke)</small><input name="vtitle" maxlength="60"></label></div>
+      <button class="btn btn-small">Video hochladen</button>
+    </form><?php endif; ?>
+  </section>
+<?php rs_locked('ugc-anfragen', function () { $l = rs_ugc_msgs(); $ch = false; foreach ($l as &$m) if (empty($m['seen'])) { $m['seen'] = true; $ch = true; } unset($m); if ($ch) rs_write('ugc-anfragen', $l); }); ?>
+
 <?php /* ======================= TERMINE ======================= */ elseif ($tab === 'termine'):
   $B = $c['booking']; $all = rs_bookings(); $now = time(); $types = rs_booking_types($B);
   $up = array_values(array_filter($all, fn($b) => $b['status'] !== 'abgesagt' && (int)$b['end'] >= $now));
@@ -1135,7 +1214,7 @@ head('Admin – reserved.social', true);
   $lpLeads = count(array_filter($leads, fn($x) => ($x['page'] ?? '') === 'angebot' && $x['created'] > time() - 30 * 86400));
 ?>
   <div class="page-head"><div><h1>Seiten</h1><p class="sub">Was Besucher sehen: Status, Vor-Launch-Seite und Landingpage.</p></div></div>
-  <nav class="subnav"><a href="#status">Status</a><a href="#vorlaunch">Vor-Launch</a><a href="#zugaenge">Zugänge</a><a href="#anmeldungen">Anmeldungen</a><a href="#landingpage">Landingpage</a><a href="#fitcheck">Fit-Check</a><a href="#ugc">UGC-Seite</a></nav>
+  <nav class="subnav"><a href="#status">Status</a><a href="#vorlaunch">Vor-Launch</a><a href="#zugaenge">Zugänge</a><a href="#anmeldungen">Anmeldungen</a><a href="#landingpage">Landingpage</a><a href="#fitcheck">Fit-Check</a></nav>
 
   <section class="hero-status s-<?= e($eff) ?>" id="status">
     <div><span class="eyebrow-s">Gerade sichtbar</span><h2 class="big"><?= e($modeNames[$eff]) ?></h2>
@@ -1277,73 +1356,6 @@ head('Admin – reserved.social', true);
       <button class="btn">Fit-Check speichern</button>
     </form>
   </section>
-  <section class="card" id="ugc">
-    <?php $U = $c['ugc']; $ugUrl = rs_abs_url('ugc/'); $ugVisits = (int)($st30['p']['ugc/index.html'] ?? 0); $ugMails = (int)($st30['c']['ugc-mail'] ?? 0);
-      $maxUp = (function () { $f = function ($v) { $v = trim((string)$v); $n = (float)$v; return match (strtolower(substr($v, -1))) { 'g' => $n * 1024, 'm' => $n, 'k' => $n / 1024, default => $n / 1048576 }; }; return (int)min($f(ini_get('upload_max_filesize')), $f(ini_get('post_max_size'))); })(); ?>
-    <div class="card-h"><h2>UGC-Seite „Creator Kit“ <small class="muted-s">/ugc</small></h2><a class="more" href="<?= e(rs_url('ugc/')) ?>" target="_blank" rel="noopener">Ansehen ↗</a></div>
-    <p class="hint">Victorias Seite als Creatorin (Westerberg-Chaya): Reichweite, Zielgruppe, Leistungen, Marken. Verlinkt auf „Über mich“ und im Fuß der Startseite. Letzte 30 Tage: <b><?= $n($ugVisits) ?></b> Besuche · <b><?= $n($ugMails) ?></b> Klicks auf „Anfrage per Mail“.</p>
-    <div class="utm"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'tiktok' => 'TikTok-Bio', 'mail' => 'E-Mail an Marken'] as $k => $t): $u = $ugUrl . ($k ? '?utm_source=' . $k : ''); ?>
-      <div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
-    <h3 class="mt">Foto oben</h3>
-    <div class="img-slot"><img src="<?= e(rs_url($S['img_ugc'] ?? '' ?: 'assets/img/victoria-creator.webp')) ?>" alt="">
-      <div><p class="hint">Hochformat, JPG/PNG/WebP. Ohne eigenes Bild erscheint das Foto aus dem Creator Kit.</p>
-        <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><input type="hidden" name="slot" value="ugc"><label class="btn btn-ghost btn-small file-btn">Neues Bild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
-        <?php if ($S['img_ugc'] ?? ''): ?><form method="post"><?= $hidden('image_delete') ?><input type="hidden" name="slot" value="ugc"><button class="btn btn-small btn-danger">Zurücksetzen</button></form><?php endif; ?></div></div>
-    <?php $um = array_reverse(rs_ugc_msgs()); ?>
-    <h3 class="mt">Anfragen von Marken <small>(<?= count($um) ?> – kommen auch per Mail an <?= e($U['email']) ?>)</small></h3>
-    <?php if (!$um): ?><p class="empty">Noch keine Anfragen über das Formular auf der UGC-Seite.</p>
-    <?php else: ?><div class="ugm-list"><?php foreach (array_slice($um, 0, 30) as $m): ?>
-      <details class="ugm"><summary><span class="ugm-d"><?= e(date('d.m.', (int)$m['ts'])) ?></span><b><?= e($m['firma'] ?: $m['name']) ?></b><span class="ugm-s"><?= e($m['betreff'] ?: rs_cut($m['text'], 60)) ?></span></summary>
-        <p class="ugm-from"><?= e($m['name']) ?> · <a href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>"><?= e($m['email']) ?></a> · über <?= e($m['src']) ?></p>
-        <p class="msg"><?= nl2br(e($m['text'])) ?></p>
-        <div class="btnrow"><a class="btn btn-small" href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>">Antworten</a>
-          <form method="post" onsubmit="return confirm('Anfrage löschen?')"><?= $hidden('ugc_msg_delete') ?><input type="hidden" name="id" value="<?= e($m['id']) ?>"><button class="btn btn-small btn-danger">Löschen</button></form></div>
-      </details><?php endforeach; ?></div><?php endif; ?>
-    <form method="post" class="form mt"><?= $hidden('ugc') ?>
-      <label class="check"><input type="checkbox" name="ug_on" value="1"<?= !empty($U['on']) ? ' checked' : '' ?>> UGC-Seite ist online <small>(aus = Links darauf verschwinden)</small></label>
-      <fieldset><legend>Oben</legend>
-        <div class="cols"><label>Name<input name="title" value="<?= e($U['title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="script" value="<?= e($U['script']) ?>" maxlength="60"></label></div>
-        <label>Zeile darunter<input name="tags" value="<?= e($U['tags']) ?>" maxlength="90"></label>
-        <label>Text<textarea name="intro" rows="3" maxlength="500"><?= e($U['intro']) ?></textarea></label>
-        <div class="cols"><label>E-Mail für Anfragen<input type="email" name="email" value="<?= e($U['email']) ?>" maxlength="120"></label><label>Model-Portfolio <small>(Link, z. B. Canva oder Linktree – leer = ausblenden)</small><input name="portfolio" value="<?= e($U['portfolio']) ?>" maxlength="300" placeholder="https://…"></label>
-          <label>Instagram-Name<input name="ig" value="<?= e($U['ig']) ?>" maxlength="60"></label><label>TikTok-Name<input name="tt" value="<?= e($U['tt']) ?>" maxlength="60"></label></div>
-      </fieldset>
-      <fieldset><legend>Reichweite</legend>
-        <div class="cols"><label>Überschrift<input name="reach_title" value="<?= e($U['reach_title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="reach_script" value="<?= e($U['reach_script']) ?>" maxlength="40"></label></div>
-        <label>Zahlen <small>(eine pro Zeile: Zahl | Text – am besten 4)</small><textarea name="stats" rows="4" maxlength="1000"><?= e($U['stats']) ?></textarea></label>
-        <label>Quelle / Zeitraum<input name="stats_src" value="<?= e($U['stats_src']) ?>" maxlength="160"></label>
-      </fieldset>
-      <fieldset><legend>Zielgruppe</legend>
-        <p class="hint">Aus den Insights abschreiben. Alter: eine Zeile pro Gruppe, z. B. „25–34 | 44,1 %“ – die Balken passen sich an.</p>
-        <div class="cols">
-          <div><label>Instagram – Kopfzeile<input name="ig_head" value="<?= e($U['ig_head']) ?>" maxlength="120"></label><label>Alter<textarea name="ig_ages" rows="4" maxlength="400"><?= e($U['ig_ages']) ?></textarea></label><label>Weitere Werte <small>(Name | Wert)</small><textarea name="ig_facts" rows="3" maxlength="400"><?= e($U['ig_facts']) ?></textarea></label></div>
-          <div><label>TikTok – Kopfzeile<input name="tt_head" value="<?= e($U['tt_head']) ?>" maxlength="120"></label><label>Alter<textarea name="tt_ages" rows="4" maxlength="400"><?= e($U['tt_ages']) ?></textarea></label><label>Weitere Werte <small>(Name | Wert)</small><textarea name="tt_facts" rows="3" maxlength="400"><?= e($U['tt_facts']) ?></textarea></label></div>
-        </div>
-      </fieldset>
-      <fieldset><legend>Leistungen, Ablauf, Marken</legend>
-        <label>Leistungen <small>(eine pro Zeile: Name | Für wen | Punkt; Punkt; Punkt)</small><textarea name="services" rows="7" maxlength="2000"><?= e($U['services']) ?></textarea></label>
-        <div class="cols"><label>Preis-Hinweis rechts <small>(leer = ausblenden)</small><input name="price_label" value="<?= e($U['price_label']) ?>" maxlength="30"></label></div>
-        <label>Hinweis darunter<textarea name="note" rows="3" maxlength="600"><?= e($U['note']) ?></textarea></label>
-        <label>Ablauf <small>(eine Zeile pro Schritt: Titel | Text)</small><textarea name="steps" rows="4" maxlength="1200"><?= e($U['steps']) ?></textarea></label>
-        <label>Marken <small>(eine Zeile pro Spalte: Überschrift | Marke, Marke, Marke)</small><textarea name="brands" rows="5" maxlength="2000"><?= e($U['brands']) ?></textarea></label>
-      </fieldset>
-      <button class="btn">UGC-Seite speichern</button>
-    </form>
-    <h3 class="mt">Beispielvideos <small>(<?= count((array)$U['videos']) ?> von 8 – der Abschnitt erscheint erst mit dem ersten Video)</small></h3>
-    <?php if ($U['videos']): ?><div class="ugv-list"><?php foreach ((array)$U['videos'] as $i => $v): ?>
-      <div class="ugv"><video src="<?= e(rs_url($v['file'])) ?>"<?= !empty($v['poster']) ? ' poster="' . e(rs_url($v['poster'])) . '"' : '' ?> preload="metadata" muted playsinline controls></video>
-        <span><?= e($v['title'] ?: 'Ohne Titel') ?></span>
-        <div class="btnrow"><?php if ($i > 0): ?><form method="post"><?= $hidden('ugc_video_move') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-ghost btn-small" aria-label="Nach vorne">←</button></form><?php endif; ?>
-          <form method="post" onsubmit="return confirm('Video löschen?')"><?= $hidden('ugc_video_delete') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-small btn-danger">Löschen</button></form></div></div>
-    <?php endforeach; ?></div><?php endif; ?>
-    <?php if (count((array)$U['videos']) < 8): ?>
-    <form method="post" class="form mt" enctype="multipart/form-data"><?= $hidden('ugc_video') ?>
-      <div class="cols"><label>Video <small>(MP4, Hochformat 9:16, max. <?= $maxUp ?> MB)</small><input type="file" name="video" accept="video/mp4,video/webm" required></label>
-        <label>Vorschaubild <small>(optional, JPG/PNG/WebP)</small><input type="file" name="poster" accept="image/jpeg,image/png,image/webp"></label>
-        <label>Titel <small>(optional, z. B. Marke)</small><input name="vtitle" maxlength="60"></label></div>
-      <button class="btn btn-small">Video hochladen</button>
-    </form><?php endif; ?>
-  </section>
 <?php /* ======================= EINSTELLUNGEN ======================= */ else: ?>
   <div class="page-head"><div><h1>Einstellungen</h1></div></div>
   <section class="card">
@@ -1420,7 +1432,7 @@ function spark(array $vals): string {
 function icon(string $k): string {
     $p = ['start' => '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>', 'anfragen' => '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/>',
           'statistik' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', 'inhalte' => '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
-          'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/>', 'seiten' => '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/><path d="m10 13 2 2 4-4"/>', 'funnel' => '<path d="M3 4h18l-7 8v6l-4 2v-8z"/>', 'termine' => '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3"/>', 'einstellungen' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'][$k] ?? '';
+          'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/>', 'seiten' => '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/><path d="m10 13 2 2 4-4"/>', 'funnel' => '<path d="M3 4h18l-7 8v6l-4 2v-8z"/>', 'ugc' => '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/>', 'termine' => '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3"/>', 'einstellungen' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'][$k] ?? '';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
 function render_auth(string $type, ?string $error): void {
