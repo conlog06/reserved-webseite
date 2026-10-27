@@ -558,3 +558,4 @@ require_once __DIR__ . '/render.php';
 require_once __DIR__ . '/funnel.php';
 require_once __DIR__ . '/booking.php';
 require_once __DIR__ . '/ugc.php';
+require_once __DIR__ . '/twofa.php';

@@ -62,13 +62,55 @@ if ($c['admin_hash'] === '') {
     render_auth('setup', $error); exit;
 }
 if (isset($_GET['logout'])) { $_SESSION = []; session_destroy(); header('Location: ' . $self, true, 303); exit; }
+$login = function () use ($self) {
+    session_regenerate_id(true);
+    unset($_SESSION['rs_pw_ok']);
+    $_SESSION['rs_admin'] = true; $_SESSION['rs_admin_until'] = time() + 12 * 3600;
+    $to = (string)($_SESSION['rs_after'] ?? $self); unset($_SESSION['rs_after']);
+    header('Location: ' . (str_starts_with($to, $self) ? $to : $self), true, 303); exit;
+};
 if (!$isAdmin) {
+    /* Passwort vergessen → Link per Mail an die hinterlegte Adresse */
+    if (isset($_GET['reset'])) {
+        $tok = (string)$_GET['reset'];
+        if (!rs_pw_reset_valid($tok)) { render_auth('reset_bad', null); exit; }
+        if ($post && $action === 'reset') {
+            $pw = (string)($_POST['password'] ?? '');
+            if (strlen($pw) < 10) $error = 'Das Passwort muss mindestens 10 Zeichen lang sein.';
+            elseif ($pw !== ($_POST['password2'] ?? '')) $error = 'Die Passwörter stimmen nicht überein.';
+            else {
+                $c['admin_hash'] = password_hash($pw, PASSWORD_DEFAULT); rs_save_config($c);
+                @unlink(RS_DATA . '/passwort-reset.php');
+                $_SESSION['rs_msg'] = 'Neues Passwort gespeichert – bitte melde dich an.';
+                header('Location: ' . $self, true, 303); exit;
+            }
+        }
+        render_auth('reset', $error); exit;
+    }
+    if ($post && $action === 'forgot') {
+        if (!rs_throttled('forgot', 3, 3600)) { rs_hit('forgot', 3600); rs_pw_reset_request(); }
+        $_SESSION['rs_msg'] = 'Wir haben dir einen Link zum Zurücksetzen an die hinterlegte E-Mail-Adresse geschickt (gilt 30 Minuten).';
+        header('Location: ' . $self, true, 303); exit;
+    }
+    /* Schritt 2: Code aus der Authenticator-App */
+    if (!empty($_SESSION['rs_pw_ok']) && $_SESSION['rs_pw_ok'] > time() - 300 && rs_2fa_on()) {
+        if ($post && $action === 'code') {
+            if (rs_throttled('2fa', 6)) $error = 'Zu viele Fehlversuche. Bitte 15 Minuten warten.';
+            elseif ($how = rs_2fa_verify((string)($_POST['code'] ?? ''))) {
+                if (!empty($_POST['trust'])) rs_2fa_trust_set(30);
+                if ($how === 'backup') $_SESSION['rs_flash'] = ['Mit Notfall-Code angemeldet – dieser Code ist jetzt verbraucht. Unter Einstellungen kannst du neue erzeugen.', 'warn'];
+                $login();
+            } else { rs_hit('2fa'); $error = 'Der Code stimmt nicht. Bitte den aktuellen Code aus der App eingeben.'; }
+        }
+        render_auth('code', $error); exit;
+    }
+    /* Schritt 1: Passwort */
     if ($post && $action === 'login') {
         if (rs_throttled('login', 6)) $error = 'Zu viele Fehlversuche. Bitte 15 Minuten warten.';
         elseif (password_verify((string)($_POST['password'] ?? ''), $c['admin_hash'])) {
-            session_regenerate_id(true);
-            $_SESSION['rs_admin'] = true; $_SESSION['rs_admin_until'] = time() + 12 * 3600;
-            header('Location: ' . ($_SERVER['REQUEST_URI'] ?? $self), true, 303); exit;
+            $_SESSION['rs_after'] = (string)($_SERVER['REQUEST_URI'] ?? $self);
+            if (rs_2fa_on() && !rs_2fa_trusted()) { $_SESSION['rs_pw_ok'] = time(); header('Location: ' . $self, true, 303); exit; }
+            $login();
         } else { rs_hit('login'); $error = 'Passwort falsch.'; }
     }
     render_auth('login', $error); exit;
@@ -487,8 +529,31 @@ if ($post) {
         case 'admin_pw':
             if (!password_verify((string)($_POST['old'] ?? ''), $c['admin_hash'])) flash('Aktuelles Passwort falsch.', 'error');
             elseif (strlen((string)($_POST['new'] ?? '')) < 10) flash('Das neue Passwort braucht mindestens 10 Zeichen.', 'error');
+            elseif (isset($_POST['new2']) && $_POST['new2'] !== $_POST['new']) flash('Die neuen Passwörter stimmen nicht überein.', 'error');
             else { $c['admin_hash'] = password_hash((string)$_POST['new'], PASSWORD_DEFAULT); rs_save_config($c); flash('Passwort geändert.'); }
             back();
+        /* ----- Zwei-Faktor ----- */
+        case '2fa_start':
+            $_SESSION['rs_2fa_new'] = rs_b32_encode(random_bytes(20)); back('#sicherheit');
+        case '2fa_cancel':
+            unset($_SESSION['rs_2fa_new']); back('#sicherheit');
+        case '2fa_confirm':
+            $sec = (string)($_SESSION['rs_2fa_new'] ?? '');
+            if ($sec === '' || rs_totp_check($sec, (string)($_POST['code'] ?? '')) === null) { flash('Der Code passt nicht – bitte den aktuellen Code aus der App eingeben (die Uhrzeit am Handy muss stimmen).', 'error'); back('#sicherheit'); }
+            $_SESSION['rs_2fa_codes'] = rs_2fa_enable($sec); unset($_SESSION['rs_2fa_new']);
+            flash('Zwei-Faktor-Anmeldung ist an. Schreib dir jetzt die Notfall-Codes auf!'); back('#sicherheit');
+        case '2fa_codes':
+            if (rs_2fa_verify((string)($_POST['code'] ?? '')) !== 'app') { flash('Der Code passt nicht.', 'error'); back('#sicherheit'); }
+            $codes = rs_2fa_backup_codes();
+            rs_locked('zwei-faktor', function () use ($codes) { $t = rs_2fa(); $t['backup'] = array_map(fn($k) => password_hash(str_replace('-', '', $k), PASSWORD_DEFAULT), $codes); rs_write('zwei-faktor', $t); });
+            $_SESSION['rs_2fa_codes'] = $codes; flash('Neue Notfall-Codes erzeugt – die alten gelten nicht mehr.'); back('#sicherheit');
+        case '2fa_untrust':
+            rs_locked('zwei-faktor', function () { $t = rs_2fa(); $t['trust_salt'] = bin2hex(random_bytes(8)); rs_write('zwei-faktor', $t); });
+            flash('Alle vertrauten Geräte müssen beim nächsten Mal wieder einen Code eingeben.'); back('#sicherheit');
+        case '2fa_off':
+            if (rs_throttled('2fa', 6)) { flash('Zu viele Versuche. Bitte 15 Minuten warten.', 'error'); back('#sicherheit'); }
+            if (!password_verify((string)($_POST['password'] ?? ''), $c['admin_hash']) || !rs_2fa_verify((string)($_POST['code'] ?? ''))) { rs_hit('2fa'); flash('Passwort oder Code stimmt nicht.', 'error'); back('#sicherheit'); }
+            @unlink(RS_DATA . '/zwei-faktor.php'); flash('Zwei-Faktor-Anmeldung ist aus.', 'warn'); back('#sicherheit');
         case 'test_mail':
             $ok = rs_mail($S['email'], 'Test-E-Mail von deiner Webseite', "Hallo!\n\nWenn du diese E-Mail liest, kommen Anfragen von der Webseite richtig bei dir an.\n\nreserved.social Webseite");
             flash($ok ? 'Test-E-Mail an ' . $S['email'] . ' verschickt – bitte auch im Spam-Ordner nachsehen.' : 'Versand fehlgeschlagen. Beim Hoster prüfen, ob PHP-Mail aktiv ist, und eine Absender-Adresse der eigenen Domain eintragen.', $ok ? 'ok' : 'error');
@@ -1414,8 +1479,9 @@ head('Admin – reserved.social', true);
     </form>
   </section>
 <?php /* ======================= EINSTELLUNGEN ======================= */ else: ?>
-  <div class="page-head"><div><h1>Einstellungen</h1><p class="sub">Kontakt &amp; E-Mails, Impressum, Datenschutz, Statistik und Passwort.</p></div></div>
-  <section class="card">
+  <div class="page-head"><div><h1>Einstellungen</h1><p class="sub">Kontakt &amp; E-Mails, Impressum, Datenschutz, Anmeldung &amp; Sicherheit, Statistik.</p></div></div>
+  <nav class="subnav"><a href="#allgemein">Kontakt &amp; Rechtliches</a><a href="#sicherheit">Anmeldung &amp; Sicherheit</a></nav>
+  <section class="card" id="allgemein">
     <form method="post" class="form"><?= $hidden('settings') ?>
       <fieldset><legend>Kontakt</legend>
         <div class="cols">
@@ -1436,18 +1502,58 @@ head('Admin – reserved.social', true);
     </form>
     <form method="post" class="mt"><?= $hidden('test_mail') ?><button class="btn btn-ghost btn-small">Test-E-Mail an <?= e($S['email']) ?> senden</button></form>
   </section>
-  <div class="grid g-1-1">
-    <section class="card"><h2>Statistik</h2>
-      <form method="post"><?= $hidden('stats') ?><label class="check"><input type="checkbox" name="stats_on" value="1"<?= !empty($c['stats_on']) ? ' checked' : '' ?> onchange="this.form.submit()"> Besucherstatistik eingeschaltet (ohne Cookies)</label></form>
-      <form method="post" class="mt" onsubmit="return confirm('Alle Statistikdaten löschen?')"><?= $hidden('stats_reset') ?><button class="btn btn-small btn-danger">Statistik zurücksetzen</button></form>
-    </section>
-    <section class="card"><h2>Passwort ändern</h2>
-      <form method="post" class="form"><?= $hidden('admin_pw') ?>
-        <label>Aktuelles Passwort<input type="password" name="old" required autocomplete="current-password"></label>
-        <label>Neues Passwort <small>(mind. 10 Zeichen)</small><input type="password" name="new" required minlength="10" autocomplete="new-password"></label>
-        <button class="btn btn-small">Ändern</button></form>
-    </section>
-  </div>
+  <section class="card" id="sicherheit">
+    <?php $tf = rs_2fa(); $tfOn = rs_2fa_on(); $pending = (string)($_SESSION['rs_2fa_new'] ?? ''); $codes = $_SESSION['rs_2fa_codes'] ?? null; unset($_SESSION['rs_2fa_codes']); ?>
+    <div class="card-h"><h2>Anmeldung &amp; Sicherheit</h2><?= $tfOn ? '<span class="tag on">Zwei-Faktor an</span>' : '<span class="tag warn">Zwei-Faktor aus</span>' ?></div>
+    <div class="grid g-1-1 inner">
+      <div>
+        <h3>Passwort ändern</h3>
+        <form method="post" class="form"><?= $hidden('admin_pw') ?>
+          <label>Aktuelles Passwort<input type="password" name="old" required autocomplete="current-password"></label>
+          <label>Neues Passwort <small>(mind. 10 Zeichen)</small><input type="password" name="new" required minlength="10" autocomplete="new-password"></label>
+          <label>Neues Passwort wiederholen<input type="password" name="new2" required minlength="10" autocomplete="new-password"></label>
+          <button class="btn btn-small">Passwort ändern</button></form>
+        <p class="hint mt">Passwort vergessen? Auf der Anmeldeseite gibt es „Passwort vergessen?“ – der Link geht an <b><?= e($S['email']) ?></b>.</p>
+      </div>
+      <div>
+        <h3>Zwei-Faktor-Anmeldung</h3>
+        <?php if ($codes): ?>
+          <div class="flash warn"><b>Deine Notfall-Codes – jetzt aufschreiben oder ausdrucken!</b><br>Jeder Code funktioniert genau einmal, falls dein Handy weg ist. Sie werden nur dieses eine Mal angezeigt.
+            <ol class="codes"><?php foreach ($codes as $k): ?><li><code><?= e($k) ?></code></li><?php endforeach; ?></ol>
+            <button type="button" class="btn btn-ghost btn-small" onclick="window.print()">Drucken</button></div>
+        <?php endif; ?>
+        <?php if ($tfOn): ?>
+          <p class="hint">Nach dem Passwort fragt der Admin nach einem 6-stelligen Code aus deiner Authenticator-App. Aktiv seit <?= e(rs_date_de((int)($tf['since'] ?? time()), false, false)) ?> · <?= count((array)($tf['backup'] ?? [])) ?> Notfall-Codes übrig.</p>
+          <details class="tech"><summary>Neue Notfall-Codes erzeugen</summary>
+            <form method="post" class="form"><?= $hidden('2fa_codes') ?><label>Aktueller Code aus der App<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label><button class="btn btn-small">Neue Codes erzeugen</button></form></details>
+          <details class="tech"><summary>Vertrauten Geräten das Vertrauen entziehen</summary>
+            <form method="post" class="form"><?= $hidden('2fa_untrust') ?><p class="hint">Alle Geräte, bei denen „30 Tage vertrauen“ angehakt war, müssen beim nächsten Mal wieder einen Code eingeben.</p><button class="btn btn-ghost btn-small">Alle abmelden</button></form></details>
+          <details class="tech"><summary>Zwei-Faktor ausschalten</summary>
+            <form method="post" class="form"><?= $hidden('2fa_off') ?><label>Passwort<input type="password" name="password" required autocomplete="current-password"></label><label>Code aus der App oder Notfall-Code<input name="code" required autocomplete="one-time-code" maxlength="12"></label><button class="btn btn-small btn-danger">Ausschalten</button></form></details>
+        <?php elseif ($pending !== ''): ?>
+          <ol class="steps-mini">
+            <li>Authenticator-App auf dem Handy öffnen (z.&nbsp;B. Google Authenticator, Microsoft Authenticator oder die iPhone-App „Passwörter“).</li>
+            <li>„Konto hinzufügen“ → QR-Code scannen. Kein Scannen möglich? Schlüssel von Hand eintippen.</li>
+            <li>Den 6-stelligen Code aus der App hier eingeben.</li>
+          </ol>
+          <div class="qr-wrap"><div id="qr2fa" data-uri="<?= e(rs_2fa_uri($pending)) ?>" aria-label="QR-Code für die Authenticator-App"></div>
+            <div><span class="hint">Schlüssel zum Eintippen</span><code class="key2fa"><?= e(trim(chunk_split($pending, 4, ' '))) ?></code></div></div>
+          <form method="post" class="form"><?= $hidden('2fa_confirm') ?><label>Code aus der App<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus class="code-in"></label>
+            <div class="btnrow"><button class="btn btn-small">Bestätigen &amp; einschalten</button></div></form>
+          <form method="post"><?= $hidden('2fa_cancel') ?><button class="linklike">Abbrechen</button></form>
+          <script src="qrcode.js"></script>
+          <script>(() => { const el = document.getElementById('qr2fa'); const q = qrcode(0, 'M'); q.addData(el.dataset.uri); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 5, margin: 3, scalable: true }); })();</script>
+        <?php else: ?>
+          <p class="hint">Schützt den Admin zusätzlich: Selbst wer dein Passwort kennt, kommt ohne den Code aus deiner Handy-App nicht hinein. Dauert 2 Minuten.</p>
+          <form method="post"><?= $hidden('2fa_start') ?><button class="btn btn-small">Zwei-Faktor einrichten</button></form>
+        <?php endif; ?>
+      </div>
+    </div>
+  </section>
+  <section class="card"><h2>Statistik</h2>
+    <form method="post"><?= $hidden('stats') ?><label class="check"><input type="checkbox" name="stats_on" value="1"<?= !empty($c['stats_on']) ? ' checked' : '' ?> onchange="this.form.submit()"> Besucherstatistik eingeschaltet (ohne Cookies)</label></form>
+    <form method="post" class="mt" onsubmit="return confirm('Alle Statistikdaten löschen?')"><?= $hidden('stats_reset') ?><button class="btn btn-small btn-danger">Statistik zurücksetzen</button></form>
+  </section>
 <?php endif; ?>
 </main>
 <script src="admin.js" defer></script>
@@ -1493,10 +1599,13 @@ function icon(string $k): string {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
 function render_auth(string $type, ?string $error): void {
+    $msg = $_SESSION['rs_msg'] ?? null; unset($_SESSION['rs_msg']);
     head($type === 'setup' ? 'Einrichtung – reserved.social Admin' : 'Anmelden – reserved.social Admin'); ?>
-<main class="auth"><form method="post" class="card auth-card">
+<main class="auth"><div class="card auth-card">
   <span class="brand big">reserved<span>.social</span></span>
+  <?php if ($msg): ?><p class="flash ok"><?= e($msg) ?></p><?php endif; ?>
   <?php if ($type === 'setup'): ?>
+    <form method="post" class="stack">
     <h1>Admin einrichten</h1>
     <p class="hint">Den Einrichtungscode findest du auf dem Webspace in <code>_reserved/data/einrichtungscode.php</code> (z. B. über den Webspace-Explorer deines Hosters oder per FTP).</p>
     <?php if (PHP_SAPI === 'cli-server'): ?><p class="flash warn">Lokaler Test – Einrichtungscode: <strong><?= e(setup_code()) ?></strong></p><?php endif; ?>
@@ -1506,14 +1615,47 @@ function render_auth(string $type, ?string $error): void {
     <label>Passwort wiederholen<input type="password" name="password2" required minlength="10" autocomplete="new-password"></label>
     <?php if ($error): ?><p class="flash error"><?= e($error) ?></p><?php endif; ?>
     <button class="btn">Einrichten</button>
+    </form>
+  <?php elseif ($type === 'code'): ?>
+    <form method="post" class="stack">
+    <h1>Bestätigungscode</h1>
+    <p class="hint">Öffne deine Authenticator-App und gib den 6-stelligen Code für <b>reserved.social</b> ein. Handy nicht da? Dann einen deiner Notfall-Codes.</p>
+    <input type="hidden" name="action" value="code">
+    <label>Code<input name="code" required autofocus autocomplete="one-time-code" inputmode="numeric" maxlength="12" placeholder="123 456" class="code-in"></label>
+    <label class="check"><input type="checkbox" name="trust" value="1"> <span>Diesem Gerät 30 Tage vertrauen <small>(nur auf deinem eigenen Gerät)</small></span></label>
+    <?php if ($error): ?><p class="flash error"><?= e($error) ?></p><?php endif; ?>
+    <button class="btn">Anmelden</button>
+    <a class="auth-link" href="?logout">Abbrechen</a>
+    </form>
+  <?php elseif ($type === 'reset'): ?>
+    <form method="post" class="stack">
+    <h1>Neues Passwort</h1>
+    <input type="hidden" name="action" value="reset">
+    <label>Neues Passwort <small>(mind. 10 Zeichen)</small><input type="password" name="password" required minlength="10" autocomplete="new-password" autofocus></label>
+    <label>Passwort wiederholen<input type="password" name="password2" required minlength="10" autocomplete="new-password"></label>
+    <?php if ($error): ?><p class="flash error"><?= e($error) ?></p><?php endif; ?>
+    <button class="btn">Passwort speichern</button>
+    </form>
+  <?php elseif ($type === 'reset_bad'): ?>
+    <h1>Link abgelaufen</h1>
+    <p class="hint">Dieser Link ist ungültig oder älter als 30 Minuten. Fordere einfach einen neuen an.</p>
+    <a class="btn" href="./">Zur Anmeldung</a>
   <?php else: ?>
+    <form method="post" class="stack">
     <h1>Admin-Bereich</h1>
     <input type="hidden" name="action" value="login">
     <label>Passwort<input type="password" name="password" required autofocus autocomplete="current-password"></label>
     <?php if ($error): ?><p class="flash error"><?= e($error) ?></p><?php endif; ?>
-    <button class="btn">Anmelden</button>
+    <button class="btn">Weiter</button>
+    <?php if (rs_2fa_on()): ?><p class="hint auth-2fa">🔒 Mit Zwei-Faktor-Anmeldung geschützt</p><?php endif; ?>
+    </form>
+    <details class="auth-forgot"><summary>Passwort vergessen?</summary>
+      <form method="post"><input type="hidden" name="action" value="forgot">
+        <p class="hint">Wir schicken einen Link zum Zurücksetzen an die im Admin hinterlegte E-Mail-Adresse.</p>
+        <button class="btn btn-ghost btn-small">Link schicken</button></form>
+    </details>
   <?php endif; ?>
-</form></main>
+</div></main>
 <?php foot();
 }
 function head(string $title, bool $app = false): void { ?>

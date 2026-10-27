@@ -385,3 +385,21 @@ details.tech .form{margin-top:12px}
 @media (min-width:1261px) and (max-width:1340px){.top .brand small{display:none}}
 @media (min-width:761px) and (max-width:1260px){.tabs a span{display:none}.tabs a svg{display:block;width:18px;height:18px}.tabs a{padding:10px}}
 @media (min-width:761px) and (max-width:960px){.top .brand small{display:none}.top-r .ghost:first-child{display:none}.tabs a{padding:9px}.tab-sep{margin:6px 2px}}
+/* Anmeldung & Zwei-Faktor */
+.auth-card .stack{gap:14px}
+.code-in{font-size:1.4rem!important;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums}
+.auth-link{justify-self:center;font-size:.86rem;color:#6D665E}
+.auth-2fa{text-align:center;margin:0}
+.auth-forgot{border-top:1px solid var(--linie,#DCD5C8);padding-top:12px}
+.auth-forgot summary{cursor:pointer;font-size:.86rem;font-weight:600;color:#6D665E}
+.auth-forgot form{display:grid;gap:10px;margin-top:10px}
+.qr-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.qr-wrap #qr2fa{width:176px;height:176px;background:#fff;border-radius:12px;padding:4px;border:1px solid var(--linie,#DCD5C8)}
+.qr-wrap #qr2fa svg{width:100%;height:100%;display:block}
+.key2fa{display:block;margin-top:6px;font-size:.95rem;letter-spacing:.06em;word-break:break-all;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--linie,#DCD5C8)}
+.codes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin:12px 0;padding-left:22px}
+.codes code{font-size:1rem;letter-spacing:.06em}
+@media print{body.app>*:not(.wrap),.top,.tabs{display:none!important}}
+main.auth{width:100%;display:grid;place-items:center}
+.linklike{background:none;border:0;padding:0;font:inherit;font-size:.86rem;color:#6D665E;text-decoration:underline;cursor:pointer}
+#sicherheit .grid.inner{align-items:start}
