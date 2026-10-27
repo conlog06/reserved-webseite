@@ -128,12 +128,14 @@ if ($post) {
             foreach (['hero_kicker' => 90, 'hero_title' => 120, 'hero_script' => 60, 'hero_lead' => 400,
                       'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300,
                       'rh_title' => 80, 'rh_script' => 40, 'rh_lead' => 600, 'rh_fig' => 12, 'rh_fig_text' => 240,
-                      'sv_lead' => 300, 'sv_note' => 300, 'pk_lead' => 300, 'vi_title' => 80, 'vi_script' => 40, 'vi_intro' => 600,
+                      'sv_lead' => 300, 'sv_note' => 300, 'pk_lead' => 300, 'me_title' => 90, 'me_sub' => 120, 'vi_title' => 80, 'vi_script' => 40, 'vi_intro' => 600,
                       'response_text' => 160, 'about_lead' => 400, 'about_text' => 1200, 'bar_text' => 180, 'bar_link_text' => 40] as $k => $max) $S[$k] = $str($k, $max);
             $S['bar_on'] = !empty($_POST['bar_on']);
             $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt';
             $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
             $S['about_stats'] = array_map(fn($x) => ['v' => rs_cut((string)($x['v'] ?? ''), 12), 't' => rs_cut((string)($x['t'] ?? ''), 80)], array_slice($list('about_stats'), 0, 3));
+            $S['services'] = [];
+            foreach ($list('svc') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['services'][] = ['t' => rs_cut((string)$x['t'], 50), 'tag' => rs_cut((string)($x['tag'] ?? ''), 24), 'd' => rs_cut((string)($x['d'] ?? ''), 300)];
             $S['vita'] = [];
             foreach ($list('vita') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['vita'][] = ['k' => rs_cut((string)($x['k'] ?? ''), 30), 't' => rs_cut((string)$x['t'], 80), 'd' => rs_cut((string)($x['d'] ?? ''), 500)];
             $S['faq'] = [];
@@ -618,7 +620,15 @@ head('Admin – reserved.social', true);
       };
       $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]]]);
       $sec('Fester Rhythmus', [[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]);
+      $sec('Startbereich – Victoria', [[['me_title', 'Zeile mit Foto (verlinkt auf „Über mich“)', 90, 0]], [['me_sub', 'Zweite Zeile', 120, 0]]]);
       $sec('Leistungen', [[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]);
+      ?>
+      <fieldset><legend>Leistungen – Liste</legend>
+        <div id="svcList" class="qlist"><?php foreach ((array)$S['services'] as $i => $x): ?><div class="qed"><div class="cols"><input name="svc[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Leistung" maxlength="50"><input name="svc[<?= $i ?>][tag]" value="<?= e($x['tag'] ?? '') ?>" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[<?= $i ?>][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
+        <template id="tpl-svc"><div class="qed"><div class="cols"><input name="svc[__][t]" placeholder="Leistung" maxlength="50"><input name="svc[__][tag]" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[__][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-svc" data-to="svcList">+ Leistung</button>
+      </fieldset>
+      <?php
       $sec('Pakete', [[['pk_lead', 'Text neben der Überschrift', 300, 2]]]);
       ?>
       <fieldset><legend>Seite „Über mich“ <a class="more" href="<?= e(rs_url('ueber-mich/')) ?>" target="_blank" rel="noopener">ansehen ↗</a></legend>

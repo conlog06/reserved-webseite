@@ -155,7 +155,7 @@ function rs_defaults(): array {
             'rh_fig' => '36 %',
             'rh_fig_text' => 'der Firmen ohne Social Media nennen den Personalaufwand als Grund – häufiger als jeden anderen. Quelle: Bitkom, 2017.',
             'sv_lead' => 'Du gibst uns Zugang zu deinen Accounts und einen Drehtermin. Um den Rest kümmern wir uns – von der ersten Idee bis zum fertigen Post.',
-            'sv_note' => 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.',
+            'sv_note' => 'Vor der Kamera stehst normalerweise du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.',
             'vg_title' => 'Wir kommen nicht aus deiner Branche.', 'vg_script' => 'Zum Glück.',
             'vg_lead' => 'Das ist Absicht. Wir fragen wie Laien und erklären dein Angebot so, dass deine Kunden es verstehen. Branchenagenturen produzieren oft für Kollegen.',
             'pk_lead' => 'Keine starren Pakete, keine Preisliste: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst. Die Preise richten sich individuell nach deinen Wünschen.',
@@ -201,6 +201,16 @@ function rs_defaults(): array {
                 ['v' => 'OS', 't' => 'Lokal verwurzelt, persönlich vor Ort'],
             ],
             'cases' => [],
+            'me_title' => 'Hi, ich bin Victoria – Gründerin von reserved.social.',
+            'me_sub' => 'Von UGC über Westerberg Chaya zur eigenen Agentur.',
+            'services' => [
+                ['t' => 'Strategie', 'tag' => '', 'd' => 'Bevor die Kamera läuft, klären wir, wen du erreichen willst und womit – Ziele, Zielgruppe und Ideen für deine Reels.'],
+                ['t' => '9:16 Content', 'tag' => '', 'd' => 'Wir drehen bei dir vor Ort – hochkant, mit dem Handy, für Reels und TikTok. Schnitt, Musik und Captions inklusive.'],
+                ['t' => 'Social Media Management', 'tag' => '', 'd' => 'Wir posten im zugesagten Rhythmus, kümmern uns um Kommentare und Nachrichten und schauen jeden Monat, was ankommt.'],
+                ['t' => 'Kooperationen', 'tag' => '', 'd' => 'Wir bringen dich mit lokalen Accounts zusammen, die deine Kunden schon kennen – zum Beispiel: Paddelclub trifft Chaya.'],
+                ['t' => 'Coaching', 'tag' => 'Selbst lernen', 'd' => 'Du willst selbst drehen? Victoria zeigt dir, wie es geht: Content erstellen, Schneiden mit CapCut, monatliche Strategie und Hilfe beim Dreh.'],
+                ['t' => 'Fotografie', 'tag' => 'Add-on', 'd' => 'Nicht jeder braucht Fotos – wer möchte, bucht sie einfach dazu: Produkte, Räume und Team für Feed, Website und Print.'],
+            ],
             'vi_title' => 'Von UGC über Westerberg Chaya', 'vi_script' => 'zur Gründerin.',
             'vi_intro' => 'Hi, ich bin Victoria. Ich drehe seit Jahren Content – erst für Marken, dann für meine eigene Personal Brand und heute für Unternehmen aus Osnabrück. Hier erzähle ich dir, wie es dazu kam.',
             'vita' => [
@@ -282,6 +292,7 @@ function rs_config(): array {
     /* Keine Pakete/Anzahlen mehr auf der Seite: alte Standardtexte ersetzen */
     if (($c['site']['proof'][0]['v'] ?? '') === '1×' && ($c['site']['proof'][1]['v'] ?? '') === '4–8') { $c['site']['proof'][0] = $d['site']['proof'][0]; $c['site']['proof'][1] = $d['site']['proof'][1]; }
     foreach (['pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.'] as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
+    if (($c['site']['sv_note'] ?? '') === 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.') $c['site']['sv_note'] = $d['site']['sv_note'];
     if (($c['site']['pk_lead'] ?? '') === 'Keine starren Pakete: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst – zugeschnitten auf dich und dein Unternehmen.') $c['site']['pk_lead'] = $d['site']['pk_lead'];
     foreach ((array)($c['site']['faq'] ?? []) as $i => $f) foreach ($d['site']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && (str_contains((string)$f['a'], 'Strategie-Plan, den du') || str_starts_with((string)$f['a'], 'Das hängt davon ab, was du brauchst.'))) $c['site']['faq'][$i]['a'] = $df['a'];
     if (($c['site']['whatsapp'] ?? '') === '0176 22876980' && empty($c['site']['wa_set'])) $c['site']['whatsapp'] = '';

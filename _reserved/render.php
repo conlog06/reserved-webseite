@@ -72,6 +72,12 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     foreach ($S['proof'] as $p) if (trim($p['v'] ?? '') !== '') $proof .= '<div><strong>' . e($p['v']) . '</strong><span>' . e($p['t']) . '</span></div>';
     if ($proof !== '') $html = rs_block($html, 'proof', $proof);
 
+    /* Leistungen als Zeilen */
+    $sv = ''; $n = 0;
+    foreach ((array)($S['services'] ?? []) as $x) if (trim($x['t'] ?? '') !== '') { $n++;
+        $sv .= '<div class="svc-row reveal"><span class="svc-n">' . sprintf('%02d', $n) . '</span><h3>' . e($x['t']) . (trim($x['tag'] ?? '') !== '' ? ' <small>' . e($x['tag']) . '</small>' : '') . '</h3><p>' . e($x['d'] ?? '') . '</p></div>'; }
+    if ($sv !== '') $html = rs_block($html, 'services', $sv);
+
     /* Reel-Statistiken (nur mit echten Einträgen) */
     $html = rs_block($html, 'cases', rs_render_cases((array)($S['cases'] ?? [])));
 
