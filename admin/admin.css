@@ -350,8 +350,6 @@ details.tech .form{margin-top:12px}
 .bk-week label{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px}
 .bk-week span{font-weight:600;font-size:.88rem}
 @media (max-width:720px){.bk-row{grid-template-columns:62px 1fr}.bk-row .btnrow{grid-column:1/-1}}
-@media (min-width:721px) and (max-width:1600px){.top{gap:12px}.tabs{gap:2px}.tabs a{padding:8px 10px;font-size:.84rem;gap:6px}.tabs a svg{width:16px;height:16px}}
-@media (min-width:721px) and (max-width:1380px){.tabs a svg{display:none}.top-r .ghost{padding-inline:10px}}
 .tag.bad{background:#F6D9D2;color:#9A3B26}
 .bk-answer{margin-top:8px;font-size:.88rem;padding:8px 10px;border-radius:10px;background:#F6E3C9}
 .bk-more{margin-top:8px}
@@ -367,3 +365,23 @@ details.tech .form{margin-top:12px}
 .ugm-s{color:#6D665E;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .ugm-from{margin:10px 0 6px;font-size:.85rem;color:#6D665E}
 .ugm.new{border-color:#E2B98A;background:#FFFBF4}
+.tab-sep{width:1px;align-self:stretch;margin:6px 6px;background:rgba(244,241,234,.18)}
+@media (max-width:760px){.tab-sep{display:none}}
+.sec-n{display:inline-grid;place-items:center;width:26px;height:26px;margin-right:10px;border-radius:50%;background:var(--kohle,#2B2622);color:#F4F1EA;font-size:.74rem;font-weight:650;vertical-align:2px}
+.card-h small.muted-s{font-size:.82rem}
+.todo{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.todo-i{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid var(--linie,#DCD5C8);text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+.todo-i span{font-size:.78rem;font-weight:600;color:#6D665E}
+.todo-i b{font-family:var(--serif,Georgia,serif);font-size:2rem;font-weight:500;line-height:1.1}
+.todo-i small{font-size:.76rem;color:#6D665E}
+.todo-i.hot{border-color:#D98A73;background:#FFF7F3}
+.todo-i.hot b{color:#A55038}
+@media (hover:hover){.todo-i:hover{border-color:#2B2622;transform:translateY(-2px)}}
+@media (max-width:1100px){.todo{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.todo{grid-template-columns:1fr 1fr}}
+/* Kopfleiste: 10 Bereiche passen auf jede Breite */
+@media (min-width:761px) and (max-width:1600px){.top{gap:12px}.tabs{gap:2px}.tabs a{padding:8px 10px;font-size:.84rem;gap:6px}.tabs a svg{width:16px;height:16px}.tab-sep{margin:6px 4px}.top-r .ghost{padding-inline:12px}}
+@media (min-width:1261px) and (max-width:1520px){.tabs a svg{display:none}}
+@media (min-width:1261px) and (max-width:1340px){.top .brand small{display:none}}
+@media (min-width:761px) and (max-width:1260px){.tabs a span{display:none}.tabs a svg{display:block;width:18px;height:18px}.tabs a{padding:10px}}
+@media (min-width:761px) and (max-width:960px){.top .brand small{display:none}.top-r .ghost:first-child{display:none}.tabs a{padding:9px}.tab-sep{margin:6px 2px}}

@@ -14,7 +14,8 @@ header('Referrer-Policy: same-origin');
 rs_session();
 $c = rs_config();
 $self = (string)strtok($_SERVER['REQUEST_URI'] ?? '', '?');
-$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'seiten' => 'Seiten', 'funnel' => 'Funnel', 'termine' => 'Termine', 'ugc' => 'UGC', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
+$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'termine' => 'Termine', 'ugc' => 'UGC', 'inhalte' => 'Inhalte', 'instagram' => 'Instagram', 'funnel' => 'Funnel', 'seiten' => 'Seiten', 'statistik' => 'Statistik', 'einstellungen' => 'Einstellungen'];
+$tabGroups = ['inhalte' => 'Webseite', 'statistik' => 'System'];   // vor diesen Bereichen beginnt eine neue Gruppe
 $tab = isset($tabs[$_GET['tab'] ?? '']) ? $_GET['tab'] : 'start';
 
 function flash(string $t, string $type = 'ok'): void { $_SESSION['rs_flash'] = [$t, $type]; }
@@ -126,22 +127,21 @@ if ($post) {
 
         /* ----- Inhalte ----- */
         case 'content_hero':
+            /* Jede Karte im Bereich „Inhalte“ schickt nur ihre eigenen Felder – nur diese werden geändert */
+            $has = array_map('strval', (array)($_POST['has'] ?? []));
             foreach (['hero_kicker' => 90, 'hero_title' => 120, 'hero_script' => 60, 'hero_lead' => 400,
                       'fw_title' => 80, 'fw_script' => 40, 'fw_sub' => 300,
                       'rh_title' => 80, 'rh_script' => 40, 'rh_lead' => 600, 'rh_fig' => 12, 'rh_fig_text' => 240,
                       'sv_lead' => 300, 'sv_note' => 300, 'pk_lead' => 300, 'me_title' => 90, 'me_sub' => 120, 'vi_title' => 80, 'vi_script' => 40, 'vi_intro' => 600,
-                      'response_text' => 160, 'about_lead' => 400, 'about_text' => 1200, 'bar_text' => 180, 'bar_link_text' => 40] as $k => $max) $S[$k] = $str($k, $max);
-            $S['bar_on'] = !empty($_POST['bar_on']);
-            $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt';
-            $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
-            $S['about_stats'] = array_map(fn($x) => ['v' => rs_cut((string)($x['v'] ?? ''), 12), 't' => rs_cut((string)($x['t'] ?? ''), 80)], array_slice($list('about_stats'), 0, 3));
-            $S['services'] = [];
-            foreach ($list('svc') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['services'][] = ['t' => rs_cut((string)$x['t'], 50), 'tag' => rs_cut((string)($x['tag'] ?? ''), 24), 'd' => rs_cut((string)($x['d'] ?? ''), 300)];
-            $S['vita'] = [];
-            foreach ($list('vita') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['vita'][] = ['k' => rs_cut((string)($x['k'] ?? ''), 30), 't' => rs_cut((string)$x['t'], 80), 'd' => rs_cut((string)($x['d'] ?? ''), 500)];
-            $S['faq'] = [];
-            foreach ($list('hfaq') as $f) if (trim((string)($f['q'] ?? '')) !== '') $S['faq'][] = ['q' => rs_cut((string)$f['q'], 160), 'a' => rs_cut((string)($f['a'] ?? ''), 1200)];
-            rs_save_config($c); flash('Texte gespeichert – sofort auf der Webseite sichtbar.'); back('#hero');
+                      'response_text' => 160, 'about_lead' => 400, 'about_text' => 1200, 'bar_text' => 180, 'bar_link_text' => 40] as $k => $max) if (array_key_exists($k, $_POST)) $S[$k] = $str($k, $max);
+            if (in_array('bar', $has, true)) { $S['bar_on'] = !empty($_POST['bar_on']); $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt'; }
+            if (isset($_POST['proof'])) $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
+            if (isset($_POST['about_stats'])) $S['about_stats'] = array_map(fn($x) => ['v' => rs_cut((string)($x['v'] ?? ''), 12), 't' => rs_cut((string)($x['t'] ?? ''), 80)], array_slice($list('about_stats'), 0, 3));
+            if (in_array('svc', $has, true)) { $S['services'] = []; foreach ($list('svc') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['services'][] = ['t' => rs_cut((string)$x['t'], 50), 'tag' => rs_cut((string)($x['tag'] ?? ''), 24), 'd' => rs_cut((string)($x['d'] ?? ''), 300)]; }
+            if (in_array('vita', $has, true)) { $S['vita'] = []; foreach ($list('vita') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['vita'][] = ['k' => rs_cut((string)($x['k'] ?? ''), 30), 't' => rs_cut((string)$x['t'], 80), 'd' => rs_cut((string)($x['d'] ?? ''), 500)]; }
+            if (in_array('faq', $has, true)) { $S['faq'] = []; foreach ($list('hfaq') as $f) if (trim((string)($f['q'] ?? '')) !== '') $S['faq'][] = ['q' => rs_cut((string)$f['q'], 160), 'a' => rs_cut((string)($f['a'] ?? ''), 1200)]; }
+            $anchor = preg_replace('/[^a-z0-9-]/', '', (string)($_POST['anchor'] ?? 'start-bereich'));
+            rs_save_config($c); flash('Gespeichert – sofort auf der Webseite sichtbar.'); back('#' . $anchor);
         case 'content_plans':
             $S['plans'] = array_map(fn($p) => ['tier' => rs_cut((string)($p['tier'] ?? ''), 30), 'name' => rs_cut((string)($p['name'] ?? ''), 30) ?: 'Paket', 'price' => rs_cut((string)($p['price'] ?? ''), 40)], array_slice($list('plans'), 0, 3));
             $S['plan_rows'] = [];
@@ -566,7 +566,7 @@ head('Admin – reserved.social', true);
 <header class="top">
   <a class="brand" href="?tab=start">reserved<span>.social</span> <small>Admin</small></a>
   <nav class="tabs" aria-label="Bereiche">
-    <?php foreach ($tabs as $k => $t): ?><a href="?tab=<?= $k ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= icon($k) ?><span><?= $t ?></span><?= $k === 'anfragen' && $newLeads ? '<i class="badge-n">' . $newLeads . '</i>' : ($k === 'ugc' && $newUgc ? '<i class="badge-n">' . $newUgc . '</i>' : '') ?></a><?php endforeach; ?>
+    <?php foreach ($tabs as $k => $t): ?><?= isset($tabGroups[$k]) ? '<span class="tab-sep" aria-hidden="true"></span>' : '' ?><a href="?tab=<?= $k ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= icon($k) ?><span><?= $t ?></span><?= $k === 'anfragen' && $newLeads ? '<i class="badge-n">' . $newLeads . '</i>' : ($k === 'ugc' && $newUgc ? '<i class="badge-n">' . $newUgc . '</i>' : '') ?></a><?php endforeach; ?>
   </nav>
   <div class="top-r"><a href="<?= e(rs_url('')) ?>" target="_blank" rel="noopener" class="ghost">Seite ansehen ↗</a><a href="?logout" class="ghost">Abmelden</a></div>
 </header>
@@ -584,6 +584,23 @@ head('Admin – reserved.social', true);
     <div><h1><?= $hello ?>, <?= e(explode(' ', $S['imp_name'])[0]) ?>.</h1><p class="sub">So läuft deine Webseite in den letzten <?= $range === 365 ? '12 Monaten' : $range . ' Tagen' ?>.</p></div>
     <?= range_nav($range, 'start') ?>
   </div>
+  <?php
+    $bk = rs_bookings(); $nowT = time();
+    $bkToday = count(array_filter($bk, fn($b) => $b['status'] === 'bestaetigt' && date('Y-m-d', (int)$b['start']) === date('Y-m-d')));
+    $bkWait = count(array_filter($bk, fn($b) => $b['status'] === 'offen' && (int)$b['end'] > $nowT));
+    $bkNo = count(array_filter($bk, fn($b) => $b['status'] === 'abgelehnt' && (int)$b['end'] > $nowT));
+    $dl30 = (int)(rs_stats_summary(30)['c']['plan-signup'] ?? 0);
+    $todo = [
+      ['anfragen', 'Neue Anfragen', $newLeads, $newLeads ? 'beantworten' : 'alles erledigt', $newLeads > 0],
+      ['termine', 'Termine heute', $bkToday, $bkWait ? $bkWait . ' warten auf Bestätigung' : 'keine offenen Vorschläge', false],
+      ['termine', 'Passt nicht', $bkNo, $bkNo ? 'neuen Vorschlag schicken' : '–', $bkNo > 0],
+      ['ugc', 'Anfragen von Marken', $newUgc, $newUgc ? 'neu' : 'keine neuen', $newUgc > 0],
+      ['funnel', 'Plan geholt', $dl30, 'letzte 30 Tage', false],
+    ];
+  ?>
+  <section class="todo" aria-label="Zu tun">
+    <?php foreach ($todo as [$k, $t, $v, $sub, $hot]): ?><a class="todo-i<?= $hot ? ' hot' : '' ?>" href="?tab=<?= $k ?>"><span><?= e($t) ?></span><b><?= $n($v) ?></b><small><?= e($sub) ?> →</small></a><?php endforeach; ?>
+  </section>
   <section class="kpis">
     <div class="kpi"><span>Besucher</span><b><?= $n($st['u']) ?></b><?= $trend($st['u'], $st['prev']['u']) ?></div>
     <div class="kpi"><span>Anfragen</span><b><?= $n($st['a']) ?></b><?= $trend($st['a'], $st['prev']['a']) ?></div>
@@ -762,93 +779,72 @@ head('Admin – reserved.social', true);
   <?php endif; ?>
 
 <?php /* ======================= INHALTE ======================= */ elseif ($tab === 'inhalte'): ?>
-  <div class="page-head"><div><h1>Inhalte</h1><p class="sub">Änderungen sind nach dem Speichern sofort auf der Webseite sichtbar. <b>**fett**</b> schreibt Text fett.</p></div></div>
-  <nav class="subnav"><a href="#hero">Texte</a><a href="#reels">Reel-Statistiken</a><a href="#feedback">Feedback</a><a href="#ueber">Bild</a><a href="#pakete">Pakete (intern)</a></nav>
+  <div class="page-head"><div><h1>Inhalte</h1><p class="sub">Sortiert wie auf der Startseite – von oben nach unten. Jede Karte hat ihren eigenen „Speichern“-Button, Änderungen sind sofort sichtbar. <b>**fett**</b> schreibt Text fett.</p></div>
+    <a class="btn btn-ghost btn-small" href="<?= e(rs_url('')) ?>" target="_blank" rel="noopener">Startseite ansehen ↗</a></div>
+  <nav class="subnav"><a href="#leiste">Leiste</a><a href="#start-bereich">Start</a><a href="#fuer-wen">Für wen</a><a href="#leistungen">Leistungen</a><a href="#rhythmus">Rhythmus</a><a href="#angebot">Angebot</a><a href="#reels">Reels</a><a href="#feedback">Feedback</a><a href="#ueber">Über mich</a><a href="#faq">FAQ</a><a href="#kontakt">Kontakt</a><a href="#seite-ueber-mich">Seite „Über mich“</a></nav>
+      <?php $fields = function (array $f) use ($S) {
+          foreach ($f as $row) {
+              echo count($row) > 1 ? '<div class="cols">' : '';
+              foreach ($row as [$k, $label, $max, $rows]) echo $rows ? '<label>' . e($label) . '<textarea name="' . $k . '" rows="' . $rows . '" maxlength="' . $max . '">' . e($S[$k]) . '</textarea></label>'
+                                                                   : '<label>' . e($label) . '<input name="' . $k . '" value="' . e($S[$k]) . '" maxlength="' . $max . '">' . '</label>';
+              echo count($row) > 1 ? '</div>' : '';
+          }
+      }; ?>
 
-  <section class="card" id="hero">
-    <h2>Texte &amp; Hinweise</h2>
-    <form method="post" class="form"><?= $hidden('content_hero') ?>
-      <fieldset><legend>Startbereich</legend>
+  <section class="card" id="leiste">
+    <div class="card-h"><h2><span class="sec-n">1</span>Ankündigungsleiste</h2><small class="muted-s">ganz oben, optional</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="leiste"><input type="hidden" name="has[]" value="bar">
+        <label class="check"><input type="checkbox" name="bar_on" value="1"<?= !empty($S['bar_on']) ? ' checked' : '' ?>> Leiste ganz oben anzeigen</label>
+        <label>Text<input name="bar_text" value="<?= e($S['bar_text']) ?>" maxlength="180" placeholder="z. B. Noch 2 Plätze für Dezember frei"></label>
+        <div class="cols"><label>Link-Text<input name="bar_link_text" value="<?= e($S['bar_link_text']) ?>" maxlength="40" placeholder="Jetzt anfragen"></label><label>Link-Ziel<input name="bar_link" value="<?= e($S['bar_link']) ?>" maxlength="300" placeholder="#kontakt"></label></div>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
+  <section class="card" id="start-bereich">
+    <div class="card-h"><h2><span class="sec-n">2</span>Startbereich</h2><small class="muted-s">Überschrift, Text, Kennzahlen</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="start-bereich">
         <label>Zeile über der Überschrift<input name="hero_kicker" value="<?= e($S['hero_kicker']) ?>" maxlength="90"></label>
         <div class="cols"><label>Überschrift<input name="hero_title" value="<?= e($S['hero_title']) ?>" maxlength="120"></label><label>Schreibschrift-Zeile<input name="hero_script" value="<?= e($S['hero_script']) ?>" maxlength="60"></label></div>
         <label>Text<textarea name="hero_lead" rows="3" maxlength="400"><?= e($S['hero_lead']) ?></textarea></label>
         <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $p = $S['proof'][$i] ?? ['v' => '', 't' => '']; ?><div class="mini-f"><label>Kennzahl <?= $i + 1 ?><input name="proof[<?= $i ?>][v]" value="<?= e($p['v']) ?>" maxlength="12" placeholder="z. B. 1×"></label><label>Beschreibung<input name="proof[<?= $i ?>][t]" value="<?= e($p['t']) ?>" maxlength="60"></label></div><?php endforeach; ?></div>
-      </fieldset>
-      <?php $sec = function (string $legend, array $f) use ($S) {
-          echo '<fieldset><legend>' . e($legend) . '</legend>';
-          foreach ($f as $row) {
-              echo count($row) > 1 ? '<div class="cols">' : '';
-              foreach ($row as [$k, $label, $max, $rows]) echo $rows ? '<label>' . e($label) . '<textarea name="' . $k . '" rows="' . $rows . '" maxlength="' . $max . '">' . e($S[$k]) . '</textarea></label>'
-                                                                   : '<label>' . e($label) . '<input name="' . $k . '" value="' . e($S[$k]) . '" maxlength="' . $max . '"></label>';
-              echo count($row) > 1 ? '</div>' : '';
-          }
-          echo '</fieldset>';
-      };
-      $sec('Für wen', [[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]]]);
-      $sec('Fester Rhythmus', [[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]);
-      $sec('Startbereich – Victoria', [[['me_title', 'Zeile mit Foto (verlinkt auf „Über mich“)', 90, 0]], [['me_sub', 'Zweite Zeile', 120, 0]]]);
-      $sec('Leistungen', [[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]);
-      ?>
-      <fieldset><legend>Leistungen – Liste</legend>
+      <?php $fields([[['me_title', 'Zeile mit Foto von Victoria (verlinkt auf „Über mich“)', 90, 0]], [['me_sub', 'Zweite Zeile', 120, 0]]]); ?>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
+  <section class="card" id="fuer-wen">
+    <div class="card-h"><h2><span class="sec-n">3</span>Für wen</h2><small class="muted-s">Umkreis-Karte</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="fuer-wen">
+      <?php $fields([[['fw_title', 'Überschrift', 80, 0], ['fw_script', 'Schreibschrift', 40, 0]], [['fw_sub', 'Text', 300, 2]]]); ?>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
+  <section class="card" id="leistungen">
+    <div class="card-h"><h2><span class="sec-n">4</span>Leistungen</h2></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="leistungen"><input type="hidden" name="has[]" value="svc">
+      <?php $fields([[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]); ?>
+      <h3 class="mt">Liste</h3>
         <div id="svcList" class="qlist"><?php foreach ((array)$S['services'] as $i => $x): ?><div class="qed"><div class="cols"><input name="svc[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Leistung" maxlength="50"><input name="svc[<?= $i ?>][tag]" value="<?= e($x['tag'] ?? '') ?>" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[<?= $i ?>][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
         <template id="tpl-svc"><div class="qed"><div class="cols"><input name="svc[__][t]" placeholder="Leistung" maxlength="50"><input name="svc[__][tag]" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[__][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
         <button type="button" class="btn btn-ghost btn-small" data-add="tpl-svc" data-to="svcList">+ Leistung</button>
-      </fieldset>
-      <?php
-      $sec('Pakete', [[['pk_lead', 'Text neben der Überschrift', 300, 2]]]);
-      ?>
-      <fieldset><legend>Seite „Über mich“ <a class="more" href="<?= e(rs_url('ueber-mich/')) ?>" target="_blank" rel="noopener">ansehen ↗</a></legend>
-        <div class="cols"><label>Überschrift<input name="vi_title" value="<?= e($S['vi_title']) ?>" maxlength="80"></label><label>Schreibschrift<input name="vi_script" value="<?= e($S['vi_script']) ?>" maxlength="40"></label></div>
-        <label>Einleitung<textarea name="vi_intro" rows="3" maxlength="600"><?= e($S['vi_intro']) ?></textarea></label>
-        <p class="hint">Mein Weg – Stationen von oben nach unten. Ins kleine Feld kann auch eine Jahreszahl (z. B. „2023“).</p>
-        <div id="vitaList" class="qlist"><?php foreach ((array)$S['vita'] as $i => $x): ?><div class="qed"><div class="cols"><input name="vita[<?= $i ?>][k]" value="<?= e($x['k'] ?? '') ?>" placeholder="z. B. 2023 oder „Heute“" maxlength="30"><input name="vita[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Station" maxlength="80"></div><textarea name="vita[<?= $i ?>][d]" rows="2" maxlength="500" placeholder="Was war da?"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
-        <template id="tpl-vita"><div class="qed"><div class="cols"><input name="vita[__][k]" placeholder="z. B. 2023 oder „Heute“" maxlength="30"><input name="vita[__][t]" placeholder="Station" maxlength="80"></div><textarea name="vita[__][d]" rows="2" maxlength="500" placeholder="Was war da?"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
-        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-vita" data-to="vitaList">+ Station</button>
-      </fieldset>
-      <fieldset><legend>Häufige Fragen <small>(leer = Abschnitt ausgeblendet)</small></legend>
-        <div id="hFaq" class="qlist"><?php foreach ((array)($S['faq'] ?? []) as $i => $f): ?><div class="qed"><input name="hfaq[<?= $i ?>][q]" value="<?= e($f['q']) ?>" placeholder="Frage" maxlength="160"><textarea name="hfaq[<?= $i ?>][a]" rows="2" maxlength="1200" placeholder="Antwort"><?= e($f['a']) ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
-        <template id="tpl-hfaq"><div class="qed"><input name="hfaq[__][q]" placeholder="Frage" maxlength="160"><textarea name="hfaq[__][a]" rows="2" maxlength="1200" placeholder="Antwort"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
-        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-hfaq" data-to="hFaq">+ Frage</button>
-      </fieldset>
-      <fieldset><legend>Ankündigungsleiste <?= !empty($S['bar_on']) && $S['bar_text'] ? '<span class="tag on">sichtbar</span>' : '<span class="tag">aus</span>' ?></legend>
-        <label class="check"><input type="checkbox" name="bar_on" value="1"<?= !empty($S['bar_on']) ? ' checked' : '' ?>> Leiste ganz oben anzeigen</label>
-        <label>Text<input name="bar_text" value="<?= e($S['bar_text']) ?>" maxlength="180" placeholder="z. B. Noch 2 Plätze für Dezember frei"></label>
-        <div class="cols"><label>Link-Text<input name="bar_link_text" value="<?= e($S['bar_link_text']) ?>" maxlength="40" placeholder="Jetzt anfragen"></label><label>Link-Ziel<input name="bar_link" value="<?= e($S['bar_link']) ?>" maxlength="300" placeholder="#kontakt"></label></div>
-      </fieldset>
-      <fieldset><legend>Über uns &amp; Kontakt</legend>
-        <label>Über uns – erster Absatz<textarea name="about_lead" rows="2" maxlength="400"><?= e($S['about_lead']) ?></textarea></label>
-        <label>Über uns – zweiter Absatz<textarea name="about_text" rows="4" maxlength="1200"><?= e($S['about_text']) ?></textarea></label>
-        <p class="hint">Jahresangaben (z. B. „ein Jahr lang bei Beiersdorf“, „Vor einem Jahr …“) hier einfach anpassen, wenn sich etwas ändert.</p>
-        <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $x = $S['about_stats'][$i] ?? ['v' => '', 't' => '']; ?><div class="mini-f"><label>Kennzahl <?= $i + 1 ?><input name="about_stats[<?= $i ?>][v]" value="<?= e($x['v']) ?>" maxlength="12"></label><label>Beschreibung<input name="about_stats[<?= $i ?>][t]" value="<?= e($x['t']) ?>" maxlength="80"></label></div><?php endforeach; ?></div>
-        <label>Antwortzeit (Kontakt &amp; Bestätigungs-Mail)<input name="response_text" value="<?= e($S['response_text']) ?>" maxlength="160"></label>
-      </fieldset>
-      <button class="btn">Texte speichern</button>
+      <button class="btn btn-small">Speichern</button>
     </form>
   </section>
-
-  <section class="card" id="pakete">
-    <h2>Pakete <span class="tag">nicht auf der Webseite</span></h2>
-    <p class="hint">Die Webseite zeigt keine Pakete, Anzahlen oder Preise mehr – das Angebot wird im Erstgespräch zusammengestellt. Diese Tabelle dient nur noch als interne Übersicht.</p>
-    <form method="post" class="form"><?= $hidden('content_plans') ?>
-      <p class="hint">In die Zellen: <b>✓</b> (oder „ja“) für enthalten, <b>—</b> (oder leer) für nicht enthalten, sonst freier Text wie „bis zu 2“. Die mittlere Spalte ist dunkel hervorgehoben.</p>
-      <div class="ptable">
-        <div class="pt-head"><span></span><?php foreach ([0, 1, 2] as $i): $p = $S['plans'][$i]; ?><div><input name="plans[<?= $i ?>][tier]" value="<?= e($p['tier']) ?>" placeholder="Etikett" maxlength="30" class="sm"><input name="plans[<?= $i ?>][name]" value="<?= e($p['name']) ?>" placeholder="Name" maxlength="30" class="strong"><input name="plans[<?= $i ?>][price]" value="<?= e($p['price']) ?>" placeholder="Preis (optional), z. B. ab 590 € / Monat" maxlength="40" class="sm"></div><?php endforeach; ?><span></span></div>
-        <div id="rows"><?php foreach ($S['plan_rows'] as $i => $r): ?><div class="pt-row"><input name="rows[<?= $i ?>][l]" value="<?= e($r['l']) ?>" maxlength="80"><?php foreach ([0, 1, 2] as $k): ?><input name="rows[<?= $i ?>][v][<?= $k ?>]" value="<?= e($r['v'][$k] ?? '') ?>" maxlength="30" class="c"><?php endforeach; ?><button type="button" class="x" data-remove aria-label="Zeile löschen">✕</button></div><?php endforeach; ?></div>
-        <template id="tpl-row"><div class="pt-row"><input name="rows[__][l]" placeholder="Leistung" maxlength="80"><input name="rows[__][v][0]" class="c" maxlength="30"><input name="rows[__][v][1]" class="c" maxlength="30"><input name="rows[__][v][2]" class="c" maxlength="30"><button type="button" class="x" data-remove aria-label="Zeile löschen">✕</button></div></template>
-        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-row" data-to="rows">+ Zeile</button>
-      </div>
-      <label>Hinweis unter der Tabelle<input name="plans_note" value="<?= e($S['plans_note']) ?>" maxlength="160"></label>
-      <fieldset><legend>Zusatzleistungen</legend>
-        <div id="extras"><?php foreach ($S['extras'] as $i => $x): ?><div class="lrow"><input name="extras[<?= $i ?>][t]" value="<?= e($x['t']) ?>" placeholder="Titel" maxlength="60"><input name="extras[<?= $i ?>][d]" value="<?= e($x['d']) ?>" placeholder="Beschreibung" maxlength="160" class="grow"><input name="extras[<?= $i ?>][p]" value="<?= e($x['p']) ?>" placeholder="Preis (optional)" maxlength="40"><button type="button" class="x" data-remove aria-label="Löschen">✕</button></div><?php endforeach; ?></div>
-        <template id="tpl-extra"><div class="lrow"><input name="extras[__][t]" placeholder="Titel" maxlength="60"><input name="extras[__][d]" placeholder="Beschreibung" maxlength="160" class="grow"><input name="extras[__][p]" placeholder="Preis (optional)" maxlength="40"><button type="button" class="x" data-remove aria-label="Löschen">✕</button></div></template>
-        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-extra" data-to="extras">+ Zusatzleistung</button>
-      </fieldset>
-      <button class="btn">Pakete speichern</button>
+  <section class="card" id="rhythmus">
+    <div class="card-h"><h2><span class="sec-n">5</span>Fester Rhythmus</h2><small class="muted-s">Grafik „Ein Jahr im Feed“</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="rhythmus">
+      <?php $fields([[['rh_title', 'Überschrift', 80, 0], ['rh_script', 'Schreibschrift', 40, 0]], [['rh_lead', 'Text', 600, 4]], [['rh_fig', 'Große Zahl', 12, 0], ['rh_fig_text', 'Text zur Zahl (mit Quelle)', 240, 0]]]); ?>
+      <button class="btn btn-small">Speichern</button>
     </form>
   </section>
-
+  <section class="card" id="angebot">
+    <div class="card-h"><h2><span class="sec-n">6</span>Angebot</h2><small class="muted-s">„Von Content bis Management“</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="angebot">
+      <?php $fields([[['pk_lead', 'Text neben der Überschrift', 300, 2]]]); ?>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
   <section class="card" id="reels">
-    <h2>Reel-Statistiken</h2>
+    <div class="card-h"><h2><span class="sec-n">7</span>Reel-Statistiken</h2><small class="muted-s">erscheint erst mit Einträgen</small></div>
     <p class="hint">Echte Zahlen von Reels für bekannte Kund:innen (aus Instagram-Insights). Der Abschnitt erscheint auf der Webseite erst, wenn hier mindestens ein Eintrag steht. Bis zu 6 Einträge.</p>
     <?php $caseRow = function (string $k, array $x) { ob_start(); ?>
       <div class="qed case-ed">
@@ -867,7 +863,7 @@ head('Admin – reserved.social', true);
   </section>
 
   <section class="card" id="feedback">
-    <h2>Feedback</h2>
+    <div class="card-h"><h2><span class="sec-n">8</span>Feedback</h2><small class="muted-s">Ergebnisse &amp; Kundenstimmen</small></div>
     <form method="post" class="form"><?= $hidden('content_feedback') ?>
       <fieldset><legend>Ergebnis-Karten</legend>
         <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $r = $S['results'][$i] ?? ['v' => '', 't' => '', 'l' => '']; ?><div class="mini-f"><label>Groß<input name="results[<?= $i ?>][v]" value="<?= e($r['v']) ?>" maxlength="20"></label><label>Text<textarea name="results[<?= $i ?>][t]" rows="3" maxlength="200"><?= e($r['t']) ?></textarea></label><label>Kunde<input name="results[<?= $i ?>][l]" value="<?= e($r['l']) ?>" maxlength="40"></label></div><?php endforeach; ?></div>
@@ -883,12 +879,72 @@ head('Admin – reserved.social', true);
   </section>
 
   <section class="card" id="ueber">
-    <h2>Bild „Über uns“</h2>
-    <div class="img-slot"><img src="<?= e(rs_url($S['img_about'] ?: 'assets/img/post-dm.webp')) ?>" alt="">
+    <div class="card-h"><h2><span class="sec-n">9</span>Über mich (Startseite)</h2><small class="muted-s">Text, Kennzahlen, Foto</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="ueber">
+        <label>Über uns – erster Absatz<textarea name="about_lead" rows="2" maxlength="400"><?= e($S['about_lead']) ?></textarea></label>
+        <label>Über uns – zweiter Absatz<textarea name="about_text" rows="4" maxlength="1200"><?= e($S['about_text']) ?></textarea></label>
+        <p class="hint">Jahresangaben (z. B. „ein Jahr lang bei Beiersdorf“, „Vor einem Jahr …“) hier einfach anpassen, wenn sich etwas ändert.</p>
+        <div class="cols c3"><?php foreach ([0, 1, 2] as $i): $x = $S['about_stats'][$i] ?? ['v' => '', 't' => '']; ?><div class="mini-f"><label>Kennzahl <?= $i + 1 ?><input name="about_stats[<?= $i ?>][v]" value="<?= e($x['v']) ?>" maxlength="12"></label><label>Beschreibung<input name="about_stats[<?= $i ?>][t]" value="<?= e($x['t']) ?>" maxlength="80"></label></div><?php endforeach; ?></div>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+    <h3 class="mt">Foto von Victoria</h3>
+    <p class="hint">Wird auch im Startbereich, auf „Über mich“ und auf der Download-Seite verwendet.</p>
+    <div class="img-slot"><img src="<?= e(rs_url($S['img_about'] ?: 'assets/img/victoria-creator.webp')) ?>" alt="">
       <div><p class="hint">Hochformat (4:5), JPG/PNG/WebP. Ersetzt das Bild sofort.</p>
         <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><label class="btn btn-ghost btn-small file-btn">Neues Bild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
         <?php if ($S['img_about']): ?><form method="post" onsubmit="return confirm('Eigenes Bild entfernen?')"><?= $hidden('image_delete') ?><button class="btn btn-small btn-danger">Entfernen</button></form><?php endif; ?></div></div>
+
   </section>
+  <section class="card" id="faq">
+    <div class="card-h"><h2><span class="sec-n">10</span>Häufige Fragen</h2><small class="muted-s">leer = Abschnitt ausgeblendet</small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="faq"><input type="hidden" name="has[]" value="faq">
+        <div id="hFaq" class="qlist"><?php foreach ((array)($S['faq'] ?? []) as $i => $f): ?><div class="qed"><input name="hfaq[<?= $i ?>][q]" value="<?= e($f['q']) ?>" placeholder="Frage" maxlength="160"><textarea name="hfaq[<?= $i ?>][a]" rows="2" maxlength="1200" placeholder="Antwort"><?= e($f['a']) ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
+        <template id="tpl-hfaq"><div class="qed"><input name="hfaq[__][q]" placeholder="Frage" maxlength="160"><textarea name="hfaq[__][a]" rows="2" maxlength="1200" placeholder="Antwort"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-hfaq" data-to="hFaq">+ Frage</button>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
+  <section class="card" id="kontakt">
+    <div class="card-h"><h2><span class="sec-n">11</span>Kontakt</h2></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="kontakt">
+        <label>Antwortzeit (Kontakt &amp; Bestätigungs-Mail)<input name="response_text" value="<?= e($S['response_text']) ?>" maxlength="160"></label>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
+  <section class="card" id="seite-ueber-mich">
+    <div class="card-h"><h2><span class="sec-n">12</span>Seite „Über mich“</h2><small class="muted-s"><a href="<?= e(rs_url('ueber-mich/')) ?>" target="_blank" rel="noopener">/ueber-mich ansehen ↗</a></small></div>
+    <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="seite-ueber-mich"><input type="hidden" name="has[]" value="vita">
+        <div class="cols"><label>Überschrift<input name="vi_title" value="<?= e($S['vi_title']) ?>" maxlength="80"></label><label>Schreibschrift<input name="vi_script" value="<?= e($S['vi_script']) ?>" maxlength="40"></label></div>
+        <label>Einleitung<textarea name="vi_intro" rows="3" maxlength="600"><?= e($S['vi_intro']) ?></textarea></label>
+        <p class="hint">Mein Weg – Stationen von oben nach unten. Ins kleine Feld kann auch eine Jahreszahl (z. B. „2023“).</p>
+        <div id="vitaList" class="qlist"><?php foreach ((array)$S['vita'] as $i => $x): ?><div class="qed"><div class="cols"><input name="vita[<?= $i ?>][k]" value="<?= e($x['k'] ?? '') ?>" placeholder="z. B. 2023 oder „Heute“" maxlength="30"><input name="vita[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Station" maxlength="80"></div><textarea name="vita[<?= $i ?>][d]" rows="2" maxlength="500" placeholder="Was war da?"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
+        <template id="tpl-vita"><div class="qed"><div class="cols"><input name="vita[__][k]" placeholder="z. B. 2023 oder „Heute“" maxlength="30"><input name="vita[__][t]" placeholder="Station" maxlength="80"></div><textarea name="vita[__][d]" rows="2" maxlength="500" placeholder="Was war da?"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-vita" data-to="vitaList">+ Station</button>
+      <button class="btn btn-small">Speichern</button>
+    </form>
+  </section>
+  <section class="card" id="pakete">
+    <details class="tech"><summary>Interne Paket-Übersicht <small>(nicht auf der Webseite)</small></summary>
+    <p class="hint">Die Webseite zeigt keine Pakete, Anzahlen oder Preise mehr – das Angebot wird im Erstgespräch zusammengestellt. Diese Tabelle dient nur noch als interne Übersicht.</p>
+    <form method="post" class="form"><?= $hidden('content_plans') ?>
+      <p class="hint">In die Zellen: <b>✓</b> (oder „ja“) für enthalten, <b>—</b> (oder leer) für nicht enthalten, sonst freier Text wie „bis zu 2“. Die mittlere Spalte ist dunkel hervorgehoben.</p>
+      <div class="ptable">
+        <div class="pt-head"><span></span><?php foreach ([0, 1, 2] as $i): $p = $S['plans'][$i]; ?><div><input name="plans[<?= $i ?>][tier]" value="<?= e($p['tier']) ?>" placeholder="Etikett" maxlength="30" class="sm"><input name="plans[<?= $i ?>][name]" value="<?= e($p['name']) ?>" placeholder="Name" maxlength="30" class="strong"><input name="plans[<?= $i ?>][price]" value="<?= e($p['price']) ?>" placeholder="Preis (optional), z. B. ab 590 € / Monat" maxlength="40" class="sm"></div><?php endforeach; ?><span></span></div>
+        <div id="rows"><?php foreach ($S['plan_rows'] as $i => $r): ?><div class="pt-row"><input name="rows[<?= $i ?>][l]" value="<?= e($r['l']) ?>" maxlength="80"><?php foreach ([0, 1, 2] as $k): ?><input name="rows[<?= $i ?>][v][<?= $k ?>]" value="<?= e($r['v'][$k] ?? '') ?>" maxlength="30" class="c"><?php endforeach; ?><button type="button" class="x" data-remove aria-label="Zeile löschen">✕</button></div><?php endforeach; ?></div>
+        <template id="tpl-row"><div class="pt-row"><input name="rows[__][l]" placeholder="Leistung" maxlength="80"><input name="rows[__][v][0]" class="c" maxlength="30"><input name="rows[__][v][1]" class="c" maxlength="30"><input name="rows[__][v][2]" class="c" maxlength="30"><button type="button" class="x" data-remove aria-label="Zeile löschen">✕</button></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-row" data-to="rows">+ Zeile</button>
+      </div>
+      <label>Hinweis unter der Tabelle<input name="plans_note" value="<?= e($S['plans_note']) ?>" maxlength="160"></label>
+      <fieldset><legend>Zusatzleistungen</legend>
+        <div id="extras"><?php foreach ($S['extras'] as $i => $x): ?><div class="lrow"><input name="extras[<?= $i ?>][t]" value="<?= e($x['t']) ?>" placeholder="Titel" maxlength="60"><input name="extras[<?= $i ?>][d]" value="<?= e($x['d']) ?>" placeholder="Beschreibung" maxlength="160" class="grow"><input name="extras[<?= $i ?>][p]" value="<?= e($x['p']) ?>" placeholder="Preis (optional)" maxlength="40"><button type="button" class="x" data-remove aria-label="Löschen">✕</button></div><?php endforeach; ?></div>
+        <template id="tpl-extra"><div class="lrow"><input name="extras[__][t]" placeholder="Titel" maxlength="60"><input name="extras[__][d]" placeholder="Beschreibung" maxlength="160" class="grow"><input name="extras[__][p]" placeholder="Preis (optional)" maxlength="40"><button type="button" class="x" data-remove aria-label="Löschen">✕</button></div></template>
+        <button type="button" class="btn btn-ghost btn-small" data-add="tpl-extra" data-to="extras">+ Zusatzleistung</button>
+      </fieldset>
+      <button class="btn">Pakete speichern</button>
+    </form>
+    </details>
+  </section>
+
 
 <?php /* ======================= FUNNEL ======================= */ elseif ($tab === 'funnel'):
   $F = $c['funnel']; $subs = array_reverse(rs_funnel_subs());
@@ -897,9 +953,9 @@ head('Admin – reserved.social', true);
   $s30 = rs_stats_summary(30); $cl = $s30['c'] ?? [];
   $planUrl = rs_abs_url('plan/'); $ownPdf = is_file(RS_DATA . '/plan.pdf');
 ?>
-  <div class="page-head"><div><h1>Funnel</h1><p class="sub">Kostenloser Download → E-Mail bestätigen → Danke-Seite mit Angebot und Terminbuchung.</p></div>
+  <div class="page-head"><div><h1>Funnel</h1><p class="sub">Kostenloser Content-Plan: Download-Seite → Danke-Seite mit Angebot. Hier siehst du, wer ihn sich geholt hat.</p></div>
     <div class="btnrow"><a class="btn btn-ghost btn-small" href="<?= e(rs_url('plan/')) ?>" target="_blank" rel="noopener">Download-Seite ansehen ↗</a></div></div>
-  <nav class="subnav"><a href="#einstellungen">Texte & Angebot</a><a href="#pdf">PDF</a><a href="#eintraege">Einträge</a></nav>
+  <nav class="subnav"><a href="#eintraege">Einträge</a><a href="#einstellungen">Zustellung, Texte &amp; Angebot</a><a href="#pdf">PDF</a></nav>
   <section class="kpis k6">
     <div class="kpi"><span>Eingetragen</span><b><?= $n(count($subs)) ?></b></div>
     <div class="kpi"><span>Bestätigt</span><b><?= $n(count($conf)) ?></b><small><?= count($subs) ? round(count($conf) / count($subs) * 100) : 0 ?> % bestätigen</small></div>
@@ -912,6 +968,17 @@ head('Admin – reserved.social', true);
     <h2>Links zum Teilen</h2>
     <div class="links"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'instagram-story' => 'Instagram-Story', 'tiktok' => 'TikTok'] as $k => $t): $u = $planUrl . ($k ? '?utm_source=' . $k : ''); ?>
       <div class="lrow"><span class="grow"><b><?= e($t) ?></b> <small><?= e($u) ?></small></span><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
+  </section>
+
+  <section class="card" id="eintraege">
+    <div class="card-h"><h2>Einträge <small>(<?= count($subs) ?>)</small></h2><?php if ($subs): ?><form method="post"><?= $hidden('funnel_export') ?><button class="btn btn-ghost btn-small">CSV exportieren</button></form><?php endif; ?></div>
+    <?php if (!$subs): ?><p class="empty">Noch keine Einträge. Teile den Link zur Download-Seite, z. B. in der Instagram-Bio.</p>
+    <?php else: ?><div class="table-scroll"><table class="tbl"><thead><tr><th>Name</th><th>E-Mail</th><th>Eingetragen</th><th>Status</th><th>PDF</th><th></th></tr></thead><tbody>
+      <?php foreach ($subs as $x): $stt = $x['unsub'] ? ['abgemeldet', ''] : ($x['confirmed'] ? ['bestätigt', 'on'] : ['offen', 'warn']); ?>
+      <tr><td><?= e($x['name']) ?></td><td><a href="mailto:<?= e($x['email']) ?>"><?= e($x['email']) ?></a></td><td><?= e(date('d.m.Y', (int)$x['ts'])) ?> <small><?= e($x['src']) ?></small></td>
+        <td><span class="tag <?= $stt[1] ?>"><?= $stt[0] ?></span></td><td><?= (int)$x['downloads'] ?>×</td>
+        <td><form method="post" onsubmit="return confirm('Eintrag löschen?')"><?= $hidden('funnel_delete') ?><input type="hidden" name="id" value="<?= e($x['id']) ?>"><button class="x" aria-label="Löschen">✕</button></form></td></tr>
+      <?php endforeach; ?></tbody></table></div><?php endif; ?>
   </section>
 
   <section class="card" id="einstellungen">
@@ -956,16 +1023,6 @@ head('Admin – reserved.social', true);
       </div>
     </section>
 
-  <section class="card" id="eintraege">
-    <div class="card-h"><h2>Einträge <small>(<?= count($subs) ?>)</small></h2><?php if ($subs): ?><form method="post"><?= $hidden('funnel_export') ?><button class="btn btn-ghost btn-small">CSV exportieren</button></form><?php endif; ?></div>
-    <?php if (!$subs): ?><p class="empty">Noch keine Einträge. Teile den Link zur Download-Seite, z. B. in der Instagram-Bio.</p>
-    <?php else: ?><div class="table-scroll"><table class="tbl"><thead><tr><th>Name</th><th>E-Mail</th><th>Eingetragen</th><th>Status</th><th>PDF</th><th></th></tr></thead><tbody>
-      <?php foreach ($subs as $x): $stt = $x['unsub'] ? ['abgemeldet', ''] : ($x['confirmed'] ? ['bestätigt', 'on'] : ['offen', 'warn']); ?>
-      <tr><td><?= e($x['name']) ?></td><td><a href="mailto:<?= e($x['email']) ?>"><?= e($x['email']) ?></a></td><td><?= e(date('d.m.Y', (int)$x['ts'])) ?> <small><?= e($x['src']) ?></small></td>
-        <td><span class="tag <?= $stt[1] ?>"><?= $stt[0] ?></span></td><td><?= (int)$x['downloads'] ?>×</td>
-        <td><form method="post" onsubmit="return confirm('Eintrag löschen?')"><?= $hidden('funnel_delete') ?><input type="hidden" name="id" value="<?= e($x['id']) ?>"><button class="x" aria-label="Löschen">✕</button></form></td></tr>
-      <?php endforeach; ?></tbody></table></div><?php endif; ?>
-  </section>
 
 <?php /* ======================= UGC ======================= */ elseif ($tab === 'ugc'):
   $st30 = rs_stats_summary(30); $U = $c['ugc'];
@@ -1357,7 +1414,7 @@ head('Admin – reserved.social', true);
     </form>
   </section>
 <?php /* ======================= EINSTELLUNGEN ======================= */ else: ?>
-  <div class="page-head"><div><h1>Einstellungen</h1></div></div>
+  <div class="page-head"><div><h1>Einstellungen</h1><p class="sub">Kontakt &amp; E-Mails, Impressum, Datenschutz, Statistik und Passwort.</p></div></div>
   <section class="card">
     <form method="post" class="form"><?= $hidden('settings') ?>
       <fieldset><legend>Kontakt</legend>
