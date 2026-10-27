@@ -283,8 +283,10 @@ function rs_render_datenschutz(array $S, array $c): string {
 <h4>2. Aufruf der Webseite</h4><p>Beim Aufruf der Webseite verarbeitet unser Hosting-Anbieter technisch notwendige Daten (z.&nbsp;B. IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, Browser) in Server-Logfiles, um die Seite sicher und stabil auszuliefern (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;f DSGVO). Schriften und Bilder – auch die Bilder aus unserem Instagram-Profil – werden von unserem eigenen Server geladen; es werden keine Daten an Google, Meta oder andere Dritte übertragen.</p>
 <h4>3. Besucherstatistik ohne Cookies</h4><p>Wir zählen Seitenaufrufe anonym: welche Bereiche angesehen werden, Klicks auf Buttons, Herkunft (z.&nbsp;B. „Instagram“ oder „Google“), Gerätetyp und Verweildauer. Es werden keine Cookies gesetzt und keine IP-Adressen gespeichert. Um Besucher eines Tages nicht doppelt zu zählen, wird ein Prüfwert aus IP-Adresse und Browserkennung mit einem täglich wechselnden Zufallswert gebildet, der nach Ablauf des Tages gelöscht wird – eine Wiedererkennung ist nicht möglich. Wenn dein Browser „Do Not Track“ oder „Global Privacy Control“ sendet, zählen wir nichts. Rechtsgrundlage ist unser berechtigtes Interesse an einer datensparsamen Reichweitenmessung (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;f DSGVO, § 25 Abs.&nbsp;2 TDDDG).</p>
 <h4>4. Anfrageformular und E-Mail</h4><p>Wenn du uns über das Formular oder per E-Mail kontaktierst, verarbeiten wir deine Angaben (Name, Kontaktdaten, Angaben zu deinem Unternehmen und deine Nachricht), um deine Anfrage zu beantworten und ein Angebot zu erstellen (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b DSGVO). Du erhältst eine automatische Bestätigung per E-Mail. Anfragen werden spätestens nach $months Monaten gelöscht, sofern daraus kein Auftrag entsteht und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
-<h4>5. Instagram</h4><p>Unsere Webseite zeigt Beiträge aus unserem Instagram-Profil. Die Bilder liegen auf unserem Server. Erst wenn du einen Link zu Instagram anklickst oder ein Video in der Großansicht abspielst, wird eine Verbindung zu Meta Platforms Ireland Ltd. hergestellt; dann gelten deren Datenschutzbestimmungen.</p>
-<h4>6. Deine Rechte</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren. Schreib uns dafür einfach eine E-Mail.</p>
+<h4>5. Kostenloser Download und E-Mails</h4><p>Wenn du dir unseren kostenlosen Content-Plan Starter holst, speichern wir deinen Vornamen, deine E-Mail-Adresse, den Zeitpunkt der Anmeldung und der Bestätigung. Du bekommst zuerst eine E-Mail mit einem Bestätigungslink (Double-Opt-in); erst danach schicken wir dir den Plan und gelegentlich Social-Media-Tipps per E-Mail. Rechtsgrundlage ist deine Einwilligung (Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;a DSGVO), die du jederzeit über den Abmeldelink in jeder E-Mail oder per Nachricht an uns widerrufen kannst. Nutzen wir für den Versand einen Newsletter-Dienst, verarbeitet dieser die Daten in unserem Auftrag (Auftragsverarbeitung nach Art.&nbsp;28 DSGVO). Nach der Abmeldung löschen wir deine Daten, sofern wir sie nicht als Nachweis der früheren Einwilligung aufbewahren müssen.</p>
+<h4>6. Terminbuchung</h4><p>Für Terminbuchungen verlinken wir auf einen externen Kalender-Dienst. Erst wenn du den Link anklickst, wird eine Verbindung zu diesem Anbieter hergestellt; dort gelten dessen Datenschutzbestimmungen.</p>
+<h4>7. Instagram</h4><p>Unsere Webseite zeigt Beiträge aus unserem Instagram-Profil. Die Bilder liegen auf unserem Server. Erst wenn du einen Link zu Instagram anklickst oder ein Video in der Großansicht abspielst, wird eine Verbindung zu Meta Platforms Ireland Ltd. hergestellt; dann gelten deren Datenschutzbestimmungen.</p>
+<h4>8. Deine Rechte</h4><p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren. Schreib uns dafür einfach eine E-Mail.</p>
 HTML;
 }
 
@@ -367,6 +369,35 @@ function rs_render_angebot(string $html, array $c): string {
     return $html;
 }
 
+
+/* ==========================================================================
+   Funnel /plan/ und /plan/danke/
+   ========================================================================== */
+function rs_render_plan(string $html, array $c, bool $danke): string {
+    $F = $c['funnel'];
+    $html = rs_render_page($html, $c);
+    $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms-pl="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($F) {
+        $v = $F[$m[3]] ?? null;
+        return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
+    }, $html);
+    $li = fn(array $l) => implode('', array_map(fn($b) => '<li><svg><use href="#i-check"/></svg><span>' . e($b) . '</span></li>', array_filter($l, fn($b) => trim((string)$b) !== '')));
+    $html = rs_block($html, 'plbullets', $li((array)$F['bullets']));
+    if (!$danke) return $html;
+
+    $html = rs_block($html, 'ploffer', $li((array)$F['offer_bullets']));
+    $price = trim((string)$F['price']);
+    $html = rs_block($html, 'plprice', $price !== '' ? '<span class="price-k">Strategie-Begleitung mit Victoria</span><b class="price">' . e($price) . '</b>' : '');
+    if (trim((string)$F['booking_url']) !== '') $html = (string)preg_replace('~id="bookBtn" href="[^"]*"~', 'id="bookBtn" href="' . e($F['booking_url']) . '" target="_blank" rel="noopener"', $html, 1);
+    $s = rs_funnel_find((string)($_GET['t'] ?? ''));
+    if ($s && $s['confirmed'] && !$s['unsub']) {
+        $html = (string)preg_replace('~id="planDl" href="[^"]*"~', 'id="planDl" href="' . e(rs_funnel_links($s)['pdf']) . '"', $html, 1);
+        $first = explode(' ', $s['name'])[0];
+        $html = (string)preg_replace_callback('~(<h1 class="reveal d1" data-cms-pl="danke_title">)(.*?)(</h1>)~s', fn($m) => $m[1] . (preg_match('/[!.]$/u', $m[2]) ? rtrim($m[2], '!.') . ', ' . e($first) . '!' : $m[2]) . $m[3], $html, 1);
+    } else {
+        $html = rs_block($html, 'pldl', '<span class="done-ic"><svg><use href="#i-mail"/></svg></span><h1>Fast geschafft!</h1><p class="lead">Bitte bestätige zuerst deine E-Mail-Adresse über den Link in unserer Mail – dann kannst du den Plan hier herunterladen.</p><div class="hero-actions"><a class="btn btn-primary" href="' . e(rs_url('plan/')) . '">Plan anfordern</a></div>');
+    }
+    return $html;
+}
 
 /* ==========================================================================
    Über mich /ueber-mich/

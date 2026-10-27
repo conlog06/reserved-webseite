@@ -222,7 +222,7 @@ function rs_defaults(): array {
             'faq' => [
                 ['q' => 'Für wen ist reserved.social gedacht?', 'a' => 'Für lokale Unternehmen in Osnabrück und Umgebung wie Cafés, Restaurants, Hotels, Läden, Salons, Praxen und Handwerksbetriebe. Und für Selbstständige, die eine Personal Brand aufbauen wollen, z. B. Versicherungsberater:innen, Coaches oder Makler:innen.'],
                 ['q' => 'Muss ich selbst posten?', 'a' => 'Das entscheidest du: Du bekommst fertig geschnittene Inhalte mit Captions und Hashtags und postest selbst – oder wir übernehmen das Posten und das Community Management komplett.'],
-                ['q' => 'Kann ich Social Media auch selbst lernen?', 'a' => 'Ja. Im 1:1 Coaching zeigt dir Victoria, wie du Content erstellst und mit CapCut schneidest – mit einer monatlichen Strategie und Hilfe beim Dreh. Der Einstieg ist der kostenlose Content-Plan Starter, den du dir per Instagram-DM holen kannst.'],
+                ['q' => 'Kann ich Social Media auch selbst lernen?', 'a' => 'Ja. Im 1:1 Coaching zeigt dir Victoria, wie du Content erstellst und mit CapCut schneidest – mit einer monatlichen Strategie und Hilfe beim Dreh. Der Einstieg ist der kostenlose Content-Plan Starter, den du dir hier auf der Seite herunterladen kannst.'],
                 ['q' => 'Wer kommt ins Bild?', 'a' => 'Wer aus deinem Team Lust hat, ist herzlich willkommen – echte Menschen wirken am besten. Kund:innen kommen nur mit ihrem Einverständnis ins Bild.'],
                 ['q' => 'Wie lange dauert ein Drehtermin?', 'a' => 'Ca. 2–4 Stunden. Am besten drehen wir zu einer ruhigen Zeit. Den Zeitplan bekommst du vorab.'],
                 ['q' => 'Darf ich die Inhalte auch auf meiner Website nutzen?', 'a' => 'Ja, alle Inhalte darfst du auf deinen eigenen Kanälen nutzen: Instagram, TikTok und Website. Für Werbeanzeigen, Print oder die Weitergabe an Dritte sprich uns bitte vorher an.'],
@@ -235,6 +235,26 @@ function rs_defaults(): array {
             'imp_address' => "c/o IP-Management #6193\nLudwig-Erhard-Straße 18\n20459 Hamburg",
             'imp_ustid' => 'DE358083332',
             'datenschutz' => '',
+        ],
+        'funnel' => [
+            'on' => true,
+            'title' => 'Content-Plan Starter',
+            'kicker' => 'Kostenloser Download',
+            'headline' => 'Dein Content-Plan', 'script' => 'zum Selberdrehen.',
+            'lead' => 'Der Plan, mit dem du deine Social-Media-Strategie selbst aufstellst: Ziele, Ideen und ein klarer Rhythmus – als PDF, direkt in dein Postfach.',
+            'bullets' => ['Deine Ziele und Zielgruppe in 15 Minuten klar', 'Ideen für Reels, die zu deinem Unternehmen passen', 'Ein Rhythmus, den du wirklich durchhältst'],
+            'button' => 'Jetzt kostenlos sichern',
+            'consent' => 'Ja, schick mir den Content-Plan Starter und gelegentlich Social-Media-Tipps von reserved.social per E-Mail. Abmelden geht jederzeit mit einem Klick.',
+            'danke_title' => 'Dein Plan ist da!',
+            'danke_text' => 'Viel Spaß beim Umsetzen. Den Download-Link hast du außerdem per E-Mail bekommen.',
+            'offer_title' => 'Lieber nicht allein planen?',
+            'offer_text' => 'Victoria plant deine Strategie jeden Monat mit dir: Ziele, Ideen und Auswertung – und hilft dir beim Dreh und Schneiden.',
+            'offer_bullets' => ['Monatlicher Strategie-Call mit Victoria', 'Feedback zu deinen Reels', 'Hilfe beim Dreh und Schneiden mit CapCut'],
+            'price' => '',
+            'booking_url' => '',
+            'booking_label' => 'Strategie-Call buchen',
+            'notify' => false,
+            'nl_tool' => 'none', 'nl_key' => '', 'nl_list' => '',
         ],
         'ig' => [
             'on' => true,
@@ -294,7 +314,7 @@ function rs_config(): array {
     foreach (['pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.'] as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
     if (($c['site']['sv_note'] ?? '') === 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.') $c['site']['sv_note'] = $d['site']['sv_note'];
     if (($c['site']['pk_lead'] ?? '') === 'Keine starren Pakete: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst – zugeschnitten auf dich und dein Unternehmen.') $c['site']['pk_lead'] = $d['site']['pk_lead'];
-    foreach ((array)($c['site']['faq'] ?? []) as $i => $f) foreach ($d['site']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && (str_contains((string)$f['a'], 'Strategie-Plan, den du') || str_starts_with((string)$f['a'], 'Das hängt davon ab, was du brauchst.'))) $c['site']['faq'][$i]['a'] = $df['a'];
+    foreach ((array)($c['site']['faq'] ?? []) as $i => $f) foreach ($d['site']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && ((str_contains((string)$f['a'], 'Strategie-Plan, den du') || str_contains((string)$f['a'], 'per Instagram-DM holen kannst')) || str_starts_with((string)$f['a'], 'Das hängt davon ab, was du brauchst.'))) $c['site']['faq'][$i]['a'] = $df['a'];
     if (($c['site']['whatsapp'] ?? '') === '0176 22876980' && empty($c['site']['wa_set'])) $c['site']['whatsapp'] = '';
     if (($c['check']['text'] ?? '') === 'Kurzer Fit-Check – dauert etwa eine Minute. Danach weißt du, welches Paket zu dir passt. Bereit?') $c['check']['text'] = $d['check']['text'];
     foreach ((array)($c['site']['faq'] ?? []) as $i => $f) if (str_starts_with((string)($f['a'] ?? ''), 'Im Starter- und Standard-Paket')) $c['site']['faq'][$i]['a'] = $d['site']['faq'][1]['a'];
@@ -475,3 +495,4 @@ require_once __DIR__ . '/stats.php';
 require_once __DIR__ . '/instagram.php';
 require_once __DIR__ . '/leads.php';
 require_once __DIR__ . '/render.php';
+require_once __DIR__ . '/funnel.php';

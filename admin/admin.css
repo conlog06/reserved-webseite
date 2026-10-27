@@ -309,3 +309,13 @@ details.tech{margin-top:18px;border-top:1px solid var(--line, #DCD5C8);padding-t
 details.tech summary{cursor:pointer;font-weight:600;font-size:.9rem;color:#6D665E}
 details.tech summary small{font-weight:400}
 details.tech .form{margin-top:12px}
+/* Funnel */
+.table-scroll{overflow-x:auto;margin:0 -4px}
+.tbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.tbl th,.tbl td{text-align:left;padding:10px 8px;border-bottom:1px solid #DCD5C8;vertical-align:middle;white-space:nowrap}
+.tbl th{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#6D665E;font-weight:600}
+.tbl td small{color:#6D665E}
+.tag.warn{background:#F6E3C9;color:#7A4B12}
+.links{display:grid;gap:8px}
+.links .lrow{display:flex;align-items:center;gap:12px}
+.links .lrow small{display:block;color:#6D665E;word-break:break-all}

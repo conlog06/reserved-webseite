@@ -12,6 +12,29 @@ header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 $out = function (array $d, int $code = 200) { http_response_code($code); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
 
+/* ---------- Links aus den Funnel-Mails (GET) ---------- */
+$a = (string)($_GET['a'] ?? '');
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && in_array($a, ['bestaetigen', 'plan', 'abmelden'], true)) {
+    $t = (string)($_GET['t'] ?? '');
+    if ($a === 'bestaetigen') {
+        $s = rs_funnel_confirm($t);
+        if (!$s) rs_funnel_page('Link ungültig', 'Dieser Bestätigungslink ist ungültig oder abgelaufen. Trag dich einfach noch einmal ein.', rs_url('plan/'), 'Zum Download');
+        rs_stats_click('plan-confirm');
+        header('Location: ' . rs_url('plan/danke/?t=' . $s['token']), true, 303); exit;
+    }
+    if ($a === 'plan') {
+        $s = rs_funnel_find($t);
+        if (!$s || !$s['confirmed']) rs_funnel_page('Download nicht möglich', 'Bitte bestätige zuerst deine E-Mail-Adresse – den Link findest du in unserer Mail.', rs_url('plan/'), 'Zurück');
+        rs_funnel_update($t, function (&$x) { $x['downloads']++; });
+        rs_stats_click('plan-download');
+        $f = rs_funnel_pdf();
+        header('Content-Type: application/pdf'); header('Content-Disposition: attachment; filename="' . rs_slug(rs_config()['funnel']['title']) . '.pdf"');
+        header('Content-Length: ' . filesize($f)); header('X-Robots-Tag: noindex'); header('Cache-Control: no-store');
+        readfile($f); exit;
+    }
+    $s = rs_funnel_unsub($t);
+    rs_funnel_page($s ? 'Du bist abgemeldet' : 'Link ungültig', $s ? 'Du bekommst keine E-Mails mehr von uns. Schade, dass du gehst – alles Gute!' : 'Dieser Abmeldelink ist ungültig.', rs_url(''), 'Zur Startseite');
+}
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') $out(['ok' => false, 'error' => 'Nur POST erlaubt.'], 405);
 // Nur Anfragen von der eigenen Seite annehmen
 $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
@@ -25,6 +48,15 @@ $a = (string)($_GET['a'] ?? '');
 if ($a === 't') {
     if (!empty(rs_config()['stats_on']) && !rs_throttled('beacon', 120, 3600)) { rs_stats_event($in); rs_hit('beacon', 3600); }
     http_response_code(204); exit;
+}
+
+if ($a === 'plan') {
+    if (!empty($in['website'])) $out(['ok' => true]);                                                     // Spam-Falle
+    if (rs_throttled('plan', 5, 3600)) $out(['ok' => false, 'error' => 'Zu viele Versuche. Bitte später erneut probieren.'], 429);
+    [$ok, $res] = rs_funnel_signup($in);
+    if (!$ok) $out(['ok' => false, 'error' => $res], 400);
+    rs_hit('plan', 3600);
+    $out(['ok' => true]);
 }
 
 if ($a === 'anfrage') {

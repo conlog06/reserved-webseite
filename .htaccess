@@ -22,6 +22,11 @@ AddType application/manifest+json .webmanifest
   # Landingpage
   RewriteRule ^angebot$ angebot/ [R=301,L]
   RewriteRule ^angebot/(index\.html?)?$ _reserved/gate.php [L,QSA]
+  # Funnel: Download & Danke-Seite
+  RewriteRule ^plan$ plan/ [R=301,L]
+  RewriteRule ^plan/(index\.html?)?$ _reserved/gate.php [L,QSA]
+  RewriteRule ^plan/danke$ plan/danke/ [R=301,L]
+  RewriteRule ^plan/danke/(index\.html?)?$ _reserved/gate.php [L,QSA]
   # Über mich
   RewriteRule ^ueber-mich$ ueber-mich/ [R=301,L]
   RewriteRule ^ueber-mich/(index\.html?)?$ _reserved/gate.php [L,QSA]

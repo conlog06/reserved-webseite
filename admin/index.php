@@ -14,7 +14,7 @@ header('Referrer-Policy: same-origin');
 rs_session();
 $c = rs_config();
 $self = (string)strtok($_SERVER['REQUEST_URI'] ?? '', '?');
-$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'seiten' => 'Seiten', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
+$tabs = ['start' => 'Übersicht', 'anfragen' => 'Anfragen', 'statistik' => 'Statistik', 'inhalte' => 'Inhalte', 'seiten' => 'Seiten', 'funnel' => 'Funnel', 'instagram' => 'Instagram', 'einstellungen' => 'Einstellungen'];
 $tab = isset($tabs[$_GET['tab'] ?? '']) ? $_GET['tab'] : 'start';
 
 function flash(string $t, string $type = 'ok'): void { $_SESSION['rs_flash'] = [$t, $type]; }
@@ -315,6 +315,52 @@ if ($post) {
             $S['instagram'] = ltrim(rs_cut((string)($_POST['instagram'] ?? ''), 60), '@') ?: $S['instagram'];
             foreach (['imp_name' => 80, 'imp_business' => 120, 'imp_address' => 300, 'imp_ustid' => 30, 'datenschutz' => 20000] as $k => $max) $S[$k] = $str($k, $max);
             rs_save_config($c); flash('Einstellungen gespeichert.'); back();
+        /* ----- Funnel ----- */
+        case 'funnel':
+            $F = &$c['funnel'];
+            $F['on'] = !empty($_POST['fu_on']); $F['notify'] = !empty($_POST['fu_notify']);
+            foreach (['title' => 60, 'kicker' => 40, 'headline' => 80, 'script' => 40, 'lead' => 400, 'button' => 40, 'consent' => 300, 'danke_title' => 80, 'danke_text' => 300,
+                      'offer_title' => 90, 'offer_text' => 400, 'price' => 40, 'booking_label' => 40] as $k => $max) { $v = $str('fu_' . $k, $max); if ($v !== '' || in_array($k, ['price'], true)) $F[$k] = $v; }
+            $u = trim($str('fu_booking_url', 300)); $F['booking_url'] = preg_match('~^https://~i', $u) ? $u : '';
+            foreach (['bullets', 'offer_bullets'] as $k) $F[$k] = array_slice(array_values(array_filter(array_map(fn($b) => rs_cut($b, 120), explode("\n", $str('fu_' . $k, 1000))), fn($b) => $b !== '')), 0, 6);
+            rs_save_config($c); flash('Funnel gespeichert.'); back('#einstellungen');
+        case 'funnel_nl':
+            $F = &$c['funnel'];
+            $F['nl_tool'] = in_array($_POST['nl_tool'] ?? '', ['none', 'brevo', 'mailerlite'], true) ? $_POST['nl_tool'] : 'none';
+            $k = trim($str('nl_key', 400)); if ($k !== '' && !str_starts_with($k, '••')) $F['nl_key'] = $k;
+            if (!empty($_POST['nl_key_del'])) $F['nl_key'] = '';
+            $F['nl_list'] = $str('nl_list', 80);
+            rs_save_config($c);
+            if (!empty($_POST['nl_sync']) && $F['nl_tool'] !== 'none' && $F['nl_key'] !== '') {
+                $ok = 0; $bad = '';
+                foreach (rs_funnel_subs() as $x) if ($x['confirmed'] && !$x['unsub']) { $r = rs_nl_push($x); if (str_contains($r, '✓')) $ok++; else $bad = $r; }
+                flash("Gespeichert – $ok Adressen übertragen." . ($bad ? " Fehler: $bad" : ''), $bad ? 'error' : 'ok'); back('#newsletter');
+            }
+            flash('Newsletter-Einstellungen gespeichert.'); back('#newsletter');
+        case 'funnel_pdf':
+            $up = $_FILES['file'] ?? null;
+            if (!$up || ($up['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file($up['tmp_name'])) { flash('Upload fehlgeschlagen – bitte eine PDF-Datei wählen (max. 20 MB).', 'error'); back('#pdf'); }
+            $head = (string)file_get_contents($up['tmp_name'], false, null, 0, 5);
+            if ($head !== '%PDF-' || $up['size'] > 20 * 1024 * 1024) { flash('Bitte eine echte PDF-Datei bis 20 MB wählen.', 'error'); back('#pdf'); }
+            if (!@move_uploaded_file($up['tmp_name'], RS_DATA . '/plan.pdf')) { flash('PDF konnte nicht gespeichert werden.', 'error'); back('#pdf'); }
+            @chmod(RS_DATA . '/plan.pdf', 0640); flash('PDF hochgeladen – ab sofort wird es verschickt.'); back('#pdf');
+        case 'funnel_pdf_delete':
+            @unlink(RS_DATA . '/plan.pdf'); flash('Eigenes PDF entfernt – es wird wieder der Platzhalter verschickt.'); back('#pdf');
+        case 'funnel_pdf_view':
+            $f = rs_funnel_pdf(); header('Content-Type: application/pdf'); header('Content-Disposition: inline; filename="plan.pdf"'); readfile($f); exit;
+        case 'funnel_delete':
+            $id = (string)($_POST['id'] ?? '');
+            rs_locked('funnel', function () use ($id) { rs_funnel_save(array_filter(rs_funnel_subs(), fn($x) => $x['id'] !== $id)); });
+            flash('Eintrag gelöscht.'); back('#eintraege');
+        case 'funnel_export':
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="reserved-downloads-' . date('Y-m-d') . '.csv"');
+            echo "\xEF\xBB\xBFVorname;E-Mail;Eingetragen;Bestätigt;Status;Downloads;Herkunft\n";
+            foreach (rs_funnel_subs() as $x) {
+                $q = fn($v) => '"' . str_replace('"', '""', (string)$v) . '"';
+                echo implode(';', [$q($x['name']), $q($x['email']), date('d.m.Y H:i', (int)$x['ts']), $x['confirmed'] ? date('d.m.Y H:i', (int)$x['confirmed']) : '', $x['unsub'] ? 'abgemeldet' : ($x['confirmed'] ? 'bestätigt' : 'offen'), (int)$x['downloads'], $q($x['src'])]) . "\n";
+            }
+            exit;
         case 'stats':
             $c['stats_on'] = !empty($_POST['stats_on']); rs_save_config($c);
             flash($c['stats_on'] ? 'Statistik eingeschaltet.' : 'Statistik ausgeschaltet – es wird nichts mehr gezählt.'); back();
@@ -724,6 +770,90 @@ head('Admin – reserved.social', true);
         <?php if ($S['img_about']): ?><form method="post" onsubmit="return confirm('Eigenes Bild entfernen?')"><?= $hidden('image_delete') ?><button class="btn btn-small btn-danger">Entfernen</button></form><?php endif; ?></div></div>
   </section>
 
+<?php /* ======================= FUNNEL ======================= */ elseif ($tab === 'funnel'):
+  $F = $c['funnel']; $subs = array_reverse(rs_funnel_subs());
+  $conf = array_filter($subs, fn($x) => $x['confirmed'] && !$x['unsub']);
+  $dl = array_sum(array_map(fn($x) => (int)$x['downloads'], $subs));
+  $s30 = rs_stats_summary(30); $cl = $s30['c'] ?? [];
+  $planUrl = rs_abs_url('plan/'); $ownPdf = is_file(RS_DATA . '/plan.pdf');
+?>
+  <div class="page-head"><div><h1>Funnel</h1><p class="sub">Kostenloser Download → E-Mail bestätigen → Danke-Seite mit Angebot und Terminbuchung.</p></div>
+    <div class="btnrow"><a class="btn btn-ghost btn-small" href="<?= e(rs_url('plan/')) ?>" target="_blank" rel="noopener">Download-Seite ansehen ↗</a></div></div>
+  <nav class="subnav"><a href="#einstellungen">Texte & Angebot</a><a href="#pdf">PDF</a><a href="#newsletter">Newsletter</a><a href="#eintraege">Einträge</a></nav>
+  <section class="kpis k6">
+    <div class="kpi"><span>Eingetragen</span><b><?= $n(count($subs)) ?></b></div>
+    <div class="kpi"><span>Bestätigt</span><b><?= $n(count($conf)) ?></b><small><?= count($subs) ? round(count($conf) / count($subs) * 100) : 0 ?> % bestätigen</small></div>
+    <div class="kpi"><span>PDF geladen</span><b><?= $n($dl) ?></b></div>
+    <div class="kpi"><span>Termin geklickt</span><b><?= $n(($cl['book-call'] ?? 0)) ?></b><small>letzte 30 Tage</small></div>
+    <div class="kpi"><span>Erstgespräch geklickt</span><b><?= $n(($cl['book-free'] ?? 0)) ?></b><small>letzte 30 Tage</small></div>
+    <div class="kpi"><span>Status</span><b><?= $F['on'] ? 'An' : 'Aus' ?></b><small><?= $ownPdf ? 'eigenes PDF' : 'Platzhalter-PDF' ?></small></div>
+  </section>
+  <section class="card">
+    <h2>Links zum Teilen</h2>
+    <div class="links"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'instagram-story' => 'Instagram-Story', 'tiktok' => 'TikTok'] as $k => $t): $u = $planUrl . ($k ? '?utm_source=' . $k : ''); ?>
+      <div class="lrow"><span class="grow"><b><?= e($t) ?></b> <small><?= e($u) ?></small></span><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
+  </section>
+
+  <section class="card" id="einstellungen">
+    <h2>Texte &amp; Angebot</h2>
+    <form method="post" class="form"><?= $hidden('funnel') ?>
+      <label class="check"><input type="checkbox" name="fu_on" value="1"<?= $F['on'] ? ' checked' : '' ?>> Download-Seite ist online</label>
+      <fieldset><legend>Download-Seite <small>/plan/</small></legend>
+        <div class="cols"><label>Name des PDFs<input name="fu_title" value="<?= e($F['title']) ?>" maxlength="60"></label><label>Zeile oben<input name="fu_kicker" value="<?= e($F['kicker']) ?>" maxlength="40"></label></div>
+        <div class="cols"><label>Überschrift<input name="fu_headline" value="<?= e($F['headline']) ?>" maxlength="80"></label><label>Schreibschrift<input name="fu_script" value="<?= e($F['script']) ?>" maxlength="40"></label></div>
+        <label>Text<textarea name="fu_lead" rows="3" maxlength="400"><?= e($F['lead']) ?></textarea></label>
+        <label>Was drinsteckt <small>(eine Zeile pro Punkt)</small><textarea name="fu_bullets" rows="3"><?= e(implode("\n", $F['bullets'])) ?></textarea></label>
+        <div class="cols"><label>Button<input name="fu_button" value="<?= e($F['button']) ?>" maxlength="40"></label><span></span></div>
+        <label>Einwilligungstext <small>(neben dem Häkchen)</small><textarea name="fu_consent" rows="2" maxlength="300"><?= e($F['consent']) ?></textarea></label>
+      </fieldset>
+      <fieldset><legend>Danke-Seite mit Angebot <small>/plan/danke/</small></legend>
+        <div class="cols"><label>Überschrift<input name="fu_danke_title" value="<?= e($F['danke_title']) ?>" maxlength="80"></label><label>Text<input name="fu_danke_text" value="<?= e($F['danke_text']) ?>" maxlength="300"></label></div>
+        <label>Angebot – Überschrift<input name="fu_offer_title" value="<?= e($F['offer_title']) ?>" maxlength="90"></label>
+        <label>Angebot – Text<textarea name="fu_offer_text" rows="2" maxlength="400"><?= e($F['offer_text']) ?></textarea></label>
+        <label>Angebot – Punkte <small>(eine Zeile pro Punkt)</small><textarea name="fu_offer_bullets" rows="3"><?= e(implode("\n", $F['offer_bullets'])) ?></textarea></label>
+        <div class="cols"><label>Preis <small>(leer = kein Preis)</small><input name="fu_price" value="<?= e($F['price']) ?>" maxlength="40" placeholder="z. B. ab 149 € im Monat"></label><label>Text auf dem Termin-Button<input name="fu_booking_label" value="<?= e($F['booking_label']) ?>" maxlength="40"></label></div>
+        <label>Link zum Buchungskalender <small>(Calendly, Cal.com … – leer = Button führt zum Kontaktformular)</small><input name="fu_booking_url" value="<?= e($F['booking_url']) ?>" maxlength="300" placeholder="https://calendly.com/…"></label>
+        <label class="check"><input type="checkbox" name="fu_notify" value="1"<?= $F['notify'] ? ' checked' : '' ?>> Mir bei jedem neuen Download eine E-Mail schicken</label>
+      </fieldset>
+      <button class="btn">Speichern</button>
+    </form>
+  </section>
+
+  <div class="grid g-1-1">
+    <section class="card" id="pdf">
+      <h2>PDF</h2>
+      <p class="hint"><?= $ownPdf ? 'Es wird dein eigenes PDF verschickt.' : 'Noch kein eigenes PDF – verschickt wird der <b>Platzhalter</b>.' ?></p>
+      <div class="btnrow">
+        <form method="post"><?= $hidden('funnel_pdf_view') ?><button class="btn btn-ghost btn-small" formtarget="_blank">Aktuelles PDF ansehen ↗</button></form>
+        <form method="post" enctype="multipart/form-data"><?= $hidden('funnel_pdf') ?><label class="btn btn-small file-btn">Eigenes PDF hochladen<input type="file" name="file" accept="application/pdf" onchange="this.form.submit()"></label></form>
+        <?php if ($ownPdf): ?><form method="post" onsubmit="return confirm('Eigenes PDF entfernen?')"><?= $hidden('funnel_pdf_delete') ?><button class="btn btn-small btn-danger">Entfernen</button></form><?php endif; ?>
+      </div>
+    </section>
+    <section class="card" id="newsletter">
+      <h2>Newsletter-Tool <small>(optional)</small></h2>
+      <p class="hint">Bestätigte Adressen landen automatisch in deinem Newsletter-Tool – dort schreibst du die Mails. Ohne Tool sammelst du die Adressen hier und kannst sie als CSV exportieren.</p>
+      <form method="post" class="form"><?= $hidden('funnel_nl') ?>
+        <div class="cols"><label>Tool<select name="nl_tool"><?php foreach (['none' => 'Keins (nur hier sammeln)', 'brevo' => 'Brevo', 'mailerlite' => 'MailerLite'] as $k => $t): ?><option value="<?= $k ?>"<?= $F['nl_tool'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
+          <label>Listen-ID / Gruppen-ID<input name="nl_list" value="<?= e($F['nl_list']) ?>" maxlength="80" placeholder="z. B. 3"></label></div>
+        <label>API-Schlüssel<input name="nl_key" value="<?= $F['nl_key'] !== '' ? '••••••••••••' : '' ?>" autocomplete="off" spellcheck="false" onfocus="if(this.value.startsWith('••'))this.select()"></label>
+        <?php if ($F['nl_key'] !== ''): ?><label class="check"><input type="checkbox" name="nl_key_del" value="1"> Schlüssel entfernen</label><?php endif; ?>
+        <label class="check"><input type="checkbox" name="nl_sync" value="1"> Beim Speichern alle bestätigten Adressen übertragen</label>
+        <button class="btn btn-ghost btn-small">Speichern</button>
+      </form>
+    </section>
+  </div>
+
+  <section class="card" id="eintraege">
+    <div class="card-h"><h2>Einträge <small>(<?= count($subs) ?>)</small></h2><?php if ($subs): ?><form method="post"><?= $hidden('funnel_export') ?><button class="btn btn-ghost btn-small">CSV exportieren</button></form><?php endif; ?></div>
+    <?php if (!$subs): ?><p class="empty">Noch keine Einträge. Teile den Link zur Download-Seite, z. B. in der Instagram-Bio.</p>
+    <?php else: ?><div class="table-scroll"><table class="tbl"><thead><tr><th>Name</th><th>E-Mail</th><th>Eingetragen</th><th>Status</th><th>PDF</th><th>Newsletter</th><th></th></tr></thead><tbody>
+      <?php foreach ($subs as $x): $stt = $x['unsub'] ? ['abgemeldet', ''] : ($x['confirmed'] ? ['bestätigt', 'on'] : ['offen', 'warn']); ?>
+      <tr><td><?= e($x['name']) ?></td><td><a href="mailto:<?= e($x['email']) ?>"><?= e($x['email']) ?></a></td><td><?= e(date('d.m.Y', (int)$x['ts'])) ?> <small><?= e($x['src']) ?></small></td>
+        <td><span class="tag <?= $stt[1] ?>"><?= $stt[0] ?></span></td><td><?= (int)$x['downloads'] ?>×</td><td><small><?= e($x['nl'] ?: '–') ?></small></td>
+        <td><form method="post" onsubmit="return confirm('Eintrag löschen?')"><?= $hidden('funnel_delete') ?><input type="hidden" name="id" value="<?= e($x['id']) ?>"><button class="x" aria-label="Löschen">✕</button></form></td></tr>
+      <?php endforeach; ?></tbody></table></div><?php endif; ?>
+  </section>
+
 <?php /* ======================= INSTAGRAM ======================= */ elseif ($tab === 'instagram'):
   $ig = $c['ig']; $connected = $ig['token'] !== ''; $P = $igData['profile'] ?? null;
   $daysLeft = $ig['token_expires'] ? (int)floor(($ig['token_expires'] - time()) / 86400) : null;
@@ -984,7 +1114,7 @@ function spark(array $vals): string {
 function icon(string $k): string {
     $p = ['start' => '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>', 'anfragen' => '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/>',
           'statistik' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', 'inhalte' => '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
-          'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/>', 'seiten' => '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/><path d="m10 13 2 2 4-4"/>', 'einstellungen' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'][$k] ?? '';
+          'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/>', 'seiten' => '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/><path d="m10 13 2 2 4-4"/>', 'funnel' => '<path d="M3 4h18l-7 8v6l-4 2v-8z"/>', 'einstellungen' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'][$k] ?? '';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
 function render_auth(string $type, ?string $error): void {

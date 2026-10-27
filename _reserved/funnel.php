@@ -1,0 +1,159 @@
+<?php
+/* ==========================================================================
+   reserved.social – Funnel „Content-Plan Starter“
+   1. /plan/          Name + E-Mail eintragen (Einwilligung)
+   2. Bestätigungsmail (Double-Opt-in, Pflicht in Deutschland)
+   3. /plan/danke/    Download + Angebot „Strategie jeden Monat mit Victoria“
+                      + Termin buchen / kostenloses Erstgespräch
+   4. Adressen im Admin (Export) und optional automatisch im Newsletter-Tool
+   ========================================================================== */
+declare(strict_types=1);
+
+function rs_funnel_subs(): array { return rs_read('funnel', []); }
+function rs_funnel_save(array $subs): void { rs_write('funnel', array_values($subs)); }
+
+/** Wo liegt das PDF? Eigenes aus dem Admin, sonst der Platzhalter. */
+function rs_funnel_pdf(): string {
+    $own = RS_DATA . '/plan.pdf';
+    return is_file($own) ? $own : rs_root() . '/_reserved/plan-platzhalter.pdf';
+}
+function rs_funnel_find(string $token): ?array {
+    if (!preg_match('/^[a-f0-9]{32}$/', $token)) return null;
+    foreach (rs_funnel_subs() as $s) if (hash_equals($s['token'], $token)) return $s;
+    return null;
+}
+function rs_funnel_update(string $token, callable $fn): ?array {
+    return rs_locked('funnel', function () use ($token, $fn) {
+        $subs = rs_funnel_subs(); $hit = null;
+        foreach ($subs as &$s) if (hash_equals($s['token'], $token)) { $fn($s); $hit = $s; }
+        unset($s);
+        if ($hit) rs_funnel_save($subs);
+        return $hit;
+    });
+}
+function rs_funnel_links(array $s): array {
+    return [
+        'confirm' => rs_abs_url('_reserved/api.php?a=bestaetigen&t=' . $s['token']),
+        'danke' => rs_abs_url('plan/danke/?t=' . $s['token']),
+        'pdf' => rs_abs_url('_reserved/api.php?a=plan&t=' . $s['token']),
+        'unsub' => rs_abs_url('_reserved/api.php?a=abmelden&t=' . $s['token']),
+    ];
+}
+
+/** Eintragen: legt einen (noch unbestätigten) Eintrag an und schickt die Bestätigungsmail. */
+function rs_funnel_signup(array $in): array {
+    $c = rs_config(); $F = $c['funnel'];
+    if (empty($F['on'])) return [false, 'Der Download ist gerade nicht verfügbar.'];
+    $name = str_replace(["\r", "\n"], ' ', rs_cut(strip_tags((string)($in['name'] ?? '')), 80));
+    $email = rs_cut((string)($in['email'] ?? ''), 200);
+    if ($name === '') return [false, 'Wie heißt du?'];
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return [false, 'Bitte gib eine gültige E-Mail-Adresse an.'];
+    if (empty($in['consent'])) return [false, 'Bitte bestätige noch die Einwilligung.'];
+    $src = rs_cut((string)preg_replace('/[^\w.\-: \/]/u', '', (string)($in['src'] ?? '')), 60) ?: 'direkt';
+
+    $sub = rs_locked('funnel', function () use ($name, $email, $src) {
+        $subs = rs_funnel_subs();
+        foreach ($subs as &$s) if (strcasecmp($s['email'], $email) === 0) {
+            $s['name'] = $name; $s['asked'] = time(); $s['unsub'] = 0; $hit = $s; unset($s); rs_funnel_save($subs); return $hit;
+        }
+        unset($s);
+        $new = ['id' => bin2hex(random_bytes(6)), 'token' => bin2hex(random_bytes(16)), 'name' => $name, 'email' => $email, 'src' => $src,
+                'ts' => time(), 'asked' => time(), 'confirmed' => 0, 'downloads' => 0, 'unsub' => 0, 'nl' => ''];
+        $subs[] = $new; rs_funnel_save($subs);
+        return $new;
+    });
+    $L = rs_funnel_links($sub);
+    $first = explode(' ', $sub['name'])[0];
+    $text = "Hallo $first,\n\nschön, dass du dir den {$F['title']} holen möchtest!\n\n"
+          . "Bitte bestätige kurz deine E-Mail-Adresse – danach kannst du den Plan sofort herunterladen:\n\n{$L['confirm']}\n\n"
+          . "Du hast dich nicht eingetragen? Dann ignoriere diese Mail einfach – es passiert nichts weiter.\n\n"
+          . "Liebe Grüße\nVictoria\nreserved.social – Social Media für lokale Unternehmen\n";
+    rs_mail($sub['email'], 'Bitte bestätigen: dein ' . $F['title'], $text);
+    rs_stats_click('plan-signup');
+    return [true, $sub];
+}
+
+/** Bestätigen: Eintrag freischalten, Download-Mail schicken, ans Newsletter-Tool übergeben. */
+function rs_funnel_confirm(string $token): ?array {
+    $first = false;
+    $s = rs_funnel_update($token, function (&$s) use (&$first) { if (!$s['confirmed']) { $s['confirmed'] = time(); $first = true; } $s['unsub'] = 0; });
+    if (!$s) return null;
+    if ($first) {
+        $c = rs_config(); $F = $c['funnel']; $L = rs_funnel_links($s);
+        $fn = explode(' ', $s['name'])[0];
+        $text = "Hallo $fn,\n\nhier ist dein {$F['title']}:\n\n{$L['pdf']}\n\n"
+              . ($F['offer_title'] !== '' ? $F['offer_title'] . "\n" . rs_plain($F['offer_text']) . "\n\n" : '')
+              . ($F['booking_url'] !== '' ? "Termin direkt buchen: {$F['booking_url']}\n\n" : "Kostenloses Erstgespräch anfragen: " . rs_abs_url('#kontakt') . "\n\n")
+              . "Viel Spaß beim Umsetzen!\nVictoria\nreserved.social\n\n—\nKeine Mails mehr von uns? Hier abmelden: {$L['unsub']}\n";
+        rs_mail($s['email'], 'Dein ' . $F['title'] . ' ist da', $text);
+        if (!empty($F['notify'])) rs_mail($c['site']['email'], 'Neuer Download: ' . $s['name'], "{$s['name']} <{$s['email']}> hat den {$F['title']} heruntergeladen (über {$s['src']}).\n\nAlle Einträge: " . rs_abs_url('admin/?tab=funnel') . "\n");
+        $nl = rs_nl_push($s);
+        rs_funnel_update($token, function (&$x) use ($nl) { $x['nl'] = $nl; });
+    }
+    return $s;
+}
+function rs_plain(string $s): string { return trim((string)preg_replace('/\*\*(.+?)\*\*/', '$1', $s)); }
+
+function rs_funnel_unsub(string $token): ?array {
+    $s = rs_funnel_update($token, function (&$s) { $s['unsub'] = time(); });
+    if ($s) rs_nl_remove($s);
+    return $s;
+}
+
+/* ---------- Newsletter-Tools (optional) ---------- */
+function rs_nl_request(string $method, string $url, array $headers, ?array $body = null): array {
+    $json = $body !== null ? json_encode($body, JSON_UNESCAPED_UNICODE) : null;
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_CUSTOMREQUEST => $method, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 12,
+            CURLOPT_HTTPHEADER => array_merge($headers, ['Content-Type: application/json', 'Accept: application/json'])] + ($json !== null ? [CURLOPT_POSTFIELDS => $json] : []));
+        $res = (string)curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+        return [$code, $res];
+    }
+    $ctx = stream_context_create(['http' => ['method' => $method, 'timeout' => 12, 'ignore_errors' => true,
+        'header' => implode("\r\n", array_merge($headers, ['Content-Type: application/json', 'Accept: application/json'])), 'content' => $json ?? '']]);
+    $res = (string)@file_get_contents($url, false, $ctx);
+    $code = isset($http_response_header[0]) && preg_match('~\s(\d{3})\s~', $http_response_header[0], $m) ? (int)$m[1] : 0;
+    return [$code, $res];
+}
+/** Gibt eine kurze Statusangabe zurück, z. B. "Brevo ✓" oder "Brevo: Fehler 401". */
+function rs_nl_push(array $s): string {
+    $F = rs_config()['funnel']; $tool = $F['nl_tool'] ?? 'none'; $key = trim((string)($F['nl_key'] ?? '')); $list = trim((string)($F['nl_list'] ?? ''));
+    if ($tool === 'none' || $key === '') return '';
+    $first = explode(' ', $s['name'])[0];
+    if ($tool === 'brevo') {
+        $body = ['email' => $s['email'], 'attributes' => ['FIRSTNAME' => $first], 'updateEnabled' => true];
+        if (ctype_digit($list)) $body['listIds'] = [(int)$list];
+        [$code] = rs_nl_request('POST', 'https://api.brevo.com/v3/contacts', ['api-key: ' . $key], $body);
+        return $code >= 200 && $code < 300 ? 'Brevo ✓' : 'Brevo: Fehler ' . $code;
+    }
+    if ($tool === 'mailerlite') {
+        $body = ['email' => $s['email'], 'fields' => ['name' => $first]];
+        if ($list !== '') $body['groups'] = [$list];
+        [$code] = rs_nl_request('POST', 'https://connect.mailerlite.com/api/subscribers', ['Authorization: Bearer ' . $key], $body);
+        return $code >= 200 && $code < 300 ? 'MailerLite ✓' : 'MailerLite: Fehler ' . $code;
+    }
+    return '';
+}
+function rs_nl_remove(array $s): void {
+    $F = rs_config()['funnel']; $tool = $F['nl_tool'] ?? 'none'; $key = trim((string)($F['nl_key'] ?? ''));
+    if ($tool === 'none' || $key === '') return;
+    if ($tool === 'brevo') rs_nl_request('PUT', 'https://api.brevo.com/v3/contacts/' . rawurlencode($s['email']), ['api-key: ' . $key], ['emailBlacklisted' => true]);
+    if ($tool === 'mailerlite') rs_nl_request('PUT', 'https://connect.mailerlite.com/api/subscribers/' . rawurlencode($s['email']), ['Authorization: Bearer ' . $key], ['status' => 'unsubscribed']);
+}
+
+/** Klick zählen (für Zahlen im Admin), unabhängig vom Browser-Signal */
+function rs_stats_click(string $k): void {
+    if (empty(rs_config()['stats_on'])) return;
+    rs_stats_event(['c' => [$k], 's' => [], 'd' => 0]);
+}
+
+/** Einfache Seite für Links aus Mails (abmelden, ungültig) */
+function rs_funnel_page(string $title, string $text, string $link = '', string $linkText = ''): void {
+    header('Content-Type: text/html; charset=utf-8'); header('X-Robots-Tag: noindex');
+    $css = rs_url('assets/css/style.css');
+    echo '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>' . e($title) . ' – reserved.social</title>'
+       . '<link rel="stylesheet" href="' . e($css) . '"><meta name="robots" content="noindex"></head><body class="plan-msg"><main><a class="logo" href="' . e(rs_url('')) . '">reserved<span>.social</span></a>'
+       . '<h1>' . e($title) . '</h1><p class="lead">' . e($text) . '</p>' . ($link ? '<a class="btn btn-primary" href="' . e($link) . '">' . e($linkText) . '</a>' : '') . '</main></body></html>';
+    exit;
+}

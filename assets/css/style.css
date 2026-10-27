@@ -1263,3 +1263,87 @@ textarea.fc-in{resize:vertical;min-height:110px;font-size:1.15rem}
 .founder u{text-decoration:none;font-weight:600;color:var(--terra-ink)}
 @media (hover:hover){.founder:hover{border-color:var(--terra-ink);background:var(--paper)}}
 @media (max-width:720px){.founder{border-radius:20px;align-items:flex-start;padding:10px 14px 10px 10px}.founder b{font-size:1.08rem}}
+
+/* ==========================================================
+   Funnel: /plan/ und /plan/danke/
+   ========================================================== */
+.plan-body .vi-nav .nav-cta{display:inline-flex!important}
+.plan-hero{padding:calc(clamp(110px,13vw,150px) + var(--safe-t)) 0 clamp(60px,8vw,110px)}
+.plan-hero .reveal{opacity:1;transform:none}
+.plan-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(36px,6vw,90px);align-items:center}
+.plan-copy h1{font-size:clamp(2.6rem,5.6vw,4.8rem);line-height:.98;letter-spacing:-.02em;margin:24px 0 0}
+.plan-copy h1 .script{display:block;font-size:1.08em;line-height:1.1;margin-top:.06em}
+.plan-copy .lead{margin-top:24px}
+.plan-bullets{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:10px}
+.plan-bullets li{display:flex;gap:12px;align-items:flex-start}
+.plan-bullets svg{width:22px;height:22px;flex-shrink:0;padding:4px;border-radius:50%;background:var(--terra-ink);color:var(--creme);margin-top:1px}
+.plan-side{position:relative}
+.plan-book{position:absolute;right:-6%;top:-14%;width:min(210px,40%);aspect-ratio:1/1.414;display:flex;flex-direction:column;padding:16px 14px;border-radius:6px 12px 12px 6px;background:var(--creme);border:1px solid var(--linie);box-shadow:0 30px 60px -30px rgba(43,38,34,.55),inset 6px 0 0 var(--sand);transform:rotate(6deg);z-index:0}
+.pb-brand{font-family:var(--serif);font-size:.85rem;font-weight:600}
+.pb-brand i{font-style:normal;color:var(--terra)}
+.pb-k{margin-top:auto;font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--terra-ink)}
+.plan-book b{font-family:var(--serif);font-weight:500;font-size:1.45rem;line-height:1;margin-top:6px}
+.pb-script{font-family:var(--script);color:var(--terra);font-size:1.3rem;line-height:1.1}
+.pb-lines{display:grid;gap:5px;margin-top:14px}
+.pb-lines i{height:2px;background:var(--linie);border-radius:2px}
+.pb-lines i:nth-child(2){width:80%}.pb-lines i:nth-child(4){width:60%}
+.plan-form{position:relative;z-index:1;background:var(--kohle);color:var(--creme);border-radius:26px;padding:clamp(22px,3.4vw,38px);box-shadow:0 40px 70px -40px rgba(43,38,34,.6);margin-top:clamp(40px,6vw,70px)}
+.plan-form h2{font-size:clamp(1.8rem,2.6vw,2.3rem);line-height:1.05;margin-bottom:6px}
+.pf-field{display:flex;flex-direction:column;gap:6px;margin-top:18px}
+.pf-field label{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(244,241,234,.66)}
+.pf-field input{width:100%;background:transparent;border:0;border-bottom:1px solid rgba(244,241,234,.28);color:var(--creme);font:400 16px/1.4 var(--sans);padding:10px 0;border-radius:0;-webkit-appearance:none;appearance:none}
+.pf-field input:focus{outline:0;border-color:var(--terra-hell)}
+.pf-field input:-webkit-autofill{-webkit-text-fill-color:var(--creme);-webkit-box-shadow:0 0 0 40px var(--kohle) inset}
+.plan-form .consent{margin-top:20px}
+.plan-form .btn{width:100%;margin-top:22px}
+.pf-error{margin-top:14px;padding:10px 12px;border-radius:10px;background:rgba(217,138,115,.15);color:#F2C6B8;font-size:.9rem}
+.pf-note{margin-top:12px;text-align:center;font-size:.8rem;color:rgba(244,241,234,.6)}
+.pf-done{text-align:center;padding:16px 0 6px;outline:0;animation:fadeUp .5s var(--ease)}
+.pf-done h2{margin:6px 0 10px}
+.pf-done p{color:rgba(244,241,234,.8)}
+.pf-done small{display:block;margin-top:12px;color:rgba(244,241,234,.6)}
+.plan-copy .founder{margin-top:34px}
+.plan-danke .done-ic{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--terra-ink);color:var(--creme);margin:0 0 6px}
+.plan-danke .done-ic svg{width:28px;height:28px}
+.plan-danke .plan-book{position:relative;right:auto;top:auto;width:min(280px,70%);margin:0 auto;transform:rotate(4deg)}
+.plan-danke .plan-book b{font-size:2rem}.plan-danke .pb-script{font-size:1.8rem}
+.plan-offer{background:var(--sand)}
+.offer-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(30px,6vw,80px);align-items:center}
+.offer-wrap h2{margin:20px 0 18px}
+.offer-box{display:flex;flex-direction:column;gap:12px;padding:clamp(24px,3.4vw,40px);border-radius:24px;background:var(--paper);border:1px solid var(--linie)}
+.price-k{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:650;color:var(--terra-ink)}
+.price{font-family:var(--serif);font-size:clamp(2.4rem,4vw,3.2rem);font-weight:500;line-height:1;margin-bottom:8px}
+.offer-box .btn{width:100%}
+.offer-note{text-align:center;font-size:.84rem;color:var(--warmgrau)}
+.offer-box .founder{margin-top:8px;border-radius:18px}
+/* einfache Meldeseiten (Abmelden, ungültiger Link) */
+.plan-msg main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:40px 20px}
+.plan-msg h1{font-size:clamp(2.4rem,6vw,3.6rem)}
+@media (max-width:1020px){.plan-grid,.offer-wrap{grid-template-columns:1fr}.plan-book{right:2%;top:-10%;width:150px}}
+@media (max-width:720px){
+  .plan-form{border-radius:22px;margin-inline:calc(var(--pad-l) * -1 + 8px) calc(var(--pad-r) * -1 + 8px)}
+  .plan-book{width:120px;top:-6%}
+  .plan-book b{font-size:1.1rem}.pb-script{font-size:1rem}
+  .plan-copy .founder{border-radius:20px}
+}
+/* Funnel: Reihenfolge (Handy: Formular direkt nach den Vorteilen) und Buch-Vorschau */
+.plan-body .plan-grid{grid-template-areas:"copy side" "founder side";row-gap:0}
+.plan-copy{grid-area:copy}.plan-side{grid-area:side}.plan-founder{grid-area:founder;align-self:start}
+.plan-founder .founder{margin-top:30px}
+.plan-danke.plan-hero .plan-grid{grid-template-areas:"copy side"}
+.plan-book{left:auto;right:-2%;top:-2%;width:min(200px,42%);transform:rotate(7deg)}
+.plan-book .pb-k{margin-top:26px}
+.plan-book .pb-lines{margin-top:auto}
+.plan-hero:not(.plan-danke) .plan-form{margin-top:150px}
+@media (max-width:1020px){
+  .plan-body .plan-grid{grid-template-areas:"copy" "side" "founder"}
+  .plan-danke.plan-hero .plan-grid{grid-template-areas:"copy" "side"}
+  .plan-book{right:4%;top:0;width:150px}
+  .plan-hero:not(.plan-danke) .plan-form{margin-top:120px}
+}
+@media (max-width:720px){
+  .plan-book{width:118px}
+  .plan-hero:not(.plan-danke) .plan-form{margin-top:96px}
+  .plan-danke .plan-book{width:180px}
+}
+.pb-brand i,.pb-script{color:var(--terra-ink)}

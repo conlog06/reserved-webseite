@@ -35,6 +35,12 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - **Reel-Statistiken:** echte Zahlen (Aufrufe, Likes, Geteilt) zu Reels für bekannte Kund:innen – der Abschnitt erscheint erst, wenn im Admin Einträge stehen.
 - **Wartung:** Hinweisseite (HTTP 503).
 
+**Funnel „Content-Plan Starter“ (Admin → Funnel)**
+- `/plan/`: kostenloser PDF-Download gegen Name + E-Mail (Einwilligung, Spam-Schutz, Herkunft per `utm_source`).
+- Double-Opt-in: Bestätigungsmail → nach dem Klick `/plan/danke/` mit Download, Angebot „Strategie jeden Monat mit Victoria – ab … €“, Termin-Button (Calendly/Cal.com-Link) und kostenlosem Erstgespräch. Zusätzlich Mail mit Download-Link und Abmeldelink.
+- Admin: alle Texte, Preis, Buchungslink, eigenes PDF hochladen (sonst Platzhalter), Einträge mit Status + CSV-Export, Zahlen (eingetragen, bestätigt, geladen, Termin geklickt), Links zum Teilen.
+- Optional: bestätigte Adressen automatisch an **Brevo** oder **MailerLite** übergeben (API-Schlüssel + Liste im Admin), Abmeldung wird mit übertragen.
+
 ## Einrichtung (einmalig)
 1. Alle Dateien per FTP/SFTP in das Web-Verzeichnis hochladen – **inklusive der versteckten `.htaccess`-Dateien**. PHP auf 8.1 oder neuer stellen.
 2. Schreibrechte für `_reserved/data/`, `assets/ig/` und `assets/img/` (bei IONOS Standard).
