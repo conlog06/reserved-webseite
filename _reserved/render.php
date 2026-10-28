@@ -35,6 +35,7 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $handle = $S['instagram'] ?: 'reserved.social';
 
     $html = (string)preg_replace('~<html\b~i', '<html data-cms-live data-api="' . e(rs_url('_reserved/api.php')) . '"', $html, 1);
+    if (!empty($c['ig']['section'])) $html = (string)preg_replace('~(<[a-z]+\b[^>]*\bdata-feed)\s+hidden~i', '$1', $html);
     if (empty($c['ugc']['on'])) for ($i = 0; $i < 4 && str_contains($html, '<!--cms:ugclink-->'); $i++) $html = rs_block($html, 'ugclink', '');
 
     /* Einzelne Texte */

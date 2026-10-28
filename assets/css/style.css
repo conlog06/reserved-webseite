@@ -1627,3 +1627,10 @@ textarea.fc-in{resize:vertical;min-height:110px;font-size:1.15rem}
 @media (max-width:1020px){.ug-end-box{grid-template-columns:1fr}}
 @media (max-width:640px){.mf-k{flex:0 0 52px}.mf-row{gap:0 10px}.mf-row input{flex:1 1 0}.mf-row input+input{flex:0 0 calc(100% - 62px);margin-left:62px;border-left:0;padding-left:0;border-top:1px solid var(--linie)}.mf-in{padding:4px 14px 14px}.mf-to small{display:none}}
 .ug-end-box .ug-mail{font-size:clamp(1.1rem,1.9vw,1.5rem);overflow-wrap:anywhere}
+
+/* Menü-Nummern automatisch (ausgeblendete Punkte werden übersprungen) */
+.mm-links{counter-reset:mm}
+.mm-links li:not([hidden]){counter-increment:mm}
+.mm-links li[hidden]{display:none}
+.mm-i::before{content:counter(mm,decimal-leading-zero)}
+[data-feed][hidden]{display:none!important}

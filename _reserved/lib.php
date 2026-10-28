@@ -158,7 +158,7 @@ function rs_defaults(): array {
             'sv_note' => 'Vor der Kamera stehst normalerweise du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.',
             'vg_title' => 'Wir kommen nicht aus deiner Branche.', 'vg_script' => 'Zum Glück.',
             'vg_lead' => 'Das ist Absicht. Wir fragen wie Laien und erklären dein Angebot so, dass deine Kunden es verstehen. Branchenagenturen produzieren oft für Kollegen.',
-            'pk_lead' => 'Keine starren Pakete, keine Preisliste: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst. Die Preise richten sich individuell nach deinen Wünschen.',
+            'pk_lead' => 'Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst. Die Preise richten sich individuell nach deinen Wünschen.',
             'bar_on' => false, 'bar_text' => '', 'bar_link_text' => '', 'bar_link' => '#kontakt',
             'plans' => [
                 ['tier' => 'Einstieg', 'name' => 'Starter', 'price' => ''],
@@ -308,6 +308,7 @@ function rs_defaults(): array {
             'last_error' => '',
             /* Quelle: manual = Beiträge selbst im Admin hochladen · api = automatisch mit Zugangsschlüssel */
             'source' => 'manual',
+            'section' => false,   // Instagram-Bereich auf Start- und Landingpage (Victoria: aus)
             'm_name' => 'reserved.social | Social Media Agentur', 'm_followers' => '', 'm_posts' => '',
         ],
         'leads' => [
@@ -358,6 +359,7 @@ function rs_config(): array {
     if (($c['site']['proof'][0]['v'] ?? '') === '1×' && ($c['site']['proof'][1]['v'] ?? '') === '4–8') { $c['site']['proof'][0] = $d['site']['proof'][0]; $c['site']['proof'][1] = $d['site']['proof'][1]; }
     foreach (['pk_lead' => 'Drei Pakete, feste Leistungen. Du weißt vorher, was du jeden Monat bekommst. Der Preis richtet sich nach dem Umfang – nicht nach deiner Branche.'] as $k => $v) if (($c['site'][$k] ?? null) === $v) $c['site'][$k] = $d['site'][$k];
     if (($c['site']['sv_note'] ?? '') === 'Vor der Kamera stehst im Standard du selbst. Keine Sorge: Wir führen Regie, schneiden und coachen dich beim Dreh.') $c['site']['sv_note'] = $d['site']['sv_note'];
+    if (str_starts_with((string)($c['site']['pk_lead'] ?? ''), 'Keine starren Pakete, keine Preisliste: ')) $c['site']['pk_lead'] = substr((string)$c['site']['pk_lead'], strlen('Keine starren Pakete, keine Preisliste: '));
     if (($c['site']['pk_lead'] ?? '') === 'Keine starren Pakete: Im kostenlosen Erstgespräch stellen wir zusammen, was du wirklich brauchst – zugeschnitten auf dich und dein Unternehmen.') $c['site']['pk_lead'] = $d['site']['pk_lead'];
     foreach ((array)($c['site']['faq'] ?? []) as $i => $f) foreach ($d['site']['faq'] as $df) if (($f['q'] ?? '') === $df['q'] && ((str_contains((string)$f['a'], 'Strategie-Plan, den du') || str_contains((string)$f['a'], 'per Instagram-DM holen kannst')) || str_starts_with((string)$f['a'], 'Das hängt davon ab, was du brauchst.'))) $c['site']['faq'][$i]['a'] = $df['a'];
     if (($c['site']['whatsapp'] ?? '') === '0176 22876980' && empty($c['site']['wa_set'])) $c['site']['whatsapp'] = '';

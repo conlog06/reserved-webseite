@@ -376,6 +376,7 @@ if ($post) {
             unset($B); rs_save_config($c); flash('Gespeichert.'); back('#einstellungen');
         case 'ig_source':
             $c['ig']['source'] = ($_POST['source'] ?? '') === 'api' ? 'api' : 'manual';
+            $c['ig']['section'] = !empty($_POST['section']);
             $c['ig']['on'] = !empty($_POST['on']);
             $c['ig']['count'] = in_array((int)($_POST['count'] ?? 9), [6, 9, 12, 15], true) ? (int)$_POST['count'] : 9;
             $c['ig']['m_name'] = $str('m_name', 80);
@@ -886,7 +887,7 @@ head('Admin – reserved.social', true);
   <section class="card" id="leistungen">
     <div class="card-h"><h2><span class="sec-n">4</span>Leistungen</h2></div>
     <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="leistungen"><input type="hidden" name="has[]" value="svc">
-      <?php $fields([[['sv_lead', 'Text neben der Überschrift', 300, 2]], [['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]); ?>
+      <?php $fields([[['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]); ?>
       <h3 class="mt">Liste</h3>
         <div id="svcList" class="qlist"><?php foreach ((array)$S['services'] as $i => $x): ?><div class="qed"><div class="cols"><input name="svc[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Leistung" maxlength="50"><input name="svc[<?= $i ?>][tag]" value="<?= e($x['tag'] ?? '') ?>" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[<?= $i ?>][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
         <template id="tpl-svc"><div class="qed"><div class="cols"><input name="svc[__][t]" placeholder="Leistung" maxlength="50"><input name="svc[__][tag]" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[__][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
@@ -1279,7 +1280,8 @@ head('Admin – reserved.social', true);
         <label>Follower <small>(nur bei „Selbst hochladen“, leer = ausblenden)</small><input name="m_followers" value="<?= e($ig['m_followers']) ?>" inputmode="numeric" placeholder="z. B. 1250"></label>
         <label>Beiträge gesamt <small>(leer = Anzahl hier)</small><input name="m_posts" value="<?= e($ig['m_posts']) ?>" inputmode="numeric"></label></div>
       <div class="cols"><label>Name im Profil<input name="m_name" value="<?= e($ig['m_name']) ?>" maxlength="80"></label>
-        <label class="check self-end"><input type="checkbox" name="on" value="1"<?= $ig['on'] ? ' checked' : '' ?>> Beiträge auf der Webseite zeigen</label></div>
+        <label class="check self-end"><input type="checkbox" name="on" value="1"<?= $ig['on'] ? ' checked' : '' ?>> Beiträge im Handy oben auf der Startseite zeigen</label></div>
+      <label class="check"><input type="checkbox" name="section" value="1"<?= !empty($ig['section']) ? ' checked' : '' ?>> <span>Eigenen Instagram-Bereich „Frisch aus dem Feed“ auf der Startseite zeigen <small>(aktuell ausgeblendet)</small></span></label>
       <button class="btn btn-small">Speichern</button>
     </form>
     <?php if (!$manual): ?><p class="hint mt">Gerade aktiv: <b>automatisch von Instagram</b>. Selbst hochgeladene Beiträge bleiben gespeichert und erscheinen, sobald du auf „Selbst hochladen“ umstellst.</p><?php endif; ?>
