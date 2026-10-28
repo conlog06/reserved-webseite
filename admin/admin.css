@@ -403,3 +403,16 @@ details.tech .form{margin-top:12px}
 main.auth{width:100%;display:grid;place-items:center}
 .linklike{background:none;border:0;padding:0;font:inherit;font-size:.86rem;color:#6D665E;text-decoration:underline;cursor:pointer}
 #sicherheit .grid.inner{align-items:start}
+/* Model-Portfolio */
+.mdp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:14px}
+.mdp{background:#fff;border:1px solid var(--line,#DCD5C8);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.mdp img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.mdp .btnrow{padding:8px;gap:6px;flex-wrap:wrap;margin:0}
+.mdp .btnrow form{margin:0}
+.mdp.is-hero{outline:2px solid #B8593F;outline-offset:-2px}
+.md-hero-slot img{aspect-ratio:3/2;object-fit:cover;width:220px}
+.mdp .btnrow{flex-wrap:nowrap;justify-content:space-between;align-items:center}
+.mdp .btn{padding:6px 10px;min-height:32px;font-size:.78rem;white-space:nowrap}
+.mdp .tag{font-size:.72rem}
+.mdp-list{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.mdp .btnrow{gap:4px;padding:8px 6px}
