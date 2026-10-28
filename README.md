@@ -34,7 +34,6 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - **Fit-Check `/start/` – „Zusammenarbeit starten“:** persönliche Begrüßung, eine Frage pro Bildschirm (Unternehmen, Instagram, Branche, Ziele, Follower, Posten, Umfang, Start, Budget-Spanne, Nachricht, Kontakt), Antippen oder Buchstabentaste, automatisch weiter, Fortschrittsbalken, Paket-Empfehlung am Ende. Ideal als Link in der Instagram-Bio. Im Admin: Texte, Profilfoto, Abbruch-Trichter je Frage, Links mit Herkunft.
 - **Über mich `/ueber-mich/`:** Victorias Weg (UGC → Westerberg Chaya → Gründerin) als Zeitstrahl, Stationen und Jahreszahlen im Admin unter „Inhalte“.
 - **UGC-Seite `/ugc/` (Creator Kit):** Victoria als Creatorin (Westerberg-Chaya) – Reichweite, Zielgruppe Instagram/TikTok mit Balken, Beispielvideos (Upload im Admin, erscheinen erst mit dem ersten Video), drei Leistungen „auf Anfrage“, Ablauf, Marken, Kontakt per Mail. Alles im Admin unter „Seiten → UGC-Seite“.
-- **Model-Portfolio `/model/`:** Victoria als Petite Model – Titelbild, Sedcard (Maße), Fotos zum Durchklicken (Großansicht mit Pfeilen/Wischen), Über mich, Highlights und Booking-Formular im E-Mail-Look. Fotos hochladen, sortieren, Titelbild wählen und alle Texte im Admin unter „UGC → Model-Portfolio“. Ersetzt den Canva-Link (Links auf UGC-Seite, Über mich und im Fuß).
 - **Reel-Statistiken:** echte Zahlen (Aufrufe, Likes, Geteilt) zu Reels für bekannte Kund:innen – der Abschnitt erscheint erst, wenn im Admin Einträge stehen.
 - **Wartung:** Hinweisseite (HTTP 503).
 

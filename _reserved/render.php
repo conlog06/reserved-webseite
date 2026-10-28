@@ -37,7 +37,6 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     $html = (string)preg_replace('~<html\b~i', '<html data-cms-live data-api="' . e(rs_url('_reserved/api.php')) . '"', $html, 1);
     if (!empty($c['ig']['section'])) $html = (string)preg_replace('~(<[a-z]+\b[^>]*\bdata-feed)\s+hidden~i', '$1', $html);
     if (empty($c['ugc']['on'])) for ($i = 0; $i < 4 && str_contains($html, '<!--cms:ugclink-->'); $i++) $html = rs_block($html, 'ugclink', '');
-    if (empty($c['model']['on'])) for ($i = 0; $i < 4 && str_contains($html, '<!--cms:mdlink-->'); $i++) $html = rs_block($html, 'mdlink', '');
 
     /* Einzelne Texte */
     $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($S) {
@@ -505,8 +504,7 @@ function rs_render_ugc(string $html, array $c): string {
         return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
     }, $html);
     $hrefs = ['mail' => $U['email'] !== '' ? 'mailto:' . $U['email'] : '', 'ig' => $U['ig'] !== '' ? 'https://www.instagram.com/' . rawurlencode($U['ig']) . '/' : '',
-              'tt' => $U['tt'] !== '' ? 'https://www.tiktok.com/@' . rawurlencode($U['tt']) : '',
-              'portfolio' => !empty($c['model']['on']) ? rs_url('model/') : (preg_match('~^https://~i', (string)$U['portfolio']) ? $U['portfolio'] : '')];
+              'tt' => $U['tt'] !== '' ? 'https://www.tiktok.com/@' . rawurlencode($U['tt']) : '', 'portfolio' => preg_match('~^https://~i', (string)$U['portfolio']) ? $U['portfolio'] : ''];
     $html = (string)preg_replace_callback('~<a\b([^>]*?)\bhref="[^"]*"([^>]*?\bdata-ug-href="([a-z]+)"[^>]*)>~i', function ($m) use ($hrefs) {
         $h = $hrefs[$m[3]] ?? '';
         return '<a' . $m[1] . 'href="' . e($h) . '"' . $m[2] . ($h === '' ? ' hidden' : '') . '>';
@@ -515,42 +513,6 @@ function rs_render_ugc(string $html, array $c): string {
     $chips = implode('', array_map(fn($x) => '<button type="button" data-subj="' . e($x[0]) . '">' . e($x[0]) . '</button>', rs_lines((string)$U['services'], 3)));
     if ($chips !== '') $html = rs_block($html, 'ugchips', $chips);
     if (!empty($c['site']['img_ugc'])) $html = (string)preg_replace('~(<img\b[^>]*\bdata-cms-img="ugc"[^>]*?)\ssrc="[^"]*"~i', '$1 src="' . e(rs_url($c['site']['img_ugc'])) . '"', $html);
-    return $html;
-}
-
-/* ==========================================================================
-   Model-Portfolio /model/
-   ========================================================================== */
-function rs_img_size(string $rel): array {
-    $i = @getimagesize(rs_root() . '/' . $rel);
-    return $i ? [(int)$i[0], (int)$i[1]] : [533, 800];
-}
-function rs_model_blocks(array $M): array {
-    $B = [];
-    $B['mdsedcard'] = implode('', array_map(fn($x) => '<div><dt>' . e($x[0]) . '</dt><dd>' . e($x[1]) . '</dd></div>', rs_lines((string)$M['sedcard'])));
-    $B['mdabout'] = implode('', array_map(fn($p) => '<p>' . e(trim($p)) . '</p>', array_filter(preg_split('/\R/', (string)$M['about']) ?: [], fn($p) => trim($p) !== '')));
-    $B['mdhigh'] = implode('', array_map(fn($x) => '<li class="reveal"><b>' . e($x[0]) . '</b><span>' . e($x[1]) . '</span></li>', rs_lines((string)$M['highlights'])));
-    $g = '';
-    foreach (array_values((array)$M['photos']) as $i => $p) {
-        if (empty($p['file']) || !is_file(rs_root() . '/' . $p['file'])) continue;
-        [$w, $h] = rs_img_size($p['file']);
-        $g .= '<figure class="md-ph reveal"><button type="button" data-track="model-photo" data-i="' . $i . '" aria-label="Foto ' . ($i + 1) . ' groß ansehen"><img src="' . e(rs_url($p['file'])) . '" alt="' . e($p['alt'] ?? '') . '" width="' . $w . '" height="' . $h . '" loading="lazy" decoding="async"></button></figure>';
-    }
-    $B['mdgallery'] = $g;
-    return $B;
-}
-function rs_render_model(string $html, array $c): string {
-    $M = $c['model']; $U = $c['ugc'];
-    $html = rs_render_ugc($html, $c);
-    $html = (string)preg_replace_callback('~<([a-z0-9]+)(\b[^>]*?\bdata-cms-md="([a-z_]+)"[^>]*)>(.*?)</\1>~is', function ($m) use ($M) {
-        $v = $M[$m[3]] ?? null;
-        return is_string($v) && trim($v) !== '' ? '<' . $m[1] . $m[2] . '>' . e($v) . '</' . $m[1] . '>' : $m[0];
-    }, $html);
-    foreach (rs_model_blocks($M) as $k => $v) $html = rs_block($html, $k, $v);
-    if (!empty($M['hero']) && is_file(rs_root() . '/' . $M['hero'])) {
-        [$w, $h] = rs_img_size($M['hero']);
-        $html = (string)preg_replace('~<img\b([^>]*\bdata-cms-img="model")[^>]*>~i', '<img src="' . e(rs_url($M['hero'])) . '"$1 alt="' . e($M['title']) . '" width="' . $w . '" height="' . $h . '" fetchpriority="high">', $html);
-    }
     return $html;
 }
 

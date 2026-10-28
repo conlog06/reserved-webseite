@@ -490,45 +490,6 @@ if ($post) {
                 } elseif ($i > 0) { [$vids[$i - 1], $vids[$i]] = [$vids[$i], $vids[$i - 1]]; }
             }
             $c['ugc']['videos'] = $vids; rs_save_config($c); flash($action === 'ugc_video_delete' ? 'Video gelöscht.' : 'Reihenfolge geändert.'); back('#ugc');
-        /* ----- Model-Portfolio ----- */
-        case 'model':
-            $M = &$c['model'];
-            $M['on'] = !empty($_POST['md_on']);
-            foreach (['title' => 60, 'script' => 60, 'tags' => 90, 'intro' => 500, 'sedcard' => 800, 'about' => 3000, 'highlights' => 1000] as $k => $max) $M[$k] = trim($str('md_' . $k, $max));
-            foreach ((array)($_POST['md_alt'] ?? []) as $i => $alt) if (isset($M['photos'][(int)$i])) $M['photos'][(int)$i]['alt'] = rs_cut(trim((string)$alt), 120);
-            unset($M); rs_save_config($c); flash('Model-Portfolio gespeichert.'); back('#model');
-        case 'model_photo':
-            $files = $_FILES['photos'] ?? null; $added = 0; $failed = 0;
-            $n = is_array($files['name'] ?? null) ? count($files['name']) : 0;
-            for ($k = 0; $k < $n; $k++) {
-                if (count((array)$c['model']['photos']) >= 40) { $failed++; continue; }
-                if (($files['error'][$k] ?? 4) !== UPLOAD_ERR_OK || !is_uploaded_file($files['tmp_name'][$k]) || $files['size'][$k] > 25 * 1024 * 1024) { $failed++; continue; }
-                $rel = rs_model_store_upload($files['tmp_name'][$k]);
-                if ($rel === '') { $failed++; continue; }
-                $c['model']['photos'][] = ['file' => $rel, 'alt' => ''];
-                $added++;
-            }
-            if (!$added && !$failed) { flash(empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0 ? 'Die Fotos sind zusammen zu groß für den Server – bitte weniger auf einmal hochladen.' : 'Bitte Fotos auswählen.', 'error'); back('#model'); }
-            rs_save_config($c);
-            flash($added . ' Foto' . ($added === 1 ? '' : 's') . ' hinzugefügt' . ($failed ? ' · ' . $failed . ' nicht möglich (nur JPG, PNG oder WebP bis 25 MB, max. 40 Fotos)' : '') . '.', $added ? 'ok' : 'error'); back('#model');
-        case 'model_photo_delete':
-        case 'model_photo_move':
-        case 'model_hero':
-            $i = (int)($_POST['i'] ?? -1); $ph = array_values((array)$c['model']['photos']);
-            if (isset($ph[$i])) {
-                if ($action === 'model_hero') { $c['model']['hero'] = $ph[$i]['file']; rs_save_config($c); flash('Titelbild geändert.'); back('#model'); }
-                if ($action === 'model_photo_delete') { if ($ph[$i]['file'] !== $c['model']['hero']) rs_model_delete_file($ph[$i]['file']); array_splice($ph, $i, 1); }
-                elseif ($i > 0) { [$ph[$i - 1], $ph[$i]] = [$ph[$i], $ph[$i - 1]]; }
-            }
-            $c['model']['photos'] = $ph; rs_save_config($c); flash($action === 'model_photo_delete' ? 'Foto entfernt.' : 'Reihenfolge geändert.'); back('#model');
-        case 'model_hero_upload':
-            $up = $_FILES['file'] ?? null;
-            if (!$up || ($up['error'] ?? 4) !== UPLOAD_ERR_OK || !is_uploaded_file($up['tmp_name'])) { flash('Upload fehlgeschlagen – bitte ein Bild wählen.', 'error'); back('#model'); }
-            $rel = rs_model_store_upload($up['tmp_name']);
-            if ($rel === '') { flash('Nur JPG, PNG oder WebP.', 'error'); back('#model'); }
-            $old = (string)$c['model']['hero'];
-            if (!in_array($old, array_column((array)$c['model']['photos'], 'file'), true)) rs_model_delete_file($old);
-            $c['model']['hero'] = $rel; rs_save_config($c); flash('Titelbild hochgeladen.'); back('#model');
         case 'funnel':
             $F = &$c['funnel'];
             $F['on'] = !empty($_POST['fu_on']); $F['notify'] = !empty($_POST['fu_notify']);
@@ -1132,16 +1093,16 @@ head('Admin – reserved.social', true);
 <?php /* ======================= UGC ======================= */ elseif ($tab === 'ugc'):
   $st30 = rs_stats_summary(30); $U = $c['ugc'];
 ?>
-  <div class="page-head"><div><h1>UGC-Seite</h1><p class="sub">Victorias Creator Kit unter <b>/ugc/</b> und ihr Model-Portfolio unter <b>/model/</b>: Anfragen, Texte, Zahlen, Fotos und Videos.</p></div>
+  <div class="page-head"><div><h1>UGC-Seite</h1><p class="sub">Victorias Creator Kit unter <b>/ugc/</b>: Anfragen von Marken, Texte, Zahlen, Foto und Videos.</p></div>
     <a class="btn btn-ghost btn-small" href="<?= e(rs_url('ugc/')) ?>" target="_blank" rel="noopener">Seite ansehen ↗</a></div>
-  <nav class="subnav"><a href="#anfragen-ugc">Anfragen</a><a href="#ugc">Creator Kit</a><a href="#model">Model-Portfolio</a></nav>
+  <nav class="subnav"><a href="#anfragen-ugc">Anfragen</a><a href="#ugc">Inhalte</a></nav>
   <section class="card" id="anfragen-ugc">
     <?php $um = array_reverse(rs_ugc_msgs()); ?>
     <h2>Anfragen von Marken <small class="muted-s">(<?= count($um) ?>)</small></h2>
-    <p class="hint">Kommen über die Formulare auf der UGC-Seite und dem Model-Portfolio – und zusätzlich per Mail an <b><?= e($U['email']) ?></b>. Antworten geht direkt per Mail.</p>
+    <p class="hint">Kommen über das Formular auf der UGC-Seite – und zusätzlich per Mail an <b><?= e($U['email']) ?></b>. Antworten geht direkt per Mail.</p>
     <?php if (!$um): ?><p class="empty">Noch keine Anfragen über das Formular auf der UGC-Seite.</p>
     <?php else: ?><div class="ugm-list"><?php foreach (array_slice($um, 0, 30) as $m): ?>
-      <details class="ugm<?= empty($m['seen']) ? ' new' : '' ?>"<?= empty($m['seen']) ? ' open' : '' ?>><summary><?= empty($m['seen']) ? '<span class="tag warn">neu</span>' : '' ?><?= ($m['page'] ?? '') === 'model' ? '<span class="tag">Model</span>' : '' ?><span class="ugm-d"><?= e(date('d.m.', (int)$m['ts'])) ?></span><b><?= e($m['firma'] ?: $m['name']) ?></b><span class="ugm-s"><?= e($m['betreff'] ?: rs_cut($m['text'], 60)) ?></span></summary>
+      <details class="ugm<?= empty($m['seen']) ? ' new' : '' ?>"<?= empty($m['seen']) ? ' open' : '' ?>><summary><?= empty($m['seen']) ? '<span class="tag warn">neu</span>' : '' ?><span class="ugm-d"><?= e(date('d.m.', (int)$m['ts'])) ?></span><b><?= e($m['firma'] ?: $m['name']) ?></b><span class="ugm-s"><?= e($m['betreff'] ?: rs_cut($m['text'], 60)) ?></span></summary>
         <p class="ugm-from"><?= e($m['name']) ?> · <a href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>"><?= e($m['email']) ?></a> · über <?= e($m['src']) ?></p>
         <p class="msg"><?= nl2br(e($m['text'])) ?></p>
         <div class="btnrow"><a class="btn btn-small" href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . ($m['betreff'] ?: 'Deine Anfrage')) ?>">Antworten</a>
@@ -1166,7 +1127,7 @@ head('Admin – reserved.social', true);
         <div class="cols"><label>Name<input name="title" value="<?= e($U['title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="script" value="<?= e($U['script']) ?>" maxlength="60"></label></div>
         <label>Zeile darunter<input name="tags" value="<?= e($U['tags']) ?>" maxlength="90"></label>
         <label>Text<textarea name="intro" rows="3" maxlength="500"><?= e($U['intro']) ?></textarea></label>
-        <div class="cols"><label>E-Mail für Anfragen <small>(gilt auch fürs Model-Portfolio)</small><input type="email" name="email" value="<?= e($U['email']) ?>" maxlength="120"></label><label>Externes Portfolio <small>(nur wenn das eigene Model-Portfolio aus ist, z. B. Canva-Link)</small><input name="portfolio" value="<?= e($U['portfolio']) ?>" maxlength="300" placeholder="https://…"></label>
+        <div class="cols"><label>E-Mail für Anfragen<input type="email" name="email" value="<?= e($U['email']) ?>" maxlength="120"></label><label>Model-Portfolio <small>(Link, z. B. Canva oder Linktree – leer = ausblenden)</small><input name="portfolio" value="<?= e($U['portfolio']) ?>" maxlength="300" placeholder="https://…"></label>
           <label>Instagram-Name<input name="ig" value="<?= e($U['ig']) ?>" maxlength="60"></label><label>TikTok-Name<input name="tt" value="<?= e($U['tt']) ?>" maxlength="60"></label></div>
       </fieldset>
       <fieldset><legend>Reichweite</legend>
@@ -1204,48 +1165,6 @@ head('Admin – reserved.social', true);
         <label>Titel <small>(optional, z. B. Marke)</small><input name="vtitle" maxlength="60"></label></div>
       <button class="btn btn-small">Video hochladen</button>
     </form><?php endif; ?>
-  </section>
-  <section class="card" id="model">
-    <?php $M = $c['model']; $mdUrl = rs_abs_url('model/'); $mdVisits = (int)($st30['p']['model/index.html'] ?? 0); $mdPh = (int)($st30['c']['model-photo'] ?? 0); ?>
-    <div class="card-h"><h2>Model-Portfolio</h2><a class="btn btn-ghost btn-small" href="<?= e(rs_url('model/')) ?>" target="_blank" rel="noopener">Ansehen ↗</a></div>
-    <p class="hint">Eigene Seite statt Canva-Link: Sedcard, Fotos zum Durchklicken, Über mich und Booking-Formular. Verlinkt auf der UGC-Seite, „Über mich“ und im Fuß. Letzte 30 Tage: <b><?= $n($mdVisits) ?></b> Besuche · <b><?= $n($mdPh) ?></b> Fotos groß angesehen.</p>
-    <div class="utm"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'agentur' => 'Mail an Agenturen'] as $k => $t): $u = $mdUrl . ($k ? '?utm_source=' . $k : ''); ?>
-      <div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
-
-    <h3 class="mt">Titelbild</h3>
-    <div class="img-slot md-hero-slot"><img src="<?= e(rs_url($M['hero'])) ?>" alt="">
-      <div><p class="hint">Querformat wirkt am besten. Oder unten bei einem Foto auf „Als Titelbild“ tippen.</p>
-        <form method="post" enctype="multipart/form-data"><?= $hidden('model_hero_upload') ?><label class="btn btn-ghost btn-small file-btn">Neues Titelbild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form></div></div>
-
-    <h3 class="mt">Fotos <small>(<?= count((array)$M['photos']) ?> von 40 – in dieser Reihenfolge auf der Seite)</small></h3>
-    <form method="post" class="form" enctype="multipart/form-data"><?= $hidden('model_photo') ?>
-      <label class="btn btn-small file-btn">Fotos hinzufügen <small>(mehrere auf einmal)</small><input type="file" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple onchange="this.form.submit()"></label>
-    </form>
-    <?php if ($M['photos']): ?><div class="mdp-list"><?php foreach (array_values((array)$M['photos']) as $i => $p): ?>
-      <div class="mdp<?= $p['file'] === $M['hero'] ? ' is-hero' : '' ?>"><img src="<?= e(rs_url($p['file'])) ?>" alt="" loading="lazy">
-        <div class="btnrow"><?php if ($i > 0): ?><form method="post"><?= $hidden('model_photo_move') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-ghost btn-small" aria-label="Nach vorne">←</button></form><?php endif; ?>
-          <?php if ($p['file'] !== $M['hero']): ?><form method="post"><?= $hidden('model_hero') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-ghost btn-small" title="Als Titelbild oben auf der Seite verwenden" aria-label="Als Titelbild">★ Titel</button></form><?php else: ?><span class="tag">Titelbild</span><?php endif; ?>
-          <form method="post" onsubmit="return confirm('Foto entfernen?')"><?= $hidden('model_photo_delete') ?><input type="hidden" name="i" value="<?= $i ?>"><button class="btn btn-small btn-danger" aria-label="Entfernen">✕</button></form></div></div>
-    <?php endforeach; ?></div><?php endif; ?>
-
-    <form method="post" class="form mt"><?= $hidden('model') ?>
-      <label class="check"><input type="checkbox" name="md_on" value="1"<?= !empty($M['on']) ? ' checked' : '' ?>> Model-Portfolio ist online <small>(aus = Links darauf verschwinden)</small></label>
-      <fieldset><legend>Oben</legend>
-        <div class="cols"><label>Name<input name="md_title" value="<?= e($M['title']) ?>" maxlength="60"></label><label>Schreibschrift<input name="md_script" value="<?= e($M['script']) ?>" maxlength="60"></label></div>
-        <label>Zeile darunter<input name="md_tags" value="<?= e($M['tags']) ?>" maxlength="90"></label>
-        <label>Text<textarea name="md_intro" rows="3" maxlength="500"><?= e($M['intro']) ?></textarea></label>
-      </fieldset>
-      <fieldset><legend>Sedcard</legend>
-        <label>Maße <small>(eine pro Zeile: Name | Wert – am besten 8)</small><textarea name="md_sedcard" rows="8" maxlength="800"><?= e($M['sedcard']) ?></textarea></label>
-      </fieldset>
-      <fieldset><legend>Über mich</legend>
-        <label>Text <small>(jede Zeile wird ein Absatz)</small><textarea name="md_about" rows="7" maxlength="3000"><?= e($M['about']) ?></textarea></label>
-        <label>Highlights rechts <small>(eine pro Zeile: Titel | Text)</small><textarea name="md_highlights" rows="4" maxlength="1000"><?= e($M['highlights']) ?></textarea></label>
-      </fieldset>
-      <?php if ($M['photos']): ?><details class="mt"><summary>Bildbeschreibungen (für Google &amp; Screenreader)</summary>
-        <div class="cols"><?php foreach (array_values((array)$M['photos']) as $i => $p): ?><label>Foto <?= $i + 1 ?><input name="md_alt[<?= $i ?>]" value="<?= e($p['alt'] ?? '') ?>" maxlength="120"></label><?php endforeach; ?></div></details><?php endif; ?>
-      <button class="btn">Model-Portfolio speichern</button>
-    </form>
   </section>
 <?php rs_locked('ugc-anfragen', function () { $l = rs_ugc_msgs(); $ch = false; foreach ($l as &$m) if (empty($m['seen'])) { $m['seen'] = true; $ch = true; } unset($m); if ($ch) rs_write('ugc-anfragen', $l); }); ?>
 

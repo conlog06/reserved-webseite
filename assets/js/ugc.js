@@ -53,7 +53,7 @@
     const btn = document.getElementById('ugSend'); btn.disabled = true;
     try {
       const res = await fetch(API + '?a=ugc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-        name: f.name.value.trim(), email: mail, firma: f.firma.value.trim(), betreff: f.betreff.value.trim(), nachricht: f.nachricht.value.trim(), consent: 1, website: f.website.value, seite: /\/model\//.test(location.pathname) ? 'model' : 'ugc',
+        name: f.name.value.trim(), email: mail, firma: f.firma.value.trim(), betreff: f.betreff.value.trim(), nachricht: f.nachricht.value.trim(), consent: 1, website: f.website.value,
         src: (() => { try { return sessionStorage.getItem('rs-src') || new URLSearchParams(location.search).get('utm_source') || 'direkt'; } catch (x) { return 'direkt'; } })() }) });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) throw new Error(j.error || 'Das hat leider nicht geklappt.');
