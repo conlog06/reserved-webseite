@@ -32,6 +32,10 @@ AddType application/manifest+json .webmanifest
   RewriteRule ^ueber-mich/(index\.html?)?$ _reserved/gate.php [L,QSA]
   RewriteRule ^ugc$ ugc/ [R=301,L]
   RewriteRule ^ugc/(index\.html?)?$ _reserved/gate.php [L,QSA]
+  # Leistungen (eigene Unterseite je Leistung)
+  RewriteRule ^leistungen/([a-z0-9-]+)$ leistungen/$1/ [R=301,L]
+  RewriteRule ^leistungen/?$ _reserved/gate.php [L,QSA]
+  RewriteRule ^leistungen/[a-z0-9-]+/(index\.html?)?$ _reserved/gate.php [L,QSA]
   RewriteRule ^termin$ termin/ [R=301,L]
   RewriteRule ^termin/(index\.html?)?$ _reserved/gate.php [L,QSA]
   # Fit-Check „Zusammenarbeit starten“

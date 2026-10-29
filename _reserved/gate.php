@@ -25,8 +25,10 @@ $isPlan = (bool)preg_match('~^/plan(/|/index\.html)?$~', $uri);
 $isDanke = (bool)preg_match('~^/plan/danke(/|/index\.html)?$~', $uri);
 $isUgc = (bool)preg_match('~^/ugc(/|/index\.html)?$~', $uri);
 $isTermin = (bool)preg_match('~^/termin(/|/index\.html)?$~', $uri);
-$page = $isLp ? 'angebot/index.html' : ($isCheck ? 'start/index.html' : ($isAbout ? 'ueber-mich/index.html' : ($isPlan ? 'plan/index.html' : ($isDanke ? 'plan/danke/index.html' : ($isUgc ? 'ugc/index.html' : ($isTermin ? 'termin/index.html' : 'index.html'))))));
-$here = rs_url($isLp ? 'angebot/' : ($isCheck ? 'start/' : ($isAbout ? 'ueber-mich/' : ($isPlan ? 'plan/' : ($isDanke ? 'plan/danke/' : ($isUgc ? 'ugc/' : ($isTermin ? 'termin/' : '')))))));
+$lsSlug = preg_match('~^/leistungen/([a-z0-9-]+)(/|/index\.html)?$~', $uri, $lm) ? $lm[1] : null;
+if (preg_match('~^/leistungen/?$~', $uri)) { header('Location: ' . rs_url('#leistungen'), true, 301); exit; }
+$page = $isLp ? 'angebot/index.html' : ($isCheck ? 'start/index.html' : ($isAbout ? 'ueber-mich/index.html' : ($isPlan ? 'plan/index.html' : ($isDanke ? 'plan/danke/index.html' : ($isUgc ? 'ugc/index.html' : ($isTermin ? 'termin/index.html' : ($lsSlug !== null ? 'leistungen/' . $lsSlug : 'index.html')))))));
+$here = rs_url($isLp ? 'angebot/' : ($isCheck ? 'start/' : ($isAbout ? 'ueber-mich/' : ($isPlan ? 'plan/' : ($isDanke ? 'plan/danke/' : ($isUgc ? 'ugc/' : ($isTermin ? 'termin/' : ($lsSlug !== null ? 'leistungen/' . $lsSlug . '/' : ''))))))));
 
 /* ---------- Automatischer Launch ---------- */
 $mode = rs_effective_mode($c);
@@ -108,11 +110,13 @@ if ($isLp && empty($c['angebot']['on']) && !$admin) { header('Location: ' . rs_u
 if (($isPlan || $isDanke) && empty($c['funnel']['on']) && !$admin) { header('Location: ' . rs_url(''), true, 302); exit; }
 if ($isTermin && empty($c['booking']['on']) && !$admin) { header('Location: ' . rs_url('#kontakt'), true, 302); exit; }
 if ($isUgc && empty($c['ugc']['on']) && !$admin) { header('Location: ' . rs_url('ueber-mich/'), true, 302); exit; }
+$lsIdx = $lsSlug !== null ? rs_leistung_find($c, $lsSlug) : -1;
+if ($lsSlug !== null && $lsIdx < 0) { header('Location: ' . rs_url('#leistungen'), true, 302); exit; }
 if ($isCheck && empty($c['check']['on']) && !$admin) { header('Location: ' . rs_url('#kontakt'), true, 302); exit; }
 
 /* ---------- Echte Seite ---------- */
-$tpl = (string)file_get_contents(rs_root() . '/' . $page);
-$html = $isLp ? rs_render_angebot($tpl, $c) : ($isCheck ? rs_render_check($tpl, $c) : ($isAbout ? rs_render_about($tpl, $c) : ($isPlan || $isDanke ? rs_render_plan($tpl, $c, $isDanke) : ($isUgc ? rs_render_ugc($tpl, $c) : ($isTermin ? rs_render_termin($tpl, $c) : rs_render_page($tpl, $c, $admin))))));
+$tpl = (string)file_get_contents(rs_root() . '/' . ($lsSlug !== null ? '_reserved/leistung.html' : $page));
+$html = $isLp ? rs_render_angebot($tpl, $c) : ($isCheck ? rs_render_check($tpl, $c) : ($isAbout ? rs_render_about($tpl, $c) : ($isPlan || $isDanke ? rs_render_plan($tpl, $c, $isDanke) : ($isUgc ? rs_render_ugc($tpl, $c) : ($isTermin ? rs_render_termin($tpl, $c) : ($lsSlug !== null ? rs_render_leistung($tpl, $c, $lsIdx) : rs_render_page($tpl, $c, $admin)))))));
 if ($admin || $bypass) {
     header('Cache-Control: no-store');
     if ($mode !== 'live') header('X-Robots-Tag: noindex');

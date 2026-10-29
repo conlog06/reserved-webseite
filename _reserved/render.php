@@ -75,9 +75,8 @@ function rs_render_page(string $html, array $c, bool $admin = false): string {
     if ($proof !== '') $html = rs_block($html, 'proof', $proof);
 
     /* Leistungen als Zeilen */
-    $sv = ''; $n = 0;
-    foreach ((array)($S['services'] ?? []) as $x) if (trim($x['t'] ?? '') !== '') { $n++;
-        $sv .= '<div class="svc-row reveal"><span class="svc-n">' . sprintf('%02d', $n) . '</span><h3>' . e($x['t']) . (trim($x['tag'] ?? '') !== '' ? ' <small>' . e($x['tag']) . '</small>' : '') . '</h3><p>' . e($x['d'] ?? '') . '</p></div>'; }
+    $sv = '';
+    foreach (rs_services($c) as $i => $x) $sv .= rs_svc_row($x, $i + 1, rs_url('leistungen/' . $x['slug'] . '/'));
     if ($sv !== '') $html = rs_block($html, 'services', $sv);
 
     /* Reel-Statistiken (nur mit echten Einträgen) */
@@ -420,6 +419,73 @@ function rs_render_about(string $html, array $c): string {
     foreach ($items as $i => $x) $v .= '<li class="reveal' . ($i === count($items) - 1 ? ' now' : '') . '"><span class="vita-k">' . e($x['k'] ?? '') . '</span><div><h3>' . e($x['t']) . '</h3><p>' . rs_fmt((string)($x['d'] ?? '')) . '</p></div></li>';
     if ($v !== '') $html = rs_block($html, 'vita', $v);
     return $html;
+}
+
+/* ==========================================================================
+   Leistungen: Zeilen auf der Startseite + eigene Unterseite je Leistung
+   /leistungen/<slug>/
+   ========================================================================== */
+function rs_svc_slug(string $t): string {
+    $s = mb_strtolower(strtr($t, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'Ä' => 'ae', 'Ö' => 'oe', 'Ü' => 'ue', 'ß' => 'ss', '&' => 'und']));
+    return trim((string)preg_replace('/[^a-z0-9]+/', '-', $s), '-') ?: 'leistung';
+}
+/** Leistungen mit allen Feldern (ältere Einträge bekommen die Standardtexte) und eindeutigen Adressen */
+function rs_services(array $c): array {
+    $def = []; foreach (rs_defaults()['site']['services'] as $x) $def[mb_strtolower($x['t'])] = $x;
+    $out = []; $used = [];
+    foreach ((array)($c['site']['services'] ?? []) as $x) {
+        if (trim((string)($x['t'] ?? '')) === '') continue;
+        if (!array_key_exists('slug', $x) && ($d = $def[mb_strtolower((string)$x['t'])] ?? null)) $x = array_merge($d, $x);
+        $x += ['tag' => '', 'd' => '', 'slug' => '', 'p_on' => true, 'p_title' => '', 'p_script' => '', 'p_lead' => '', 'p_items' => '', 'p_notes' => ''];
+        $slug = rs_svc_slug((string)($x['slug'] !== '' ? $x['slug'] : $x['t']));
+        $base = $slug; $k = 2; while (isset($used[$slug])) $slug = $base . '-' . $k++;
+        $used[$slug] = true; $x['slug'] = $slug;
+        $out[] = $x;
+    }
+    return $out;
+}
+function rs_svc_row(array $x, int $n, string $href): string {
+    $t = e($x['t']);
+    $h = !empty($x['p_on']) ? '<a href="' . e($href) . '" class="svc-a">' . $t . '</a>' : $t;
+    return '<div class="svc-row reveal"><span class="svc-n">' . sprintf('%02d', $n) . '</span><h3>' . $h . (trim($x['tag'] ?? '') !== '' ? ' <small>' . e($x['tag']) . '</small>' : '') . '</h3>'
+        . '<p>' . e($x['d'] ?? '') . (!empty($x['p_on']) ? ' <span class="svc-more" aria-hidden="true">Mehr erfahren <svg><use href="#i-arrow"/></svg></span>' : '') . '</p></div>';
+}
+/** Füllt die Vorlage _reserved/leistung.html (auch für die statische Version ohne PHP) */
+function rs_leistung_fill(string $tpl, array $list, int $i): string {
+    $x = $list[$i];
+    $title = trim((string)$x['p_title']) !== '' ? $x['p_title'] : $x['t'];
+    $lead = trim((string)$x['p_lead']) !== '' ? $x['p_lead'] : $x['d'];
+    $items = implode('', array_map(fn($l) => '<li><svg><use href="#i-check"/></svg><span>' . e($l[0]) . '</span></li>', rs_lines((string)$x['p_items'], 1)));
+    $notes = implode('', array_map(fn($l) => '<div class="ls-note reveal"><b>' . e($l[0]) . '</b>' . ($l[1] !== '' ? '<span>' . e($l[1]) . '</span>' : '') . '</div>', rs_lines((string)$x['p_notes'])));
+    $others = '';
+    foreach ($list as $j => $o) if ($j !== $i && !empty($o['p_on'])) $others .= '<li class="reveal"><a href="../' . e($o['slug']) . '/"><span class="svc-n">' . sprintf('%02d', $j + 1) . '</span><b>' . e($o['t']) . '</b><svg><use href="#i-arrow"/></svg></a></li>';
+    $desc = rs_cut(trim(preg_replace('/\s+/', ' ', $lead)), 155);
+    $html = strtr($tpl, [
+        '{{meta_title}}' => e($title . ' in Osnabrück – reserved.social'),
+        '{{og_title}}' => e($title . ' – reserved.social'),
+        '{{meta_desc}}' => e($desc),
+        '{{n}}' => sprintf('%02d', $i + 1),
+        '{{tag}}' => trim((string)$x['tag']) !== '' ? ' · ' . e($x['tag']) : '',
+        '{{h1}}' => e($title),
+        '{{script}}' => e((string)$x['p_script']),
+        '{{lead}}' => e($lead),
+        '{{items}}' => $items,
+        '{{notes}}' => $notes,
+        '{{others}}' => $others,
+    ]);
+    if ($items === '') $html = (string)preg_replace('~<div class="ls-card reveal">.*?</ul>\s*</div>~s', '', $html, 1);
+    if ($others === '') $html = (string)preg_replace('~<section class="section ls-more".*?</section>~s', '', $html, 1);
+    return $html;
+}
+function rs_render_leistung(string $tpl, array $c, int $i): string {
+    $html = rs_render_page(rs_leistung_fill($tpl, rs_services($c), $i), $c);
+    if (empty($c['check']['on'])) $html = rs_block($html, 'fitlink', '');
+    return $html;
+}
+/** Index der Leistung zur Adresse oder -1 */
+function rs_leistung_find(array $c, string $slug): int {
+    foreach (rs_services($c) as $i => $x) if ($x['slug'] === $slug && !empty($x['p_on'])) return $i;
+    return -1;
 }
 
 /* ==========================================================================

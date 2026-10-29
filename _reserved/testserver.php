@@ -14,6 +14,8 @@ if ($path === '/plan') { header('Location: /plan/'); return true; }
 if ($path === '/plan/danke') { header('Location: /plan/danke/' . (($q = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY)) ? '?' . $q : '')); return true; }
 if ($path === '/ueber-mich') { header('Location: /ueber-mich/'); return true; }
 if ($path === '/ugc') { header('Location: /ugc/'); return true; }
+if (preg_match('~^/leistungen/[a-z0-9-]+$~', $path)) { header('Location: ' . $path . '/'); return true; }
+if (preg_match('~^/leistungen(/[a-z0-9-]+)?(/|/index\.html)?$~', $path)) { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
 if ($path === '/termin') { header('Location: /termin/'); return true; }
 if ($path === '/' || $path === '/index.html' || $path === '/angebot/' || $path === '/angebot/index.html' || $path === '/start/' || $path === '/start/index.html' || $path === '/ueber-mich/' || $path === '/ueber-mich/index.html' || $path === '/plan/' || $path === '/plan/index.html' || $path === '/plan/danke/' || $path === '/plan/danke/index.html' || $path === '/ugc/' || $path === '/ugc/index.html' || $path === '/termin/' || $path === '/termin/index.html') { $_SERVER['SCRIPT_NAME'] = '/_reserved/gate.php'; require $root . '/_reserved/gate.php'; return true; }
 return false;

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{meta_title}}</title>
+<meta name="description" content="{{meta_desc}}">
+<meta name="theme-color" content="#F4F1EA">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-title" content="reserved.social">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{og_title}}">
+<meta property="og:description" content="{{meta_desc}}">
+<meta property="og:image" content="../../assets/img/post-0-cover.webp">
+<meta property="og:locale" content="de_DE">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%23B8593F'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Georgia,serif' font-size='30' fill='%23F4F1EA'%3ER.%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="../../assets/img/apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="preload" href="../../assets/fonts/cormorant-garamond-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../../assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body class="vi-body ls-body">
+<!-- Icon-Sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20l1.2-4.1A8.5 8.5 0 1 1 20.5 11.5z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M21 3 10 14M21 3l-6.5 18-4-7.5L3 9.5 21 3z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></symbol>
+  <symbol id="i-insta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h11a3 3 0 0 1 3 3v11h-2V6a1 1 0 0 0-1-1H7z"/><rect x="3" y="7" width="14" height="14" rx="2.5"/></symbol>
+  <symbol id="i-reel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 5 3-5 3z" fill="currentColor"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+
+<header class="nav vi-nav" id="nav">
+  <div class="container">
+    <a href="../../" class="logo" aria-label="reserved.social – zur Startseite">reserved<span>.social</span></a>
+    <ul class="nav-links">
+      <li><a href="../../#leistungen">Leistungen</a></li>
+      <li><a href="../../ueber-mich/">Über mich</a></li>
+    </ul>
+    <a href="../../#kontakt" class="btn btn-dark nav-cta vi-cta" data-track="cta-nav">Erstgespräch <svg><use href="#i-arrow"/></svg></a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="vi-hero ls-hero" data-sec="hero">
+    <div class="container">
+      <a href="../../#leistungen" class="vi-back"><svg><use href="#i-left"/></svg> Alle Leistungen</a>
+      <div class="ls-hero-in">
+        <div>
+          <span class="pill"><span class="dot"></span>Leistung {{n}}{{tag}}</span>
+          <h1>{{h1}} <span class="script">{{script}}</span></h1>
+          <p class="lead">{{lead}}</p>
+          <div class="hero-actions">
+            <a href="../../#kontakt" class="btn btn-primary" data-track="cta-leistung">Kostenloses Erstgespräch <svg><use href="#i-arrow"/></svg></a>
+            <!--cms:fitlink--><a href="../../start/" class="link-arrow" data-track="cta-leistung-check">Passt das zu mir? Fit-Check starten <svg><use href="#i-arrow"/></svg></a><!--/cms:fitlink-->
+          </div>
+        </div>
+        <span class="ls-num" aria-hidden="true">{{n}}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section ls-detail" data-sec="details">
+    <div class="container ls-grid">
+      <div class="ls-card reveal">
+        <span class="eyebrow">Das gehört dazu</span>
+        <ul class="ls-list">{{items}}</ul>
+      </div>
+      <div class="ls-notes">
+        <span class="eyebrow reveal">Gut zu wissen</span>
+        {{notes}}
+      </div>
+    </div>
+  </section>
+
+  <section class="section ls-more" data-sec="weitere">
+    <div class="container">
+      <span class="eyebrow reveal">Weitere Leistungen</span>
+      <ul class="ls-others">{{others}}</ul>
+    </div>
+  </section>
+
+  <section class="section vi-end" data-sec="kontakt">
+    <div class="container vi-end-in reveal">
+      <h2>Lass uns <span class="script">reden.</span></h2>
+      <p class="lead">Im kostenlosen Erstgespräch lernen wir uns kennen und schauen gemeinsam, was zu dir passt.</p>
+      <div class="hero-actions">
+        <a href="../../#kontakt" class="btn btn-primary" data-track="cta-leistung">Erstgespräch anfragen <svg><use href="#i-arrow"/></svg></a>
+        <a href="https://www.instagram.com/reserved.social/" data-cms-href="ig" target="_blank" rel="noopener" class="link-arrow">@<span data-cms-ig="handle">reserved.social</span> <svg><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer vi-foot">
+  <div class="container">
+    <div class="footer-row">
+      <span>© <span id="year">2026</span> reserved.social · Made in Osnabrück</span>
+      <nav aria-label="Rechtliches">
+        <a href="../../">Startseite</a>
+        <a href="../../ueber-mich/">Über mich</a>
+        <!--cms:ugclink--><a href="../../ugc/">UGC &amp; Creator Kit</a><!--/cms:ugclink-->
+        <button type="button" class="linklike" data-open="impressum">Impressum</button>
+        <button type="button" class="linklike" data-open="datenschutz">Datenschutz</button>
+        <a href="https://loggx.de" target="_blank" rel="noopener">Webdesign: LoggX</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<dialog id="impressum" class="legal" aria-labelledby="imp-title">
+  <div class="dlg" data-lenis-prevent>
+    <button type="button" class="dlg-close" data-close aria-label="Schließen"><svg><use href="#i-close"/></svg></button>
+    <h2 id="imp-title">Impressum</h2>
+    <p class="sub">Angaben gemäß § 5 DDG</p>
+    <!--cms:impressum-->
+    <h5>Name</h5><p>Victoria Franz<br>reserved.social – Social Media für lokale Unternehmen</p>
+    <h5>Anschrift</h5><p>c/o IP-Management #6193<br>Ludwig-Erhard-Straße 18<br>20459 Hamburg</p>
+    <h5>Kontakt</h5><p>E-Mail: <a href="mailto:reserved.social@web.de">reserved.social@web.de</a></p>
+    <h5>Umsatzsteuer-IdNr. gemäß § 27a UStG</h5><p>DE358083332</p>
+    <h5>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h5><p>Victoria Franz<br>c/o IP-Management #6193, Ludwig-Erhard-Straße 18, 20459 Hamburg</p>
+    <!--/cms:impressum-->
+  </div>
+</dialog>
+
+<dialog id="datenschutz" class="legal" aria-labelledby="ds-title">
+  <div class="dlg" data-lenis-prevent>
+    <button type="button" class="dlg-close" data-close aria-label="Schließen"><svg><use href="#i-close"/></svg></button>
+    <h2 id="ds-title">Datenschutz</h2>
+    <p class="sub">Datenschutzerklärung</p>
+    <!--cms:datenschutz-->
+    <p>Diese Webseite lädt keine externen Schriften, Tracker oder Cookies. Schriften und Bilder werden vom eigenen Server ausgeliefert. Beim Klick auf Links zu Instagram gelten die Datenschutzbestimmungen von Meta.</p>
+    <!--/cms:datenschutz-->
+  </div>
+</dialog>
+
+<script src="../../assets/js/vendor/gsap.min.js" defer></script>
+<script src="../../assets/js/vendor/ScrollTrigger.min.js" defer></script>
+<script src="../../assets/js/vendor/SplitText.min.js" defer></script>
+<script src="../../assets/js/vendor/lenis.min.js" defer></script>
+<script src="../../assets/js/effects.js" defer></script>
+<script src="../../assets/js/main.js" defer></script>
+</body>
+</html>

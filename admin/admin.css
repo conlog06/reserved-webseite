@@ -403,3 +403,7 @@ details.tech .form{margin-top:12px}
 main.auth{width:100%;display:grid;place-items:center}
 .linklike{background:none;border:0;padding:0;font:inherit;font-size:.86rem;color:#6D665E;text-decoration:underline;cursor:pointer}
 #sicherheit .grid.inner{align-items:start}
+.svc-page{margin-top:10px;border:1px solid var(--line,#DCD5C8);border-radius:10px;padding:10px 14px;background:rgba(255,255,255,.5)}
+.svc-page summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.svc-page summary a{font-weight:500;margin-left:8px;font-size:.82rem}
+.svc-page[open] summary{margin-bottom:10px}

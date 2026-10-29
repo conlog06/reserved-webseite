@@ -179,7 +179,9 @@ if ($post) {
             if (in_array('bar', $has, true)) { $S['bar_on'] = !empty($_POST['bar_on']); $link = $str('bar_link', 300); $S['bar_link'] = preg_match('~^(#|/|https?://)~i', $link) ? $link : '#kontakt'; }
             if (isset($_POST['proof'])) $S['proof'] = array_map(fn($p) => ['v' => rs_cut((string)($p['v'] ?? ''), 12), 't' => rs_cut((string)($p['t'] ?? ''), 60)], array_slice($list('proof'), 0, 3));
             if (isset($_POST['about_stats'])) $S['about_stats'] = array_map(fn($x) => ['v' => rs_cut((string)($x['v'] ?? ''), 12), 't' => rs_cut((string)($x['t'] ?? ''), 80)], array_slice($list('about_stats'), 0, 3));
-            if (in_array('svc', $has, true)) { $S['services'] = []; foreach ($list('svc') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['services'][] = ['t' => rs_cut((string)$x['t'], 50), 'tag' => rs_cut((string)($x['tag'] ?? ''), 24), 'd' => rs_cut((string)($x['d'] ?? ''), 300)]; }
+            if (in_array('svc', $has, true)) { $S['services'] = []; foreach ($list('svc') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['services'][] = ['t' => rs_cut((string)$x['t'], 50), 'tag' => rs_cut((string)($x['tag'] ?? ''), 24), 'd' => rs_cut((string)($x['d'] ?? ''), 300),
+                'slug' => rs_cut((string)preg_replace('/[^a-z0-9-]/', '', strtolower((string)($x['slug'] ?? ''))), 50), 'p_on' => !empty($x['p_on']), 'p_title' => rs_cut((string)($x['p_title'] ?? ''), 60), 'p_script' => rs_cut((string)($x['p_script'] ?? ''), 40),
+                'p_lead' => rs_cut((string)($x['p_lead'] ?? ''), 700), 'p_items' => rs_cut(str_replace("\r", '', (string)($x['p_items'] ?? '')), 1200), 'p_notes' => rs_cut(str_replace("\r", '', (string)($x['p_notes'] ?? '')), 1500)]; }
             if (in_array('vita', $has, true)) { $S['vita'] = []; foreach ($list('vita') as $x) if (trim((string)($x['t'] ?? '')) !== '') $S['vita'][] = ['k' => rs_cut((string)($x['k'] ?? ''), 30), 't' => rs_cut((string)$x['t'], 80), 'd' => rs_cut((string)($x['d'] ?? ''), 500)]; }
             if (in_array('faq', $has, true)) { $S['faq'] = []; foreach ($list('hfaq') as $f) if (trim((string)($f['q'] ?? '')) !== '') $S['faq'][] = ['q' => rs_cut((string)$f['q'], 160), 'a' => rs_cut((string)($f['a'] ?? ''), 1200)]; }
             $anchor = preg_replace('/[^a-z0-9-]/', '', (string)($_POST['anchor'] ?? 'start-bereich'));
@@ -889,8 +891,20 @@ head('Admin – reserved.social', true);
     <form method="post" class="form"><?= $hidden('content_hero') ?><input type="hidden" name="anchor" value="leistungen"><input type="hidden" name="has[]" value="svc">
       <?php $fields([[['sv_note', 'Hinweis unter den Leistungen', 300, 2]]]); ?>
       <h3 class="mt">Liste</h3>
-        <div id="svcList" class="qlist"><?php foreach ((array)$S['services'] as $i => $x): ?><div class="qed"><div class="cols"><input name="svc[<?= $i ?>][t]" value="<?= e($x['t'] ?? '') ?>" placeholder="Leistung" maxlength="50"><input name="svc[<?= $i ?>][tag]" value="<?= e($x['tag'] ?? '') ?>" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[<?= $i ?>][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"><?= e($x['d'] ?? '') ?></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div><?php endforeach; ?></div>
-        <template id="tpl-svc"><div class="qed"><div class="cols"><input name="svc[__][t]" placeholder="Leistung" maxlength="50"><input name="svc[__][tag]" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div><textarea name="svc[__][d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung"></textarea><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div></template>
+        <?php $svcEd = function ($i, array $x) { $f = fn($k) => e((string)($x[$k] ?? '')); $n = 'svc[' . $i . ']';
+          return '<div class="qed"><div class="cols"><input name="' . $n . '[t]" value="' . $f('t') . '" placeholder="Leistung" maxlength="50"><input name="' . $n . '[tag]" value="' . $f('tag') . '" placeholder="Kleines Etikett (optional), z. B. Add-on" maxlength="24"></div>'
+            . '<textarea name="' . $n . '[d]" rows="2" maxlength="300" placeholder="Kurze Beschreibung (Startseite)">' . $f('d') . '</textarea>'
+            . '<details class="svc-page"' . ($i === '__' ? ' open' : '') . '><summary>Eigene Unterseite' . (isset($x['slug']) && !empty($x['p_on']) ? ' <a href="' . e(rs_url('leistungen/' . $x['slug'] . '/')) . '" target="_blank" rel="noopener">/leistungen/' . e($x['slug']) . '/ ↗</a>' : '') . '</summary>'
+            . '<input type="hidden" name="' . $n . '[p_on]" value="0"><label class="check"><input type="checkbox" name="' . $n . '[p_on]" value="1"' . (!array_key_exists('p_on', $x) || !empty($x['p_on']) ? ' checked' : '') . '> Unterseite anzeigen <small>(mit „Mehr erfahren“ auf der Startseite)</small></label>'
+            . '<div class="cols"><label>Überschrift<input name="' . $n . '[p_title]" value="' . $f('p_title') . '" maxlength="60" placeholder="leer = Name der Leistung"></label><label>Schreibschrift darunter<input name="' . $n . '[p_script]" value="' . $f('p_script') . '" maxlength="40"></label></div>'
+            . '<label>Adresse <small>(nur Kleinbuchstaben und Bindestriche, leer = aus dem Namen)</small><input name="' . $n . '[slug]" value="' . $f('slug') . '" maxlength="50" pattern="[a-z0-9-]*"></label>'
+            . '<label>Einleitung<textarea name="' . $n . '[p_lead]" rows="3" maxlength="700">' . $f('p_lead') . '</textarea></label>'
+            . '<label>Das gehört dazu <small>(ein Punkt pro Zeile)</small><textarea name="' . $n . '[p_items]" rows="5" maxlength="1200">' . $f('p_items') . '</textarea></label>'
+            . '<label>Gut zu wissen <small>(eine Karte pro Zeile: Titel | Text)</small><textarea name="' . $n . '[p_notes]" rows="4" maxlength="1500">' . $f('p_notes') . '</textarea></label>'
+            . '</details><div class="qed-row"><button type="button" class="x" data-remove>Löschen</button></div></div>'; }; ?>
+        <p class="hint">Jede Leistung hat eine eigene Unterseite (gut für Google, z. B. „Social Media Management Osnabrück“). Texte unter „Eigene Unterseite“.</p>
+        <div id="svcList" class="qlist"><?php foreach (rs_services($c) as $i => $x) echo $svcEd($i, $x); ?></div>
+        <template id="tpl-svc"><?= $svcEd('__', []) ?></template>
         <button type="button" class="btn btn-ghost btn-small" data-add="tpl-svc" data-to="svcList">+ Leistung</button>
       <button class="btn btn-small">Speichern</button>
     </form>
