@@ -44,7 +44,7 @@ function rs_lead_score(array $d): int {
     $s += min(16, count($d['ziele'] ?? []) * 4);
     if (($d['telefon'] ?? '') !== '') $s += 10;
     if (($d['firma'] ?? '') !== '') $s += 6;
-    if (($d['insta'] ?? '') !== '') $s += 5;
+    if (($d['insta'] ?? '') !== '' || ($d['tiktok'] ?? '') !== '') $s += 5;
     if (mb_strlen($d['nachricht'] ?? '') > 40) $s += 8;
     if (($d['budget'] ?? '') !== '' && stripos($d['budget'], 'weiß') === false) $s += 8;
     return min(100, $s);
@@ -58,6 +58,16 @@ function rs_lead_temp(int $score): array {
 function rs_leads(): array { return rs_read('leads', []); }
 function rs_save_leads(array $l): void { rs_write('leads', array_values($l)); }
 
+/** Instagram- und TikTok-Name einer Anfrage (ältere Anfragen hatten nur ein Feld für beides) */
+function lead_handles(array $d): array {
+    $k = (array)($d['kanal'] ?? []); $ins = (string)($d['insta'] ?? ''); $tt = (string)($d['tiktok'] ?? '');
+    if (!array_key_exists('tiktok', $d) && $ins !== '') {
+        $ig = in_array('instagram', $k, true) || !$k; $t = in_array('tiktok', $k, true);
+        return [$ig ? $ins : '', $t ? $ins : ''];
+    }
+    return [$ins, $tt];
+}
+
 /** Eingaben prüfen und Anfrage speichern. Gibt [ok, fehler|lead] zurück. */
 function rs_lead_create(array $in): array {
     $o = rs_lead_options();
@@ -65,7 +75,7 @@ function rs_lead_create(array $in): array {
     $pick = fn(string $k) => isset($o[$k][(string)($in[$k] ?? '')]) ? (string)$in[$k] : '';
     $d = [
         'name' => $str('name', 120), 'email' => $str('email', 200), 'telefon' => $str('telefon', 40), 'firma' => $str('firma', 160),
-        'ort' => $str('ort', 80), 'insta' => ltrim($str('insta', 60), '@'), 'nachricht' => $str('nachricht', 4000),
+        'ort' => $str('ort', 80), 'insta' => ltrim($str('insta', 60), '@'), 'tiktok' => ltrim($str('tiktok', 60), '@'), 'nachricht' => $str('nachricht', 4000),
         'branche' => $pick('branche'), 'branche_text' => $str('branche_text', 80), 'stand' => $pick('stand'), 'umfang' => $pick('umfang'),
         'start' => $pick('start'), 'kontakt' => $pick('kontakt') ?: 'mail', 'paket' => $str('paket', 40),
         'follower' => $pick('follower'), 'posting' => $pick('posting'),
@@ -73,7 +83,9 @@ function rs_lead_create(array $in): array {
         'ziele' => array_slice(array_values(array_intersect(array_map('strval', (array)($in['ziele'] ?? [])), array_keys($o['ziele']))), 0, 2),
         'kanal' => array_values(array_intersect(['instagram', 'tiktok', 'none'], array_map('strval', (array)($in['kanal'] ?? [])))),
     ];
-    if (in_array('none', $d['kanal'], true)) { $d['kanal'] = ['none']; $d['insta'] = ''; }
+    if (in_array('none', $d['kanal'], true)) { $d['kanal'] = ['none']; $d['insta'] = ''; $d['tiktok'] = ''; }
+    if (!in_array('instagram', $d['kanal'], true)) $d['insta'] = '';
+    if (!in_array('tiktok', $d['kanal'], true)) $d['tiktok'] = '';
     $d['name'] = str_replace("\n", ' ', $d['name']);
     if ($d['name'] === '') return [false, 'Bitte gib deinen Namen an.'];
     if (!filter_var($d['email'], FILTER_VALIDATE_EMAIL)) return [false, 'Bitte gib eine gültige E-Mail-Adresse an.'];
@@ -107,7 +119,9 @@ function rs_lead_summary(array $lead): string {
     $t .= "E-Mail:          {$d['email']}\n";
     $t .= 'Telefon:         ' . ($d['telefon'] ?: '–') . "\n";
     $kan = array_map(fn($k) => ['instagram' => 'Instagram', 'tiktok' => 'TikTok', 'none' => 'Noch kein Profil'][$k], $d['kanal'] ?? []);
-    $t .= 'Social Media:    ' . ($kan ? implode(' + ', $kan) : 'Instagram') . ($d['insta'] ? ' – @' . $d['insta'] : '') . "\n";
+    if (($d['insta'] ?? '') !== '') $t .= "Instagram:       @{$d['insta']}\n";
+    if (($d['tiktok'] ?? '') !== '') $t .= "TikTok:          @{$d['tiktok']}\n";
+    if (($d['insta'] ?? '') === '' && ($d['tiktok'] ?? '') === '') $t .= 'Social Media:    ' . ($kan ? implode(' + ', $kan) : '–') . "\n";
     $t .= 'Lieber per:      ' . $lbl('kontakt') . "\n\n";
     $t .= 'Ziele:           ' . ($d['ziele'] ? implode(', ', array_map(fn($z) => $o['ziele'][$z], $d['ziele'])) : '–') . "\n";
     $t .= 'Social Media:    ' . $lbl('stand') . "\n";

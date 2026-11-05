@@ -1731,3 +1731,14 @@ html[data-palette~="rosa"] .blob::after,html[data-palette~="blau"] .blob::after{
 html[data-palette~="blau"] .hero .pill{background:rgba(169,191,212,.25);border-color:rgba(169,191,212,.6)}
 html[data-palette~="blau"] .hero-me-pic{border-color:#E4ECF4}
 html[data-palette~="blau"] .svc-n{color:var(--blau-text)}
+/* Instagram und TikTok: je eine eigene Zeile */
+.handles{display:grid;gap:4px;margin-top:6px}
+.field .handle{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:12px;text-transform:none;letter-spacing:0;font-size:inherit;font-weight:inherit;color:inherit}
+.handle[hidden]{display:none}
+.handle span{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:rgba(244,241,234,.6)}
+.fc-hl{display:grid;grid-template-columns:120px minmax(0,1fr);align-items:center;gap:14px}
+.fc-hl[hidden]{display:none}
+.fc-hl span{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:rgba(244,241,234,.6)}
+@media (max-width:520px){.field .handle{grid-template-columns:78px minmax(0,1fr)}.fc-hl{grid-template-columns:1fr;gap:0}.fc-hl span{margin-top:8px}}
+.foot-credit{color:inherit;opacity:.55;text-decoration:none}.foot-credit:hover{opacity:.9}
+.field label.opt{text-transform:none;letter-spacing:0;font-weight:inherit;color:var(--creme)}

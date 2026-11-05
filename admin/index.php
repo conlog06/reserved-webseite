@@ -157,11 +157,11 @@ if ($post) {
             header('Content-Disposition: attachment; filename="reserved-anfragen-' . date('Y-m-d') . '.csv"');
             $o = rs_lead_options(); $f = fopen('php://output', 'w');
             fwrite($f, "\xEF\xBB\xBF");
-            fputcsv($f, ['Datum', 'Status', 'Priorität', 'Empfehlung', 'Name', 'Unternehmen', 'Branche', 'Ort', 'E-Mail', 'Telefon', 'Instagram', 'Kontakt per', 'Ziele', 'Social Media', 'Umfang', 'Start', 'Budget', 'Paket', 'Nachricht', 'Herkunft', 'Gerät'], ';');
+            fputcsv($f, ['Datum', 'Status', 'Priorität', 'Empfehlung', 'Name', 'Unternehmen', 'Branche', 'Ort', 'E-Mail', 'Telefon', 'Instagram', 'TikTok', 'Kontakt per', 'Ziele', 'Social Media', 'Umfang', 'Start', 'Budget', 'Paket', 'Nachricht', 'Herkunft', 'Gerät'], ';');
             foreach (array_reverse(rs_leads()) as $x) {
                 $d = $x['data'];
                 fputcsv($f, [date('d.m.Y H:i', $x['created']), rs_lead_status()[$x['status']] ?? $x['status'], $x['score'], $x['rec'], $d['name'], $d['firma'],
-                    $d['branche'] === 'andere' ? $d['branche_text'] : ($o['branche'][$d['branche']] ?? ''), $d['ort'], $d['email'], $d['telefon'], $d['insta'],
+                    $d['branche'] === 'andere' ? $d['branche_text'] : ($o['branche'][$d['branche']] ?? ''), $d['ort'], $d['email'], $d['telefon'], ...lead_handles($d),
                     $o['kontakt'][$d['kontakt']] ?? '', implode(', ', array_map(fn($z) => $o['ziele'][$z] ?? $z, $d['ziele'])), $o['stand'][$d['stand']] ?? '',
                     $o['umfang'][$d['umfang']] ?? '', $o['start'][$d['start']] ?? '', $d['budget'] ?? '', $d['paket'], $d['nachricht'], $x['src'], $x['device']], ';');
             }
@@ -728,10 +728,9 @@ head('Admin – reserved.social', true);
         <a class="btn btn-ghost" href="?tab=termine&amp;<?= e(http_build_query(['name' => $d['name'], 'email' => $d['email'], 'lead' => $one['id']])) ?>#neu">📅 Termin vorschlagen</a>
         <?php if ($d['telefon']): ?><a class="btn btn-ghost" href="tel:<?= e(preg_replace('/[^\d+]/', '', $d['telefon'])) ?>">📞 Anrufen</a>
         <a class="btn btn-ghost" href="https://wa.me/<?= e(lead_wa($d['telefon'])) ?>?text=<?= rawurlencode("Hallo $first, hier ist Victoria von reserved.social – danke für deine Anfrage!") ?>" target="_blank" rel="noopener">💬 WhatsApp</a><?php endif; ?>
-        <?php if ($d['insta']): $tt = in_array('tiktok', $d['kanal'] ?? [], true); $ig = in_array('instagram', $d['kanal'] ?? ['instagram'], true) || empty($d['kanal']); ?>
-          <?php if ($ig): ?><a class="btn btn-ghost" href="https://www.instagram.com/<?= e(rawurlencode($d['insta'])) ?>/" target="_blank" rel="noopener">📷 @<?= e($d['insta']) ?></a><?php endif; ?>
-          <?php if ($tt): ?><a class="btn btn-ghost" href="https://www.tiktok.com/@<?= e(rawurlencode($d['insta'])) ?>" target="_blank" rel="noopener">♪ TikTok @<?= e($d['insta']) ?></a><?php endif; ?>
-        <?php endif; ?>
+        <?php [$igH, $ttH] = lead_handles($d); ?>
+        <?php if ($igH !== ''): ?><a class="btn btn-ghost" href="https://www.instagram.com/<?= e(rawurlencode($igH)) ?>/" target="_blank" rel="noopener">📷 Instagram @<?= e($igH) ?></a><?php endif; ?>
+        <?php if ($ttH !== ''): ?><a class="btn btn-ghost" href="https://www.tiktok.com/@<?= e(rawurlencode($ttH)) ?>" target="_blank" rel="noopener">♪ TikTok @<?= e($ttH) ?></a><?php endif; ?>
       </div>
       <div class="rec-box"><span>Empfehlung der Webseite</span><b><?= e($one['rec']) ?></b><small><?= e($one['why']) ?></small></div>
       <dl class="facts">
