@@ -1746,3 +1746,4 @@ html[data-palette~="blau"] .svc-n{color:var(--blau-text)}
 .foot-ic{display:inline-grid;place-items:center;width:36px;height:36px;margin:-8px 0;border-radius:50%;border:1px solid rgba(244,241,234,.22);color:inherit;transition:border-color .3s,color .3s}
 .foot-ic svg{width:17px;height:17px}
 .foot-ic:hover{border-color:var(--terra-hell);color:var(--creme)}
+.footer-big{font-size:clamp(2.1rem,4.6vw,3.6rem);letter-spacing:-.02em;line-height:1;padding:clamp(34px,4vw,48px) 0 clamp(14px,1.6vw,20px)}

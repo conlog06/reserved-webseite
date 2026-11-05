@@ -288,7 +288,7 @@
     var fb = $('#footerBig');
     if (fb && Split) {
       var fs = new Split(fb, { type: 'chars', charsClass: 'sf-char', aria: 'none' });
-      gsap.from(fs.chars, { yPercent: 100, autoAlpha: 0, stagger: 0.04, ease: 'power3.out', scrollTrigger: { trigger: fb, start: 'top 98%', end: 'bottom 85%', scrub: 0.8 } });
+      gsap.from(fs.chars, { yPercent: 100, autoAlpha: 0, stagger: 0.035, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: fb, start: 'top 98%', once: true } });
     }
     ST.refresh();
   };
