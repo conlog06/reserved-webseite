@@ -1742,3 +1742,7 @@ html[data-palette~="blau"] .svc-n{color:var(--blau-text)}
 @media (max-width:520px){.field .handle{grid-template-columns:78px minmax(0,1fr)}.fc-hl{grid-template-columns:1fr;gap:0}.fc-hl span{margin-top:8px}}
 .foot-credit{color:inherit;opacity:.55;text-decoration:none}.foot-credit:hover{opacity:.9}
 .field label.opt{text-transform:none;letter-spacing:0;font-weight:inherit;color:var(--creme)}
+.footer-row nav{align-items:center}
+.foot-ic{display:inline-grid;place-items:center;width:36px;height:36px;margin:-8px 0;border-radius:50%;border:1px solid rgba(244,241,234,.22);color:inherit;transition:border-color .3s,color .3s}
+.foot-ic svg{width:17px;height:17px}
+.foot-ic:hover{border-color:var(--terra-hell);color:var(--creme)}
