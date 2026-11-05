@@ -421,6 +421,23 @@
 
   const y = $('#year'); if (y) y.textContent = new Date().getFullYear();
 
+  /* ---------- Farbwelten vergleichen (nur in der Vorschau: Link mit ?farbe=…) ---------- */
+  (() => {
+    let cur = null; try { cur = sessionStorage.getItem('rs-farbe'); } catch (x) { return; }
+    if (!cur) return;
+    const P = [['original', 'Original', '#EFE9DC'], ['rosa', 'Rosa', '#F7E1DD'], ['blau', 'Hellblau', '#A9BFD4'], ['rosa-blau', 'Rosa + Blau', 'linear-gradient(90deg,#F7E1DD 50%,#A9BFD4 50%)']];
+    const bar = document.createElement('div'); bar.className = 'pal-bar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Farbwelt vergleichen');
+    bar.innerHTML = '<span>Farbwelt:</span>' + P.map(([k, t, c]) => `<button type="button" data-p="${k}" aria-pressed="${k === cur}"><i style="background:${c}"></i>${t}</button>`).join('') + '<button type="button" class="pal-x" aria-label="Vorschau beenden">✕</button>';
+    document.body.appendChild(bar);
+    bar.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.classList.contains('pal-x')) { try { sessionStorage.removeItem('rs-farbe'); } catch (x) {} root.removeAttribute('data-palette'); bar.remove(); return; }
+      cur = b.dataset.p; try { sessionStorage.setItem('rs-farbe', cur); } catch (x) {}
+      root.setAttribute('data-palette', cur === 'original' ? '' : cur.replace('-', ' '));
+      bar.querySelectorAll('[data-p]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.p === cur)));
+    });
+  })();
+
   /* ---------- Landingpage: Countdown der Aktion ---------- */
   const oc = $('[data-until]');
   if (oc) {

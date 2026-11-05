@@ -1689,3 +1689,45 @@ textarea.fc-in{resize:vertical;min-height:110px;font-size:1.15rem}
 .ls-more{padding-bottom:clamp(20px,3vw,40px)}
 .ls-body .vi-end{padding-top:clamp(50px,6vw,90px)}
 .ls-detail{padding-bottom:clamp(50px,6vw,90px)}
+
+/* ==========================================================
+   Farbwelten (Admin → Einstellungen, Vorschau mit ?farbe=…)
+   original · rosa · blau · rosa-blau
+   ========================================================== */
+html[data-palette~="rosa"]{--creme:#FBEFED;--paper:#FFF8F6;--linie:#EDD5D0;--sand:#F7E1DD}
+html[data-palette~="rosa"] .nav.scrolled{background:rgba(251,239,237,.92)}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){html[data-palette~="rosa"] .nav.scrolled{background:rgba(251,239,237,.8)}}
+html[data-palette~="rosa"] .float-card,html[data-palette~="rosa"] .hero-me-pic{background:#FFF8F6;border-color:#FFF8F6}
+html[data-palette~="rosa"] .svc-row:hover{background:linear-gradient(90deg,rgba(247,225,221,.8),transparent 70%)}
+
+html[data-palette~="blau"]{--sand:#E4ECF4;--blau-hell:#D6E2EE}
+html[data-palette~="blau"] .pill .dot,html[data-palette~="blau"] .eyebrow::before{background:var(--hellblau)}
+html[data-palette~="blau"] .eyebrow::before{height:2px;width:32px}
+html[data-palette~="blau"] .rh-card,html[data-palette~="blau"] .ls-note,html[data-palette~="blau"] .md-high li{background:var(--sand);border-color:var(--blau-hell)}
+html[data-palette~="blau"] .ls-note{border-color:var(--blau-hell)}
+html[data-palette~="blau"] .svc-row:hover{background:linear-gradient(90deg,rgba(214,226,238,.7),transparent 70%)}
+html[data-palette~="blau"] .svc-row::after{background:var(--hellblau)}
+html[data-palette~="blau"] .hero-me-tag,html[data-palette~="blau"] .ls-card{background:#2C3A48}
+html[data-palette~="blau"] .ls-list svg{color:var(--hellblau)}
+html[data-palette~="blau"] .ls-card .eyebrow{color:var(--hellblau)}
+html[data-palette~="blau"] .stamp{background:var(--hellblau);border-color:var(--hellblau)}
+html[data-palette~="blau"] .ls-num{-webkit-text-stroke-color:var(--hellblau)}
+html[data-palette~="blau"] .tile{background:var(--blau-hell)}
+
+/* Vorschau-Leiste zum Vergleichen der Farbwelten */
+.pal-bar{position:fixed;left:50%;bottom:calc(16px + var(--safe-b));transform:translateX(-50%);z-index:9998;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;background:var(--kohle);color:var(--creme);box-shadow:0 16px 40px -12px rgba(0,0,0,.45);font:600 13px/1 var(--sans);max-width:calc(100vw - 20px);overflow-x:auto}
+.pal-bar span{padding:0 8px 0 10px;white-space:nowrap;opacity:.7}
+.pal-bar button{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:9px 13px;background:transparent;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}
+.pal-bar button i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.pal-bar button[aria-pressed="true"]{background:var(--creme);color:var(--kohle)}
+.pal-bar .pal-x{padding:9px 11px;opacity:.7}
+@media (max-width:720px){.pal-bar{bottom:calc(84px + var(--safe-b))}.pal-bar span{display:none}}
+.about-img img,.vi-photo img{object-position:50% 18%}
+.founder-pic img{object-position:50% 40%}
+/* Farbwelt: Kreis hinter dem Handy */
+html[data-palette~="rosa"] .blob{width:150%;background:radial-gradient(circle closest-side,#F0C1B8 0,#F4D1CB 74%,rgba(244,209,203,0) 100%)}
+html[data-palette~="blau"] .blob{width:150%;background:radial-gradient(circle closest-side,#AFC5DA 0,#C5D6E6 74%,rgba(197,214,230,0) 100%)}
+html[data-palette~="rosa"] .blob::after,html[data-palette~="blau"] .blob::after{inset:9%;border-color:rgba(255,255,255,.75)}
+html[data-palette~="blau"] .hero .pill{background:rgba(169,191,212,.25);border-color:rgba(169,191,212,.6)}
+html[data-palette~="blau"] .hero-me-pic{border-color:#E4ECF4}
+html[data-palette~="blau"] .svc-n{color:var(--blau-text)}

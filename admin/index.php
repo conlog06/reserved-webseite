@@ -447,6 +447,10 @@ if ($post) {
             rs_save_config($c); flash('Einstellungen gespeichert.'); back();
         /* ----- Funnel ----- */
         /* ----- UGC-Seite ----- */
+        case 'palette':
+            $pv = (string)($_POST['palette'] ?? 'original');
+            $c['site']['palette'] = in_array($pv, ['original', 'rosa', 'blau', 'rosa-blau'], true) ? $pv : 'original';
+            rs_save_config($c); flash('Farbwelt übernommen – gilt jetzt für die ganze Webseite.'); back('#farben');
         case 'ugc':
             $U = &$c['ugc'];
             $U['on'] = !empty($_POST['ug_on']);
@@ -969,7 +973,7 @@ head('Admin – reserved.social', true);
     </form>
     <h3 class="mt">Foto von Victoria</h3>
     <p class="hint">Wird auch im Startbereich, auf „Über mich“ und auf der Download-Seite verwendet.</p>
-    <div class="img-slot"><img src="<?= e(rs_url($S['img_about'] ?: 'assets/img/victoria-creator.webp')) ?>" alt="">
+    <div class="img-slot"><img src="<?= e(rs_url($S['img_about'] ?: 'assets/img/victoria-about.webp')) ?>" alt="">
       <div><p class="hint">Hochformat (4:5), JPG/PNG/WebP. Ersetzt das Bild sofort.</p>
         <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><label class="btn btn-ghost btn-small file-btn">Neues Bild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
         <?php if ($S['img_about']): ?><form method="post" onsubmit="return confirm('Eigenes Bild entfernen?')"><?= $hidden('image_delete') ?><button class="btn btn-small btn-danger">Entfernen</button></form><?php endif; ?></div></div>
@@ -1131,7 +1135,7 @@ head('Admin – reserved.social', true);
     <div class="utm"><?php foreach (['' => 'Direkt', 'instagram-bio' => 'Instagram-Bio', 'tiktok' => 'TikTok-Bio', 'mail' => 'E-Mail an Marken'] as $k => $t): $u = $ugUrl . ($k ? '?utm_source=' . $k : ''); ?>
       <div class="utm-row"><span><?= e($t) ?></span><code><?= e($u) ?></code><button type="button" class="btn btn-ghost btn-small" data-copy="<?= e($u) ?>">Kopieren</button></div><?php endforeach; ?></div>
     <h3 class="mt">Foto oben</h3>
-    <div class="img-slot"><img src="<?= e(rs_url($S['img_ugc'] ?? '' ?: 'assets/img/victoria-creator.webp')) ?>" alt="">
+    <div class="img-slot"><img src="<?= e(rs_url($S['img_ugc'] ?? '' ?: 'assets/img/victoria-ugc.webp')) ?>" alt="">
       <div><p class="hint">Hochformat, JPG/PNG/WebP. Ohne eigenes Bild erscheint das Foto aus dem Creator Kit.</p>
         <form method="post" enctype="multipart/form-data"><?= $hidden('image') ?><input type="hidden" name="slot" value="ugc"><label class="btn btn-ghost btn-small file-btn">Neues Bild wählen<input type="file" name="file" accept="image/jpeg,image/png,image/webp" onchange="this.form.submit()"></label></form>
         <?php if ($S['img_ugc'] ?? ''): ?><form method="post"><?= $hidden('image_delete') ?><input type="hidden" name="slot" value="ugc"><button class="btn btn-small btn-danger">Zurücksetzen</button></form><?php endif; ?></div></div>
@@ -1496,7 +1500,18 @@ head('Admin – reserved.social', true);
   </section>
 <?php /* ======================= EINSTELLUNGEN ======================= */ else: ?>
   <div class="page-head"><div><h1>Einstellungen</h1><p class="sub">Kontakt &amp; E-Mails, Impressum, Datenschutz, Anmeldung &amp; Sicherheit, Statistik.</p></div></div>
-  <nav class="subnav"><a href="#allgemein">Kontakt &amp; Rechtliches</a><a href="#sicherheit">Anmeldung &amp; Sicherheit</a></nav>
+  <nav class="subnav"><a href="#allgemein">Kontakt &amp; Rechtliches</a><a href="#farben">Farbwelt</a><a href="#sicherheit">Anmeldung &amp; Sicherheit</a></nav>
+  <section class="card" id="farben">
+    <h2>Farbwelt</h2>
+    <p class="hint">Gilt für die ganze Webseite. Zum Vergleichen vorher anschauen: Link öffnen, unten zwischen den Farben umschalten (nur du siehst das).</p>
+    <form method="post" class="form"><?= $hidden('palette') ?>
+      <div class="pal-pick"><?php foreach (['original' => ['Original', 'Creme, Sand, Terrakotta', ['#F4F1EA', '#EFE9DC', '#B8593F', '#2B2622']], 'rosa' => ['Rosa', 'Zartrosa statt Beige', ['#FBEFED', '#F7E1DD', '#B8593F', '#2B2622']], 'blau' => ['Hellblau', 'Mehr hellblaue Akzente', ['#F4F1EA', '#E4ECF4', '#A9BFD4', '#B8593F']], 'rosa-blau' => ['Rosa + Blau', 'Zartrosa mit hellblauen Akzenten', ['#FBEFED', '#E4ECF4', '#A9BFD4', '#B8593F']]] as $k => [$t, $d, $cols]): ?>
+        <label class="pal-opt"><input type="radio" name="palette" value="<?= $k ?>"<?= ($S['palette'] ?? 'original') === $k ? ' checked' : '' ?>><span class="pal-sw"><?php foreach ($cols as $col): ?><i style="background:<?= $col ?>"></i><?php endforeach; ?></span><b><?= $t ?></b><small><?= $d ?></small>
+          <a href="<?= e(rs_url('?farbe=' . $k)) ?>" target="_blank" rel="noopener">Ansehen ↗</a></label>
+      <?php endforeach; ?></div>
+      <button class="btn">Farbwelt übernehmen</button>
+    </form>
+  </section>
   <section class="card" id="allgemein">
     <form method="post" class="form"><?= $hidden('settings') ?>
       <fieldset><legend>Kontakt</legend>

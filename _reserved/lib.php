@@ -135,6 +135,7 @@ function rs_defaults(): array {
         'secret' => '',
         'site' => [
             'email' => 'reserved.social@web.de',
+            'palette' => 'original',              // Farbwelt: original · rosa · blau · rosa-blau
             'instagram' => 'reserved.social',
             'mail_from' => '',                    // z. B. noreply@reserved-social.de (eigene Domain, sonst Spam)
             'response_text' => 'Wir melden uns in der Regel innerhalb von 24 Stunden.',

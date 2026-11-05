@@ -21,6 +21,7 @@ Gebaut nach demselben Prinzip wie die LoggX-Seite: **PHP ohne Datenbank** (Daten
 - **Inhalte:** Hero-Texte, Kennzahlen, Ankündigungsleiste, Paket-Tabelle (Zeilen, Namen, Preise), Zusatzleistungen, Ergebnis-Karten, Kundenstimmen (Filter-Buttons entstehen automatisch), Über-uns-Text und -Bild.
 - **Instagram:** Beiträge selbst hochladen (Bild, Karussell oder Reel-Video, Text, Link, Datum, Likes) – oder automatisch per Zugangsschlüssel. Anzahl Beiträge, Follower-Zahl.
 - **Anmeldung & Sicherheit (Einstellungen):** Passwort + optionale **Zwei-Faktor-Anmeldung** (Authenticator-App wie Google/Microsoft Authenticator oder iPhone „Passwörter“, QR-Code, 8 Notfall-Codes, „Diesem Gerät 30 Tage vertrauen“), „Passwort vergessen?“ mit Link per Mail (30 Min. gültig), Schutz gegen Durchprobieren. Notfall ohne Handy und Notfall-Codes: per FTP `_reserved/data/zwei-faktor.php` löschen → Zwei-Faktor ist aus.
+- **Farbwelt (Einstellungen):** Original, Rosa (Zartrosa statt Beige), Hellblau (mehr hellblaue Akzente) oder Rosa + Blau. Vorschau ohne Umstellen: Link mit `?farbe=rosa`, `?farbe=blau` oder `?farbe=rosa-blau` – unten erscheint eine Leiste zum Umschalten (✕ beendet die Vorschau).
 - **Einstellungen:** Online/Wartung, E-Mail-Empfänger & Absender, Test-Mail, Impressum, Datenschutzerklärung (Vorlage oder eigener Text), Statistik an/aus, Passwort.
 
 **Animationen & Scrollen**
